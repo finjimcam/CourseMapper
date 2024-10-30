@@ -16,3 +16,5 @@ mypy:
   only:
     - master
     - merge_requests
+  script:
+    - mypy backend
