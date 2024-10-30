@@ -1,0 +1,18 @@
+image: "python:3.9-slim"
+
+stages:
+  - Static Analysis
+
+flake8:
+  stage: Static Analysis
+  only:
+    - main
+    - merge_requests
+  script:
+    - flake8 backend
+
+mypy:
+  stage: Static Analysis
+  only:
+    - master
+    - merge_requests
