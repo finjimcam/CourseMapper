@@ -1,5 +1,15 @@
 image: "python:3.9-slim"
 
+cache:
+  paths:
+    - deps_cache
+    - venv/
+
+before_script:
+  - python3.10 -m venv venv
+  - source venv/bin/activate
+  - pip install -r test-requirements.txt --cache-dir deps_cache
+
 stages:
   - Static Analysis
 
