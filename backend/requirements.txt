@@ -1,1 +1,3 @@
 fastapi[standard]
+flake8
+mypy
