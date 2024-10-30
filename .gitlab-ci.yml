@@ -8,7 +8,7 @@ cache:
 before_script:
   - python3.10 -m venv venv
   - source venv/bin/activate
-  - pip install -r requirements.txt --cache-dir deps_cache
+  - pip install -r bakend/requirements.txt --cache-dir deps_cache
 
 stages:
   - Static Analysis
