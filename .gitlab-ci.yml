@@ -27,4 +27,4 @@ mypy:
     - main
     - merge_requests
   script:
-    - mypy backend
+    - mypy --strict backend
