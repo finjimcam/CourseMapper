@@ -1,7 +1,7 @@
 from typing import Union, Any, Annotated
 from contextlib import asynccontextmanager
 from .models.database import create_db_and_tables, get_session
-from .models.models import User, PermissionsGroup, Workbook, Course
+from .models.models import User, PermissionsGroup, Workbook, Course, LearningPlatform
 from sqlmodel import Session, select
 from fastapi import FastAPI, Depends, Query
 
@@ -72,3 +72,15 @@ def read_courses(
 ) -> list[Course]:
     courses = session.exec(select(Course).offset(offset).limit(limit)).all()
     return courses
+
+
+@app.get("/learning_platforms/")
+def read_learning_platforms(
+    session: SessionDep,
+    offset: int = 0,
+    limit: Annotated[int, Query(le=100)] = 100,
+) -> list[LearningPlatform]:
+    learning_platforms = session.exec(
+        select(LearningPlatform).offset(offset).limit(limit)
+    ).all()
+    return learning_platforms

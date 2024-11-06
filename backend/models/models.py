@@ -19,6 +19,7 @@ class Workbook(SQLModel, table=True):
     end_date: datetime.date = Field(nullable=False)
     course_lead_id: int = Field(foreign_key="user.id")
     related_course_id: int = Field(foreign_key="course.id")
+    related_learning_platform_id: int = Field(foreign_key="learningplatform.id")
 
 
 class WorkbookContributors(SQLModel, table=True):
@@ -29,4 +30,9 @@ class WorkbookContributors(SQLModel, table=True):
 class Course(SQLModel, table=True):
     id: int = Field(nullable=False, primary_key=True)
     course_code: str = Field(nullable=False)
+    name: str = Field(nullable=False)
+
+
+class LearningPlatform(SQLModel, table=True):
+    id: int = Field(nullable=False, primary_key=True)
     name: str = Field(nullable=False)
