@@ -59,6 +59,7 @@ class Activity(SQLModel, table=True):
     location: str = Field(nullable=False)
     learning_activity_id: int = Field(nullable=False, foreign_key="learningactivity.id")
     learning_type_id: int = Field(nullable=False, foreign_key="learningtype.id")
+    task_status_id: int = Field(nullable=False, foreign_key="taskstatus.id")
 
 
 class ActivityStaff(SQLModel, table=True):
@@ -68,5 +69,10 @@ class ActivityStaff(SQLModel, table=True):
 
 
 class LearningType(SQLModel, table=True):
+    id: int = Field(primary_key=True)
+    name: str = Field(nullable=False)
+
+
+class TaskStatus(SQLModel, table=True):
     id: int = Field(primary_key=True)
     name: str = Field(nullable=False)
