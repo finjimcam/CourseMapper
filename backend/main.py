@@ -1,4 +1,4 @@
-from typing import Union, Any, Annotated
+from typing import Union, Any, Annotated, AsyncGenerator
 from contextlib import asynccontextmanager
 from .models.database import create_db_and_tables, get_session
 from sqlmodel import Session
@@ -8,7 +8,7 @@ SessionDep = Annotated[Session, Depends(get_session)]
 
 
 @asynccontextmanager
-async def lifespan(_: FastAPI):
+async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
     create_db_and_tables()
     yield
 
