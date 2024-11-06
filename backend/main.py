@@ -1,19 +1,8 @@
 from typing import Union, Any, Annotated
 from contextlib import asynccontextmanager
 from .models.database import create_db_and_tables, get_session
-from .models.models import (
-    User,
-    PermissionsGroup,
-    Workbook,
-    Course,
-    LearningPlatform,
-    LearningActivity,
-    Week,
-    Activity,
-    WorkbookContributors,
-)
-from sqlmodel import Session, select
-from fastapi import FastAPI, Depends, Query
+from sqlmodel import Session
+from fastapi import FastAPI, Depends
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
