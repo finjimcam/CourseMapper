@@ -8,6 +8,7 @@ from .models.models import (
     Course,
     LearningPlatform,
     LearningActivity,
+    Week,
 )
 from sqlmodel import Session, select
 from fastapi import FastAPI, Depends, Query
@@ -103,3 +104,13 @@ def read_learning_activities(
         select(LearningActivity).offset(offset).limit(limit)
     ).all()
     return learning_activities
+
+
+@app.get("/weeks/")
+def read_weeks(
+    session: SessionDep,
+    offset: int = 0,
+    limit: Annotated[int, Query(le=100)] = 100,
+) -> list[Week]:
+    weeks = session.exec(select(Week).offset(offset).limit(limit)).all()
+    return weeks

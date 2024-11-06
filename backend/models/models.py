@@ -42,3 +42,12 @@ class LearningActivity(SQLModel, table=True):
     id: int = Field(nullable=False, primary_key=True)
     name: str = Field(nullable=False)
     learning_platform_id: int = Field(foreign_key="learningplatform.id")
+
+
+class Week(SQLModel, table=True):
+    workbook_id: int = Field(
+        nullable=False, foreign_key="workbook.id", primary_key=True
+    )
+    number: int = Field(nullable=False, primary_key=True)
+    start_date: datetime.date = Field(nullable=False)
+    end_date: datetime.date = Field(nullable=False)
