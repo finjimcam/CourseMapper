@@ -1,4 +1,4 @@
 fastapi[standard]
-flake8
+black
 mypy
 sqlmodel
