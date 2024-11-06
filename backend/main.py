@@ -1,7 +1,7 @@
 from typing import Union, Any, Annotated
 from contextlib import asynccontextmanager
 from .models.database import create_db_and_tables, get_session
-from .models.models import User, PermissionsGroup
+from .models.models import User, PermissionsGroup, Workbook
 from sqlmodel import Session, select
 from fastapi import FastAPI, Depends, Query
 
@@ -52,3 +52,13 @@ def read_permissions_groups(
         select(PermissionsGroup).offset(offset).limit(limit)
     ).all()
     return permissions_groups
+
+
+@app.get("/workbooks/")
+def read_workbooks(
+    session: SessionDep,
+    offset: int = 0,
+    limit: Annotated[int, Query(le=100)] = 100,
+) -> list[Workbook]:
+    workbooks = session.exec(select(Workbook).offset(offset).limit(limit)).all()
+    return workbooks
