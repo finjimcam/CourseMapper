@@ -58,9 +58,15 @@ class Activity(SQLModel, table=True):
     time_estimate_minutes: int = Field(nullable=False)
     location: str = Field(nullable=False)
     learning_activity_id: int = Field(nullable=False, foreign_key="learningactivity.id")
+    learning_type_id: int = Field(nullable=False, foreign_key="learningtype.id")
 
 
 class ActivityStaff(SQLModel, table=True):
     staff_id: int = Field(foreign_key="user.id", primary_key=True)
     activity_workbook_id: int = Field(foreign_key="workbook.id", primary_key=True)
     activity_week_number: int = Field(foreign_key="week.number", primary_key=True)
+
+
+class LearningType(SQLModel, table=True):
+    id: int = Field(primary_key=True)
+    name: str = Field(nullable=False)
