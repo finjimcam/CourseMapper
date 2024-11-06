@@ -9,6 +9,8 @@ from .models.models import (
     LearningPlatform,
     LearningActivity,
     Week,
+    Activity,
+    WorkbookContributors,
 )
 from sqlmodel import Session, select
 from fastapi import FastAPI, Depends, Query
@@ -114,3 +116,25 @@ def read_weeks(
 ) -> list[Week]:
     weeks = session.exec(select(Week).offset(offset).limit(limit)).all()
     return weeks
+
+
+@app.get("/workbook_contributors/")
+def read_workbook_contributors(
+    session: SessionDep,
+    offset: int = 0,
+    limit: Annotated[int, Query(le=100)] = 100,
+) -> list[WorkbookContributors]:
+    workbook_contributors = session.exec(
+        select(WorkbookContributors).offset(offset).limit(limit)
+    ).all()
+    return workbook_contributors
+
+
+@app.get("/activities/")
+def read_activities(
+    session: SessionDep,
+    offset: int = 0,
+    limit: Annotated[int, Query(le=100)] = 100,
+) -> list[Activity]:
+    activities = session.exec(select(Activity).offset(offset).limit(limit)).all()
+    return activities
