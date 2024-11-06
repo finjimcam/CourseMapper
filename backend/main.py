@@ -1,7 +1,7 @@
 from typing import Union, Any, Annotated
 from contextlib import asynccontextmanager
 from .models.database import create_db_and_tables, get_session
-from .models.models import User
+from .models.models import User, PermissionsGroup
 from sqlmodel import Session, select
 from fastapi import FastAPI, Depends, Query
 
@@ -27,12 +27,9 @@ def read_item(item_id: int, q: Union[str, None] = None) -> dict[str, Any]:
     return {"item_id": item_id, "q": q}
 
 
-@app.post("/users/")
-def create_user(user: User, session: SessionDep) -> User:
-    session.add(user)
-    session.commit()
-    session.refresh(user)
-    return user
+"""
+The following views exist for the purpose of debugging the database as it's being created. DO NOT SUBMIT.
+"""
 
 
 @app.get("/users/")
@@ -43,3 +40,15 @@ def read_users(
 ) -> list[User]:
     users = session.exec(select(User).offset(offset).limit(limit)).all()
     return users
+
+
+@app.get("/permissions_groups/")
+def read_permissions_groups(
+    session: SessionDep,
+    offset: int = 0,
+    limit: Annotated[int, Query(le=100)] = 100,
+) -> list[PermissionsGroup]:
+    permissions_groups = session.exec(
+        select(PermissionsGroup).offset(offset).limit(limit)
+    ).all()
+    return permissions_groups
