@@ -3,11 +3,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends
 from sqlmodel import Session, select
 
-# 导入数据库相关方法和模型
 from backend.models.database import (
     create_db_and_tables,
     get_session,
-    populate_initial_data,
 )
 from backend.models.models import (
     User,
@@ -25,7 +23,6 @@ SessionDep = Annotated[Session, Depends(get_session)]
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
     create_db_and_tables()
-    populate_initial_data()
     yield
 
 

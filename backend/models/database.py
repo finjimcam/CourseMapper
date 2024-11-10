@@ -1,4 +1,3 @@
-# database.py
 from typing import Annotated, Iterator
 from fastapi import Depends
 from sqlmodel import Session, SQLModel, create_engine
@@ -29,63 +28,3 @@ def get_session() -> Iterator[Session]:
 
 
 SessionDep = Annotated[Session, Depends(get_session)]
-
-
-def populate_initial_data() -> None:
-    """Populate the database with initial data."""
-    with Session(engine) as session:
-        # Insert permission group
-        group_admin = PermissionsGroup(id=1, name="Admin")
-        group_user = PermissionsGroup(id=2, name="User")
-
-        # Insert user
-        user_admin = User(id=1, name="Admin User", permissions_group_id=1)
-        user_regular = User(id=2, name="Regular User", permissions_group_id=2)
-
-        # Insert course
-        course_math = Course(id=1, course_code="MATH101", name="Mathematics 101")
-        course_physics = Course(id=2, course_code="PHYS101", name="Physics 101")
-
-        # Plug-in learning platform
-        platform_online = LearningPlatform(id=1, name="Online Platform")
-        platform_inperson = LearningPlatform(id=2, name="In-person Platform")
-
-        # Intercalated learning activity
-        activity_lecture = LearningActivity(
-            id=1, name="Lecture", learning_platform_id=1
-        )
-        activity_lab = LearningActivity(
-            id=2, name="Lab Session", learning_platform_id=2
-        )
-
-        # Insert task status
-        status_pending = TaskStatus(id=1, name="Pending")
-        status_completed = TaskStatus(id=2, name="Completed")
-
-        # Insertion learning type
-        type_homework = LearningType(id=1, name="Homework")
-        type_exam = LearningType(id=2, name="Exam")
-
-        # Add all initial data to the session
-        session.add_all(
-            [
-                group_admin,
-                group_user,
-                user_admin,
-                user_regular,
-                course_math,
-                course_physics,
-                platform_online,
-                platform_inperson,
-                activity_lecture,
-                activity_lab,
-                status_pending,
-                status_completed,
-                type_homework,
-                type_exam,
-            ]
-        )
-
-        # Submit data to the database
-        session.commit()
-        print("Database populated with initial data.")
