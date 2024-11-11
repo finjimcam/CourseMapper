@@ -1,5 +1,11 @@
+import sys
+import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
+
 from typing import Iterator
 from sqlmodel import Session, SQLModel, select, create_engine
+from contextlib import contextmanager
 from backend.models.models import (
     User,
     PermissionsGroup,
@@ -21,6 +27,7 @@ def create_db_and_tables() -> None:
     SQLModel.metadata.create_all(engine)
 
 
+@contextmanager
 def get_session() -> Iterator[Session]:
     with Session(engine) as session:
         yield session
@@ -28,7 +35,7 @@ def get_session() -> Iterator[Session]:
 
 def populate_initial_data() -> None:
     """Populate the database with initial data."""
-    with Session(engine) as session:
+    with get_session() as session:
         # Check if initial data already exists
         if session.exec(select(User)).first() is not None:
             print("Initial data already populated.")
