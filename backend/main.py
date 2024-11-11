@@ -60,7 +60,7 @@ def read_permissions_groups(
 # Endpoint to fetch all Courses
 @app.get("/courses/")
 def read_courses(session: Session = Depends(get_session)) -> List[Course]:
-    courses = session.exec(select(Course)).all()
+    courses = list(session.exec(select(Course)).all())
     return courses
 
 
@@ -69,7 +69,7 @@ def read_courses(session: Session = Depends(get_session)) -> List[Course]:
 def read_learning_platforms(
     session: Session = Depends(get_session),
 ) -> List[LearningPlatform]:
-    learning_platforms = session.exec(select(LearningPlatform)).all()
+    learning_platforms = list(session.exec(select(LearningPlatform)).all())
     return learning_platforms
 
 
@@ -78,19 +78,19 @@ def read_learning_platforms(
 def read_learning_activities(
     session: Session = Depends(get_session),
 ) -> List[LearningActivity]:
-    learning_activities = session.exec(select(LearningActivity)).all()
+    learning_activities = list(session.exec(select(LearningActivity)).all())
     return learning_activities
 
 
 # Endpoint to fetch all TaskStatuses
 @app.get("/task-statuses/")
 def read_task_statuses(session: Session = Depends(get_session)) -> List[TaskStatus]:
-    task_statuses = session.exec(select(TaskStatus)).all()
+    task_statuses = list(session.exec(select(TaskStatus)).all())
     return task_statuses
 
 
 # Endpoint to fetch all LearningTypes
 @app.get("/learning-types/")
 def read_learning_types(session: Session = Depends(get_session)) -> List[LearningType]:
-    learning_types = session.exec(select(LearningType)).all()
+    learning_types = list(session.exec(select(LearningType)).all())
     return learning_types
