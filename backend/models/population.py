@@ -1,5 +1,4 @@
-from typing import Annotated, Iterator
-from fastapi import Depends
+from typing import Iterator
 from sqlmodel import Session, SQLModel, select, create_engine
 from backend.models.models import (
     User,

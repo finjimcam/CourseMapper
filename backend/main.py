@@ -1,4 +1,4 @@
-from typing import Union, Any, Annotated, AsyncGenerator, List
+from typing import Union, Annotated, AsyncGenerator, List
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends
 from sqlmodel import Session, select

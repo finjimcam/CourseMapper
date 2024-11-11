@@ -1,15 +1,7 @@
 from typing import Annotated, Iterator
 from fastapi import Depends
 from sqlmodel import Session, SQLModel, create_engine
-from backend.models.models import (
-    User,
-    PermissionsGroup,
-    Course,
-    LearningPlatform,
-    LearningActivity,
-    TaskStatus,
-    LearningType,
-)
+
 
 sqlite_file_name = "backend/database.db"
 sqlite_url = f"sqlite:///{sqlite_file_name}"
