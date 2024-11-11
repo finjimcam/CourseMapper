@@ -13,6 +13,7 @@ before_script:
 
 stages:
   - Static Analysis
+  - Dynamic Analysis
 
 Linting with black:
   stage: Static Analysis
@@ -29,3 +30,11 @@ Type checking with mypy:
     - merge_requests
   script:
     - mypy --strict backend
+
+Unit tests on backend:
+  stage: Dynamic Analysis
+  only:
+    - main
+    - merge_requests
+  script:
+    - python -m unittest discover -s backend -p "test_*.py"
