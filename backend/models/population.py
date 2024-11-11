@@ -23,19 +23,19 @@ connect_args = {"check_same_thread": False}
 engine = create_engine(sqlite_url, connect_args=connect_args)
 
 
-def create_db_and_tables() -> None:
-    SQLModel.metadata.create_all(engine)
-
-
 @contextmanager
-def get_session() -> Iterator[Session]:
+def _get_session() -> Iterator[Session]:
     with Session(engine) as session:
         yield session
 
 
-def populate_initial_data() -> None:
+def _create_db_and_tables() -> None:
+    SQLModel.metadata.create_all(engine)
+
+
+def _populate_initial_data() -> None:
     """Populate the database with initial data."""
-    with get_session() as session:
+    with _get_session() as session:
         # Check if initial data already exists
         if session.exec(select(User)).first() is not None:
             print("Initial data already populated.")
@@ -98,7 +98,11 @@ def populate_initial_data() -> None:
         print("Database populated with initial data.")
 
 
+def main() -> None:
+    _create_db_and_tables()
+    _populate_initial_data()
+
+
 # Running this file alone will generate a database with the initial data
 if __name__ == "__main__":
-    create_db_and_tables()
-    populate_initial_data()
+    main()
