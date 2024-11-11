@@ -44,7 +44,7 @@ def read_item(
 # Endpoint to fetch all Users
 @app.get("/users/")
 def read_users(session: Session = Depends(get_session)) -> List[User]:
-    users = session.exec(select(User)).all()
+    users = list(session.exec(select(User)).all())
     return users
 
 
@@ -53,7 +53,7 @@ def read_users(session: Session = Depends(get_session)) -> List[User]:
 def read_permissions_groups(
     session: Session = Depends(get_session),
 ) -> List[PermissionsGroup]:
-    permissions_groups = session.exec(select(PermissionsGroup)).all()
+    permissions_groups = list(session.exec(select(PermissionsGroup)).all())
     return permissions_groups
 
 
