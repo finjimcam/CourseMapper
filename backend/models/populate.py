@@ -89,6 +89,21 @@ def _populate_initial_data() -> None:
             LearningActivity(id=10, name="Ungraded Plugin", learning_platform_id=1),
         ]
         session.add_all(coursera_learning_activities)
+        future_learn_learning_activities = [
+            LearningActivity(id=1, name="Article", learning_platform_id=2),
+            LearningActivity(id=2, name="Audio", learning_platform_id=2),
+            LearningActivity(id=3, name="Discussion", learning_platform_id=2),
+            LearningActivity(
+                id=4, name="Exercise / External Tools", learning_platform_id=2
+            ),
+            LearningActivity(
+                id=5, name="Peer Graded Assignment", learning_platform_id=2
+            ),
+            LearningActivity(id=6, name="Poll", learning_platform_id=2),
+            LearningActivity(id=7, name="Quiz", learning_platform_id=2),
+            LearningActivity(id=8, name="Video", learning_platform_id=2),
+        ]
+        session.add_all(future_learn_learning_activities)
 
         session.commit()
         print("Database populated with initial data.")
