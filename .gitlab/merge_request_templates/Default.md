@@ -7,8 +7,6 @@ that reviewers can understand your intent. Keeping the description updated is
 especially important if they didn't participate in the discussion.
 -->
 
-%{first_multiline_commit}
-
 ### References
 <!-- Please include cross links to any resources that are relevant to this MR.
 
