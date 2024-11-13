@@ -16,7 +16,7 @@ from backend.models.models import (
     TaskStatus,
     LearningType,
     Activity,
-    Workbook
+    Workbook,
 )
 
 SessionDep = Annotated[Session, Depends(get_session)]
@@ -29,6 +29,7 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
 
 
 app = FastAPI(lifespan=lifespan)
+
 
 # TODO: delete this
 @app.get("/")
@@ -100,14 +101,24 @@ def read_workbooks(session: Session = Depends(get_session)) -> List[Workbook]:
 
 # Fetches a specified workbook
 @app.get("/workbook/{workbook_id}/")
-def read_specified_workbook(workbook_id: int, session: Session = Depends(get_session)) -> Workbook:
-    workbook = list(session.exec(select(Workbook).where(Workbook.id==workbook_id)))[0] 
+def read_specified_workbook(
+    workbook_id: int, session: Session = Depends(get_session)
+) -> Workbook:
+    workbook = list(session.exec(select(Workbook).where(Workbook.id == workbook_id)))[0]
     return workbook
 
 
 # Fetches activities for a specified workbook weekst[
 @app.get("/activity/{workbook_id}/{week_number}/")
-def read_workbook_week(workbook_id: int, week_number: int, 
-                       session: Session = Depends(get_session)) -> List[Activity]:
-    activities = list(session.exec(select(Activity).where(Activity.workbook_id==workbook_id and Activity.week_number==week_number)))
+def read_workbook_week(
+    workbook_id: int, week_number: int, session: Session = Depends(get_session)
+) -> List[Activity]:
+    activities = list(
+        session.exec(
+            select(Activity).where(
+                Activity.workbook_id == workbook_id
+                and Activity.week_number == week_number
+            )
+        )
+    )
     return activities
