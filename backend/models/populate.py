@@ -58,6 +58,16 @@ def _populate_initial_data() -> None:
             TaskStatus(id=3, name="Completed"),
         ]
         session.add_all(task_statuses)
+        learning_types = [
+            LearningType(id=1, name="Acquisition"),
+            LearningType(id=2, name="Collaboration"),
+            LearningType(id=3, name="Discussion"),
+            LearningType(id=4, name="Investigation"),
+            LearningType(id=5, name="Practice"),
+            LearningType(id=6, name="Production"),
+            LearningType(id=7, name="Assessment"),
+        ]
+        session.add_all(learning_types)
 
         session.commit()
         print("Database populated with initial data.")
