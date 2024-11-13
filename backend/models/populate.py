@@ -72,6 +72,7 @@ def _populate_initial_data() -> None:
             LearningPlatform(id=1, name="Coursera"),
             LearningPlatform(id=2, name="FutureLearn"),
             LearningPlatform(id=3, name="Moodle"),
+            LearningPlatform(id=4, name="xSiTe"),
         ]
         session.add_all(learning_platforms)
 
