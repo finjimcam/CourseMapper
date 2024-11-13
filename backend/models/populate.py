@@ -46,6 +46,10 @@ def _populate_initial_data() -> None:
             PermissionsGroup(id=1, name="Admin"),
             PermissionsGroup(id=2, name="User"),
         ]
+        users = [
+            User(id=1, name="Richard Johnston", permissions_group_id=1),
+            User(id=2, name="Tim Storer", permissions_group_id=2),
+        ]
 
         session.add_all([])  # DO NOT SUBMIT without adding teh new data
         session.commit()
