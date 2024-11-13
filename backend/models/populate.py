@@ -74,6 +74,21 @@ def _populate_initial_data() -> None:
             LearningPlatform(id=4, name="xSiTe"),
         ]
         session.add_all(learning_platforms)
+        coursera_learning_activities = [
+            LearningActivity(id=1, name="Video", learning_platform_id=1),
+            LearningActivity(id=2, name="Reading", learning_platform_id=1),
+            LearningActivity(id=3, name="Assignment", learning_platform_id=1),
+            LearningActivity(id=4, name="Discussion Prompt", learning_platform_id=1),
+            LearningActivity(
+                id=5, name="Programming Assignment", learning_platform_id=1
+            ),
+            LearningActivity(id=6, name="Peer Review", learning_platform_id=1),
+            LearningActivity(id=7, name="App Item", learning_platform_id=1),
+            LearningActivity(id=8, name="Ungraded Lab", learning_platform_id=1),
+            LearningActivity(id=9, name="Quiz", learning_platform_id=1),
+            LearningActivity(id=10, name="Ungraded Plugin", learning_platform_id=1),
+        ]
+        session.add_all(coursera_learning_activities)
 
         session.commit()
         print("Database populated with initial data.")
