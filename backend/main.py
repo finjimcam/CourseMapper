@@ -31,12 +31,6 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
 app = FastAPI(lifespan=lifespan)
 
 
-# TODO: delete this
-@app.get("/")
-def read_root() -> dict[str, str]:
-    return {"Hello": "World"}
-
-
 # Fetch all Users
 @app.get("/users/")
 def read_users(session: Session = Depends(get_session)) -> List[User]:
@@ -92,28 +86,32 @@ def read_learning_types(session: Session = Depends(get_session)) -> List[Learnin
     return learning_types
 
 
-# Fetches all workbooks
-@app.get("/workbook/all/")
-def read_workbooks(session: Session = Depends(get_session)) -> List[Workbook]:
-    workbooks = list(session.exec(select(Workbook)).all())
-    return workbooks
+# Fetches all or a specified workbooks
+@app.get("/workbooks/")
+def read_workbooks(
+    workbook_id: int | None = None,
+    week_number: int | None = None,
+    session: Session = Depends(get_session),
+) -> List[Workbook]:
+    if not workbook_id:
+        return list(session.exec(select(Workbook)).all())
+    return list(session.exec(select(Workbook).where(Workbook.id == workbook_id)))
 
 
-# Fetches a specified workbook
-@app.get("/workbook/{workbook_id}/")
-def read_specified_workbook(
-    workbook_id: int, session: Session = Depends(get_session)
-) -> Workbook:
-    workbook = list(session.exec(select(Workbook).where(Workbook.id == workbook_id)))[0]
-    return workbook
-
-
-# Fetches activities for a specified workbook weekst[
-@app.get("/activity/{workbook_id}/{week_number}/")
+# Fetches all activities for a specified workbook week or specified activity
+@app.get("/activities/")
 def read_workbook_week(
-    workbook_id: int, week_number: int, session: Session = Depends(get_session)
+    workbook_id: int | None = None,
+    week_number: int | None = None,
+    session: Session = Depends(get_session),
 ) -> List[Activity]:
-    activities = list(
+    if not workbook_id:
+        return list(session.exec(select(Activity)).all())
+    if not week_number:
+        return list(
+            session.exec(select(Activity).where(Activity.workbook_id == workbook_id))
+        )
+    return list(
         session.exec(
             select(Activity).where(
                 Activity.workbook_id == workbook_id
@@ -121,4 +119,3 @@ def read_workbook_week(
             )
         )
     )
-    return activities
