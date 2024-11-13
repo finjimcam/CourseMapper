@@ -42,8 +42,8 @@ def _populate_initial_data() -> None:
             return
 
         # Insert permission group
-        group_admin = PermissionsGroup(id=1, name="Admin")
-        group_user = PermissionsGroup(id=2, name="User")
+        group_admin = PermissionsGroup(name="Admin")
+        group_user = PermissionsGroup(name="User")
 
         # Insert user
         user_admin = User(name="Admin User", permissions_group_id=1)
