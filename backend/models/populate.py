@@ -23,6 +23,36 @@ sqlite_url = f"sqlite:///{sqlite_file_name}"
 connect_args = {"check_same_thread": False}
 engine = create_engine(sqlite_url, connect_args=connect_args)
 
+# Atomic (no foreign key) database tables keyed by name for use in population
+_PERMISSIONS_GROUPS = {
+    "Admin": PermissionsGroup(id=1, name="Admin"),
+    "User": PermissionsGroup(id=2, name="User"),
+}
+_USERS = {
+    "Richard Johnston": User(id=1, name="Richard Johnston", permissions_group_id=1),
+    "Tim Storer": User(id=2, name="Tim Storer", permissions_group_id=2),
+}
+_TASK_STATUSES = {
+    "Unassigned": TaskStatus(id=1, name="Unassigned"),
+    "In Progress": TaskStatus(id=2, name="In Progress"),
+    "Completed": TaskStatus(id=3, name="Completed"),
+}
+_LEARNING_TYPES = {
+    "Acquisition": LearningType(id=1, name="Acquisition"),
+    "Collaboration": LearningType(id=2, name="Collaboration"),
+    "Discussion": LearningType(id=3, name="Discussion"),
+    "Investigation": LearningType(id=4, name="Investigation"),
+    "Practice": LearningType(id=5, name="Practice"),
+    "Production": LearningType(id=6, name="Production"),
+    "Assessment": LearningType(id=7, name="Assessment"),
+}
+_LEARNING_PLATFORMS = {
+    "Coursera": LearningPlatform(id=1, name="Coursera"),
+    "FutureLearn": LearningPlatform(id=2, name="FutureLearn"),
+    "Moodle": LearningPlatform(id=3, name="Moodle"),
+    "xSiTe": LearningPlatform(id=4, name="xSiTe"),
+}
+
 
 @contextmanager
 def _get_session() -> Iterator[Session]:
@@ -42,69 +72,11 @@ def _populate_initial_data() -> None:
             print("Initial data already populated.")
             return
 
-        permissions_groups = [
-            PermissionsGroup(id=1, name="Admin"),
-            PermissionsGroup(id=2, name="User"),
-        ]
-        session.add_all(permissions_groups)
-        users = [
-            User(id=1, name="Richard Johnston", permissions_group_id=1),
-            User(id=2, name="Tim Storer", permissions_group_id=2),
-        ]
-        session.add_all(users)
-        task_statuses = [
-            TaskStatus(id=1, name="Unassigned"),
-            TaskStatus(id=2, name="In Progress"),
-            TaskStatus(id=3, name="Completed"),
-        ]
-        session.add_all(task_statuses)
-        learning_types = [
-            LearningType(id=1, name="Acquisition"),
-            LearningType(id=2, name="Collaboration"),
-            LearningType(id=3, name="Discussion"),
-            LearningType(id=4, name="Investigation"),
-            LearningType(id=5, name="Practice"),
-            LearningType(id=6, name="Production"),
-            LearningType(id=7, name="Assessment"),
-        ]
-        session.add_all(learning_types)
-        learning_platforms = [
-            LearningPlatform(id=1, name="Coursera"),
-            LearningPlatform(id=2, name="FutureLearn"),
-            LearningPlatform(id=3, name="Moodle"),
-            LearningPlatform(id=4, name="xSiTe"),
-        ]
-        session.add_all(learning_platforms)
-        coursera_learning_activities = [
-            LearningActivity(id=1, name="Video", learning_platform_id=1),
-            LearningActivity(id=2, name="Reading", learning_platform_id=1),
-            LearningActivity(id=3, name="Assignment", learning_platform_id=1),
-            LearningActivity(id=4, name="Discussion Prompt", learning_platform_id=1),
-            LearningActivity(
-                id=5, name="Programming Assignment", learning_platform_id=1
-            ),
-            LearningActivity(id=6, name="Peer Review", learning_platform_id=1),
-            LearningActivity(id=7, name="App Item", learning_platform_id=1),
-            LearningActivity(id=8, name="Ungraded Lab", learning_platform_id=1),
-            LearningActivity(id=9, name="Quiz", learning_platform_id=1),
-            LearningActivity(id=10, name="Ungraded Plugin", learning_platform_id=1),
-        ]
-        session.add_all(coursera_learning_activities)
-        future_learn_learning_activities = [
-            LearningActivity(id=1, name="Article", learning_platform_id=2),
-            LearningActivity(id=2, name="Audio", learning_platform_id=2),
-            LearningActivity(id=3, name="Discussion", learning_platform_id=2),
-            LearningActivity(
-                id=4, name="Exercise / External Tools", learning_platform_id=2
-            ),
-            LearningActivity(
-                id=5, name="Peer Graded Assignment", learning_platform_id=2
-            ),
-            LearningActivity(id=6, name="Poll", learning_platform_id=2),
-            LearningActivity(id=7, name="Quiz", learning_platform_id=2),
-            LearningActivity(id=8, name="Video", learning_platform_id=2),
-        ]
-        session.add_all(future_learn_learning_activities)
+        session.add_all(_PERMISSIONS_GROUPS.items())
+        session.add_all(_USERS.items())
+        session.add_all(_TASK_STATUSES.items())
+        session.add_all(_LEARNING_TYPES.items())
+        session.add_all(_LEARNING_PLATFORMS.items())
 
         session.commit()
         print("Database populated with initial data.")
