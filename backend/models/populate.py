@@ -67,6 +67,12 @@ def _populate_initial_data() -> None:
             LearningType(id=7, name="Assessment"),
         ]
         session.add_all(learning_types)
+        learning_platforms = [
+            LearningPlatform(id=1, name="Coursera"),
+            LearningPlatform(id=2, name="FutureLearn"),
+            LearningPlatform(id=3, name="Moodle"),
+        ]
+        session.add_all(learning_platforms)
 
         session.commit()
         print("Database populated with initial data.")
