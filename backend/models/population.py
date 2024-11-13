@@ -46,32 +46,28 @@ def _populate_initial_data() -> None:
         group_user = PermissionsGroup(id=2, name="User")
 
         # Insert user
-        user_admin = User(id=1, name="Admin User", permissions_group_id=1)
-        user_regular = User(id=2, name="Regular User", permissions_group_id=2)
+        user_admin = User(name="Admin User", permissions_group_id=1)
+        user_regular = User(name="Regular User", permissions_group_id=2)
 
         # Insert course
-        course_math = Course(id=1, course_code="MATH101", name="Mathematics 101")
-        course_physics = Course(id=2, course_code="PHYS101", name="Physics 101")
+        course_math = Course(course_code="MATH101", name="Mathematics 101")
+        course_physics = Course(course_code="PHYS101", name="Physics 101")
 
         # Plug-in learning platform
-        platform_online = LearningPlatform(id=1, name="Online Platform")
-        platform_inperson = LearningPlatform(id=2, name="In-person Platform")
+        platform_online = LearningPlatform(name="Online Platform")
+        platform_inperson = LearningPlatform(name="In-person Platform")
 
         # Intercalated learning activity
-        activity_lecture = LearningActivity(
-            id=1, name="Lecture", learning_platform_id=1
-        )
-        activity_lab = LearningActivity(
-            id=2, name="Lab Session", learning_platform_id=2
-        )
+        activity_lecture = LearningActivity(name="Lecture", learning_platform_id=1)
+        activity_lab = LearningActivity(name="Lab Session", learning_platform_id=2)
 
         # Insert task status
-        status_pending = TaskStatus(id=1, name="Pending")
-        status_completed = TaskStatus(id=2, name="Completed")
+        status_pending = TaskStatus(name="Pending")
+        status_completed = TaskStatus(name="Completed")
 
         # Insertion learning type
-        type_homework = LearningType(id=1, name="Homework")
-        type_exam = LearningType(id=2, name="Exam")
+        type_homework = LearningType(name="Homework")
+        type_exam = LearningType(name="Exam")
 
         # Add all initial data to the session
         session.add_all(
