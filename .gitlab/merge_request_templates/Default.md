@@ -27,7 +27,7 @@ If no references exist, delete this heading.
 - [ ] There are no remaining bugs, logical problems, uncovered edge cases, or known vulnerabilities. 
 - [ ] For the code that this change impacts, you believe that the automated tests validate functionality that is highly important to the user. If the existing automated tests do not cover the above functionality, you have added the necessary additional tests or added an issue to describe the automation testing gap and linked it to this MR. 
 - [ ] This MR has been validated, and the method for validation and evidence are included in this MR.
-- [ ] The This MR does not harm performance, or you have asked a reviewer to help assess the performance impact.
+- [ ] This MR does not harm performance, or you have asked a reviewer to help assess the performance impact.
 
 ### Screenshots or screen recordings
 
