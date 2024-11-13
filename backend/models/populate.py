@@ -45,17 +45,19 @@ def _populate_initial_data() -> None:
             PermissionsGroup(id=1, name="Admin"),
             PermissionsGroup(id=2, name="User"),
         ]
+        session.add_all(permissions_groups)
         users = [
             User(id=1, name="Richard Johnston", permissions_group_id=1),
             User(id=2, name="Tim Storer", permissions_group_id=2),
         ]
+        session.add_all(users)
         task_statuses = [
             TaskStatus(id=1, name="Unassigned"),
             TaskStatus(id=2, name="In Progress"),
             TaskStatus(id=3, name="Completed"),
         ]
+        session.add_all(task_statuses)
 
-        session.add_all([])  # DO NOT SUBMIT without adding teh new data
         session.commit()
         print("Database populated with initial data.")
 
