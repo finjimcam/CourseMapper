@@ -90,7 +90,6 @@ def read_learning_types(session: Session = Depends(get_session)) -> List[Learnin
 @app.get("/workbooks/")
 def read_workbooks(
     workbook_id: int | None = None,
-    week_number: int | None = None,
     session: Session = Depends(get_session),
 ) -> List[Workbook]:
     if not workbook_id:
