@@ -42,7 +42,7 @@ def _populate_initial_data() -> None:
             print("Initial data already populated.")
             return
 
-        session.add_all()  # DO NOT SUBMIT without adding teh new data
+        session.add_all([])  # DO NOT SUBMIT without adding teh new data
         session.commit()
         print("Database populated with initial data.")
 
