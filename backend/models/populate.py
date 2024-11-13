@@ -37,64 +37,12 @@ def _create_db_and_tables() -> None:
 def _populate_initial_data() -> None:
     """Populate the database with initial data."""
     with _get_session() as session:
-        # Check if initial data already exists
+
         if session.exec(select(User)).first() is not None:
             print("Initial data already populated.")
             return
 
-        # Insert permission groups
-        group_admin = PermissionsGroup(id=uuid.uuid4(), name="Admin")
-        group_user = PermissionsGroup(id=uuid.uuid4(), name="User")
-
-        # Insert users
-        user_admin = User(name="Admin User", permissions_group=group_admin)
-        user_regular = User(name="Regular User", permissions_group=group_user)
-
-        # Insert courses
-        course_math = Course(course_code="MATH101", name="Mathematics 101")
-        course_physics = Course(course_code="PHYS101", name="Physics 101")
-
-        # Insert learning platforms
-        platform_online = LearningPlatform(name="Online Platform")
-        platform_inperson = LearningPlatform(name="In-person Platform")
-
-        # Insert learning activities
-        activity_lecture = LearningActivity(
-            name="Lecture", learning_platform=platform_online
-        )
-        activity_lab = LearningActivity(
-            name="Lab Session", learning_platform=platform_inperson
-        )
-
-        # Insert task statuses
-        status_pending = TaskStatus(name="Pending")
-        status_completed = TaskStatus(name="Completed")
-
-        # Insert learning types
-        type_homework = LearningType(name="Homework")
-        type_exam = LearningType(name="Exam")
-
-        # Add all initial data to the session
-        session.add_all(
-            [
-                group_admin,
-                group_user,
-                user_admin,
-                user_regular,
-                course_math,
-                course_physics,
-                platform_online,
-                platform_inperson,
-                activity_lecture,
-                activity_lab,
-                status_pending,
-                status_completed,
-                type_homework,
-                type_exam,
-            ]
-        )
-
-        # Commit changes to the database
+        session.add_all()  # DO NOT SUBMIT without adding teh new data
         session.commit()
         print("Database populated with initial data.")
 
