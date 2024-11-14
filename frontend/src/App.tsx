@@ -1,19 +1,35 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import {
+  createBrowserRouter, 
+  Route, 
+  createRoutesFromElements,
+  RouterProvider} from 'react-router-dom'
+
+// Do we need the import below?
 import { Flowbite } from 'flowbite-react'
+
+// Layout
 import Layout from './Layout'
+
+// Pages
+import Home from './pages/Home'
+import About from './pages/About'
+
+// Do we need the import below?
 import './App.css'
+
+const router = createBrowserRouter(
+  createRoutesFromElements(
+    <Route path="/" element={<Layout />}>
+      <Route path="home" element={<Home />} />
+      <Route path="about" element={<About />} />
+    </Route>
+  )
+)
 
 function App() {
   return (
-    <Flowbite>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Layout />}>
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </Flowbite>
-  )
+    <RouterProvider router = {router}/>
+  );
 }
 
 export default App

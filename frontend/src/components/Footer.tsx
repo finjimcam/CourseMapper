@@ -46,7 +46,7 @@ export default function FooterComponent() {
             </a>
           </div>
           <Footer.LinkGroup>
-            <Footer.Link href="#" style={{ fontSize: "x-large", color: "white" }}>About</Footer.Link>
+            <Footer.Link href="about" style={{ fontSize: "x-large", color: "white" }}>About</Footer.Link>
             <Footer.Link href="https://www.gla.ac.uk/legal/privacy/" style={{ fontSize: "x-large", color: "white" }}>Privacy</Footer.Link>
             <Footer.Link href="#" style={{ fontSize: "x-large", color: "white" }}>Licensing</Footer.Link>
             <Footer.Link href="https://www.gla.ac.uk/connect/contact/" style={{ fontSize: "x-large", color: "white" }}>Contact</Footer.Link>
