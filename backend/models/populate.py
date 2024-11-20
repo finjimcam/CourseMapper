@@ -4,6 +4,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
 import uuid
+from typing import Iterator
 from sqlmodel import Session, SQLModel, select, create_engine
 from contextlib import contextmanager
 from backend.models.models import (
@@ -24,7 +25,7 @@ engine = create_engine(sqlite_url, connect_args=connect_args)
 
 
 @contextmanager
-def _get_session() -> Session:
+def _get_session() -> Iterator[Session]:
     with Session(engine) as session:
         yield session
 
