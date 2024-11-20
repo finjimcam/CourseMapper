@@ -1,29 +1,26 @@
-import  { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-interface WorkbookInfo {
-  id: number; 
-  courseName: string;
-  startDate: string;
-  endDate: string;
-  courseLead: string;
+interface CarouselItem {
+  id: number;
+  content: JSX.Element;
 }
 
-function Carousel({ items }: { items: Array<{ id: number, courseName: string, startDate: string, endDate: string, courseLead: string }> }) {
+function Carousel({ items }: { items: Array<CarouselItem> }) {
   const [currentPosition, setCurrentPosition] = useState(0);
   const carouselSize = 3;
-  const [visibleItems, setVisibleItems] = useState<Array<WorkbookInfo>>([])
+  const [visibleItems, setVisibleItems] = useState<Array<CarouselItem>>([]);
   
   useEffect(() => {
     if (items.length < carouselSize) {
-      setVisibleItems(items)
+      setVisibleItems(items);
     } else {
-      let settingItems: { id: number, courseName: string, startDate: string, endDate: string, courseLead: string }[] = []
-      for (let i=currentPosition; i<currentPosition+carouselSize; i++) {
-        settingItems.push(items[i % items.length])
+      let settingItems: CarouselItem[] = [];
+      for (let i = currentPosition; i < currentPosition + carouselSize; i++) {
+        settingItems.push(items[i % items.length]);
       }
-      setVisibleItems(settingItems)
+      setVisibleItems(settingItems);
     }
-  }, [currentPosition])
+  }, [currentPosition, items]);
 
   const nextSlide = () => {
     setCurrentPosition((prevPosition) => (prevPosition + 1) % items.length);
@@ -41,16 +38,7 @@ function Carousel({ items }: { items: Array<{ id: number, courseName: string, st
             key={item.id}
             className="carousel-item flex-none w-1/3 p-4 bg-gray-100 rounded-lg shadow-lg"
           >
-            <img
-                src="https://via.placeholder.com/150"
-                alt="Item 3"
-                className="rounded-lg shadow-md"
-            />
-            <h3>{item.courseName}</h3>
-            {item.startDate} - {item.endDate}
-            <h4>{item.courseLead}</h4>
-
-
+            {item.content}
           </div>
         ))}
       </div>
