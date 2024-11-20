@@ -2,9 +2,9 @@ function Navbar() {
     return (
         <nav className="bg-white border-gray-200">
             <div className="flex flex-wrap items-center justify-between mx-auto p-4">
-                <a href="https://flowbite.com/" className="flex items-center space-x-3 rtl:space-x-reverse">
-                    <img src="https://flowbite.com/docs/images/logo.svg" className="h-8" alt="Flowbite Logo" />
-                    <span className="self-center text-2xl font-semibold whitespace-nowrap">Flowbite</span>
+                <a href="home" className="flex items-center space-x-3 rtl:space-x-reverse">
+                    <img src="/src/assets/LISU.png" className="h-8" alt="LISU Logo" />
+                    
                 </a>
                 <div className="flex items-center md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
                     <button
@@ -106,7 +106,7 @@ function Navbar() {
                         </li>
                         <li>
                             <a
-                                href="#"
+                                href="MyWorkbooks"
                                 className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0"
                             >
                                 My Workbooks
