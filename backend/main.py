@@ -2,6 +2,7 @@ from typing import Union, Annotated, AsyncGenerator, List
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends
 from sqlmodel import Session, select
+import uuid
 
 from backend.models.database import (
     create_db_and_tables,
@@ -84,9 +85,13 @@ def read_learning_types(session: Session = Depends(get_session)) -> List[Learnin
 
 
 @app.get("/workbooks/")
-def read_workbooks(session: Session = Depends(get_session)) -> List[Workbook]:
-    workbooks = list(session.exec(select(Workbook)).all())
-    return workbooks
+def read_workbooks(
+    workbook_id: uuid.UUID | None = None,
+    session: Session = Depends(get_session),
+) -> List[Workbook]:
+    if not workbook_id:
+        return list(session.exec(select(Workbook)).all())
+    return list(session.exec(select(Workbook).where(Workbook.id == workbook_id)))
 
 
 @app.get("/weeks/")
@@ -96,6 +101,22 @@ def read_weeks(session: Session = Depends(get_session)) -> List[Week]:
 
 
 @app.get("/activities/")
-def read_activities(session: Session = Depends(get_session)) -> List[Activity]:
-    activities = list(session.exec(select(Activity)).all())
-    return activities
+def read_activities(
+    workbook_id: uuid.UUID | None = None,
+    week_number: int | None = None,
+    session: Session = Depends(get_session),
+) -> List[Activity]:
+    if not workbook_id:
+        return list(session.exec(select(Activity)).all())
+    if not week_number:
+        return list(
+            session.exec(select(Activity).where(Activity.workbook_id == workbook_id))
+        )
+    return list(
+        session.exec(
+            select(Activity).where(
+                Activity.workbook_id == workbook_id
+                and Activity.week_number == week_number
+            )
+        )
+    )
