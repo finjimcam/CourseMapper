@@ -34,7 +34,7 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
 app = FastAPI(lifespan=lifespan)
 
 
-# Endpoints to fetch individual tables for testing purposes
+# Endpoint to fetch all Users
 @app.get("/users/")
 def read_users(session: Session = Depends(get_session)) -> List[User]:
     users = list(session.exec(select(User)).all())
@@ -81,6 +81,24 @@ def read_task_statuses(session: Session = Depends(get_session)) -> List[TaskStat
 def read_learning_types(session: Session = Depends(get_session)) -> List[LearningType]:
     learning_types = list(session.exec(select(LearningType)).all())
     return learning_types
+
+
+@app.get("/workbooks/")
+def read_workbooks(session: Session = Depends(get_session)) -> List[Workbook]:
+    workbooks = list(session.exec(select(Workbook)).all())
+    return workbooks
+
+
+@app.get("/weeks/")
+def read_weeks(session: Session = Depends(get_session)) -> List[Week]:
+    weeks = list(session.exec(select(Week)).all())
+    return weeks
+
+
+@app.get("/activities/")
+def read_activities(session: Session = Depends(get_session)) -> List[Activity]:
+    activities = list(session.exec(select(Activity)).all())
+    return activities
 
 
 @app.get("/workbooks/")
