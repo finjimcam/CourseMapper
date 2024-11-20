@@ -20,6 +20,7 @@ import './App.css'
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<Layout />}>
+      <Route index element={<Home />} />
       <Route path="home" element={<Home />} />
       <Route path="about" element={<About />} />
     </Route>
