@@ -1,9 +1,6 @@
 import sys
 import os
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
-
-from typing import Iterator
+import uuid
 from sqlmodel import Session, SQLModel, select, create_engine
 from contextlib import contextmanager
 from backend.models.models import (
@@ -24,7 +21,7 @@ engine = create_engine(sqlite_url, connect_args=connect_args)
 
 
 @contextmanager
-def _get_session() -> Iterator[Session]:
+def _get_session() -> Session:
     with Session(engine) as session:
         yield session
 
@@ -41,37 +38,45 @@ def _populate_initial_data() -> None:
             print("Initial data already populated.")
             return
 
-        # Insert permission group
-        group_admin = PermissionsGroup(name="Admin")
-        group_user = PermissionsGroup(name="User")
+        # Insert permission groups
+        group_admin = PermissionsGroup(id=uuid.uuid4(), name="Admin")
+        group_user = PermissionsGroup(id=uuid.uuid4(), name="User")
 
-        # Insert user
-        user_admin = User(name="Admin User", permissions_group=group_admin)
-        user_regular = User(name="Regular User", permissions_group=group_user)
+        # Insert users
+        user_admin = User(
+            id=uuid.uuid4(), name="Admin User", permissions_group=group_admin
+        )
+        user_regular = User(
+            id=uuid.uuid4(), name="Regular User", permissions_group=group_user
+        )
 
-        # Insert course
-        course_math = Course(course_code="MATH101", name="Mathematics 101")
-        course_physics = Course(course_code="PHYS101", name="Physics 101")
+        # Insert courses
+        course_math = Course(
+            id=uuid.uuid4(), course_code="MATH101", name="Mathematics 101"
+        )
+        course_physics = Course(
+            id=uuid.uuid4(), course_code="PHYS101", name="Physics 101"
+        )
 
-        # Plug-in learning platform
-        platform_online = LearningPlatform(name="Online Platform")
-        platform_inperson = LearningPlatform(name="In-person Platform")
+        # Insert learning platforms
+        platform_online = LearningPlatform(id=uuid.uuid4(), name="Online Platform")
+        platform_inperson = LearningPlatform(id=uuid.uuid4(), name="In-person Platform")
 
-        # Intercalated learning activity
+        # Insert learning activities
         activity_lecture = LearningActivity(
-            name="Lecture", learning_platform=platform_online
+            id=uuid.uuid4(), name="Lecture", learning_platform=platform_online
         )
         activity_lab = LearningActivity(
-            name="Lab Session", learning_platform=platform_inperson
+            id=uuid.uuid4(), name="Lab Session", learning_platform=platform_inperson
         )
 
-        # Insert task status
-        status_pending = TaskStatus(name="Pending")
-        status_completed = TaskStatus(name="Completed")
+        # Insert task statuses
+        status_pending = TaskStatus(id=uuid.uuid4(), name="Pending")
+        status_completed = TaskStatus(id=uuid.uuid4(), name="Completed")
 
-        # Insertion learning type
-        type_homework = LearningType(name="Homework")
-        type_exam = LearningType(name="Exam")
+        # Insert learning types
+        type_homework = LearningType(id=uuid.uuid4(), name="Homework")
+        type_exam = LearningType(id=uuid.uuid4(), name="Exam")
 
         # Add all initial data to the session
         session.add_all(
@@ -93,7 +98,7 @@ def _populate_initial_data() -> None:
             ]
         )
 
-        # Submit data to the database
+        # Commit changes to the database
         session.commit()
         print("Database populated with initial data.")
 
