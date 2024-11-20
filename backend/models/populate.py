@@ -47,40 +47,32 @@ def _populate_initial_data() -> None:
         group_user = PermissionsGroup(id=uuid.uuid4(), name="User")
 
         # Insert users
-        user_admin = User(
-            id=uuid.uuid4(), name="Admin User", permissions_group=group_admin
-        )
-        user_regular = User(
-            id=uuid.uuid4(), name="Regular User", permissions_group=group_user
-        )
+        user_admin = User(name="Admin User", permissions_group=group_admin)
+        user_regular = User(name="Regular User", permissions_group=group_user)
 
         # Insert courses
-        course_math = Course(
-            id=uuid.uuid4(), course_code="MATH101", name="Mathematics 101"
-        )
-        course_physics = Course(
-            id=uuid.uuid4(), course_code="PHYS101", name="Physics 101"
-        )
+        course_math = Course(course_code="MATH101", name="Mathematics 101")
+        course_physics = Course(course_code="PHYS101", name="Physics 101")
 
         # Insert learning platforms
-        platform_online = LearningPlatform(id=uuid.uuid4(), name="Online Platform")
-        platform_inperson = LearningPlatform(id=uuid.uuid4(), name="In-person Platform")
+        platform_online = LearningPlatform(name="Online Platform")
+        platform_inperson = LearningPlatform(name="In-person Platform")
 
         # Insert learning activities
         activity_lecture = LearningActivity(
-            id=uuid.uuid4(), name="Lecture", learning_platform=platform_online
+            name="Lecture", learning_platform=platform_online
         )
         activity_lab = LearningActivity(
-            id=uuid.uuid4(), name="Lab Session", learning_platform=platform_inperson
+            name="Lab Session", learning_platform=platform_inperson
         )
 
         # Insert task statuses
-        status_pending = TaskStatus(id=uuid.uuid4(), name="Pending")
-        status_completed = TaskStatus(id=uuid.uuid4(), name="Completed")
+        status_pending = TaskStatus(name="Pending")
+        status_completed = TaskStatus(name="Completed")
 
         # Insert learning types
-        type_homework = LearningType(id=uuid.uuid4(), name="Homework")
-        type_exam = LearningType(id=uuid.uuid4(), name="Exam")
+        type_homework = LearningType(name="Homework")
+        type_exam = LearningType(name="Exam")
 
         # Add all initial data to the session
         session.add_all(

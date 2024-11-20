@@ -3,29 +3,24 @@ from sqlmodel import Field, Relationship, SQLModel
 from sqlalchemy import ForeignKeyConstraint
 from typing import Optional
 import uuid
-from uuid import UUID
-
-
-def generate_uuid() -> str:
-    return str(uuid.uuid4())
 
 
 # link models
 class WorkbookContributors(SQLModel, table=True):
-    contributor_id: Optional[UUID] = Field(
-        default_factory=generate_uuid, foreign_key="user.id", primary_key=True
+    contributor_id: uuid.UUID = Field(
+        default_factory=uuid.uuid4, foreign_key="user.id", primary_key=True
     )
-    workbook_id: Optional[UUID] = Field(
-        default_factory=generate_uuid, foreign_key="workbook.id", primary_key=True
+    workbook_id: uuid.UUID = Field(
+        default_factory=uuid.uuid4, foreign_key="workbook.id", primary_key=True
     )
 
 
 class ActivityStaff(SQLModel, table=True):
-    staff_id: Optional[UUID] = Field(
-        default_factory=generate_uuid, foreign_key="user.id", primary_key=True
+    staff_id: uuid.UUID = Field(
+        default_factory=uuid.uuid4, foreign_key="user.id", primary_key=True
     )
-    activity_workbook_id: Optional[UUID] = Field(
-        default_factory=generate_uuid, foreign_key="workbook.id", primary_key=True
+    activity_workbook_id: uuid.UUID = Field(
+        default_factory=uuid.uuid4, foreign_key="workbook.id", primary_key=True
     )
     activity_week_number: Optional[int] = Field(primary_key=True)
 
@@ -49,9 +44,9 @@ format:
 
 
 class User(SQLModel, table=True):
-    id: Optional[UUID] = Field(default_factory=generate_uuid, primary_key=True)
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(index=True)
-    permissions_group_id: Optional[UUID] = Field(foreign_key="permissionsgroup.id")
+    permissions_group_id: uuid.UUID = Field(foreign_key="permissionsgroup.id")
 
     permissions_group: Optional["PermissionsGroup"] = Relationship(
         back_populates="users"
@@ -68,19 +63,19 @@ class User(SQLModel, table=True):
 
 
 class PermissionsGroup(SQLModel, table=True):
-    id: Optional[UUID] = Field(default_factory=generate_uuid, primary_key=True)
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(index=True)
 
     users: list["User"] = Relationship(back_populates="permissions_group")
 
 
 class Workbook(SQLModel, table=True):
-    id: Optional[UUID] = Field(default_factory=generate_uuid, primary_key=True)
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     start_date: datetime.date = Field(nullable=False)
     end_date: datetime.date = Field(nullable=False)
-    course_lead_id: Optional[UUID] = Field(foreign_key="user.id")
-    course_id: Optional[UUID] = Field(foreign_key="course.id")
-    learning_platform_id: Optional[UUID] = Field(foreign_key="learningplatform.id")
+    course_lead_id: uuid.UUID = Field(foreign_key="user.id")
+    course_id: uuid.UUID = Field(foreign_key="course.id")
+    learning_platform_id: uuid.UUID = Field(foreign_key="learningplatform.id")
 
     course_lead: Optional["User"] = Relationship(back_populates="workbooks_leading")
     course: Optional["Course"] = Relationship(back_populates="workbooks")
@@ -97,7 +92,7 @@ class Workbook(SQLModel, table=True):
 
 
 class Course(SQLModel, table=True):
-    id: Optional[UUID] = Field(default_factory=generate_uuid, primary_key=True)
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     course_code: str = Field(nullable=False)
     name: str = Field(nullable=False)
 
@@ -105,7 +100,7 @@ class Course(SQLModel, table=True):
 
 
 class LearningPlatform(SQLModel, table=True):
-    id: Optional[UUID] = Field(default_factory=generate_uuid, primary_key=True)
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(nullable=False)
 
     workbooks: list["Workbook"] = Relationship(back_populates="learning_platform")
@@ -115,9 +110,9 @@ class LearningPlatform(SQLModel, table=True):
 
 
 class LearningActivity(SQLModel, table=True):
-    id: Optional[UUID] = Field(default_factory=generate_uuid, primary_key=True)
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(nullable=False)
-    learning_platform_id: Optional[UUID] = Field(foreign_key="learningplatform.id")
+    learning_platform_id: uuid.UUID = Field(foreign_key="learningplatform.id")
 
     learning_platform: Optional["LearningPlatform"] = Relationship(
         back_populates="learning_activities"
@@ -127,7 +122,7 @@ class LearningActivity(SQLModel, table=True):
 
 
 class Week(SQLModel, table=True):
-    workbook_id: Optional[UUID] = Field(foreign_key="workbook.id", primary_key=True)
+    workbook_id: uuid.UUID = Field(foreign_key="workbook.id", primary_key=True)
     number: Optional[int] = Field(primary_key=True)
     start_date: datetime.date = Field(nullable=False)
     end_date: datetime.date = Field(nullable=False)
@@ -138,20 +133,20 @@ class Week(SQLModel, table=True):
 
 
 class Activity(SQLModel, table=True):
-    workbook_id: Optional[UUID] = Field(foreign_key="workbook.id", primary_key=True)
+    workbook_id: uuid.UUID = Field(foreign_key="workbook.id", primary_key=True)
     week_number: Optional[int] = Field(foreign_key="week.number", primary_key=True)
     name: str = Field(nullable=False)
     time_estimate_minutes: Optional[int] = Field(nullable=False)
     location: str = Field(nullable=False)
-    learning_activity_id: Optional[UUID] = Field(
+    learning_activity_id: uuid.UUID = Field(
         nullable=False,
         foreign_key="learningactivity.id",
     )
-    learning_type_id: Optional[UUID] = Field(
+    learning_type_id: uuid.UUID = Field(
         nullable=False,
         foreign_key="learningtype.id",
     )
-    task_status_id: Optional[UUID] = Field(nullable=False, foreign_key="taskstatus.id")
+    task_status_id: uuid.UUID = Field(nullable=False, foreign_key="taskstatus.id")
 
     workbook: Optional["Workbook"] = Relationship(back_populates="activities")
     week: Optional["Week"] = Relationship(back_populates="activities")
@@ -167,14 +162,14 @@ class Activity(SQLModel, table=True):
 
 
 class LearningType(SQLModel, table=True):
-    id: Optional[UUID] = Field(default_factory=generate_uuid, primary_key=True)
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(nullable=False)
 
     activities: list["Activity"] = Relationship(back_populates="learning_type")
 
 
 class TaskStatus(SQLModel, table=True):
-    id: Optional[UUID] = Field(default_factory=generate_uuid, primary_key=True)
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(nullable=False)
 
     activities: list["Activity"] = Relationship(back_populates="task_status")
