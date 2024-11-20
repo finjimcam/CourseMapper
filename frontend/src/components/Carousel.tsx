@@ -10,7 +10,7 @@ interface WorkbookInfo {
 
 function Carousel({ items }: { items: Array<{ id: number, courseName: string, startDate: string, endDate: string, courseLead: string }> }) {
   const [currentPosition, setCurrentPosition] = useState(0);
-  const carouselSize = 4;
+  const carouselSize = 3;
   const [visibleItems, setVisibleItems] = useState<Array<WorkbookInfo>>([])
   
   useEffect(() => {
@@ -47,9 +47,8 @@ function Carousel({ items }: { items: Array<{ id: number, courseName: string, st
                 className="rounded-lg shadow-md"
             />
             <h3>{item.courseName}</h3>
-            {item.startDate}
-            {item.endDate}
-            {item.courseLead}
+            {item.startDate} - {item.endDate}
+            <h4>{item.courseLead}</h4>
 
 
           </div>
