@@ -25,32 +25,36 @@ engine = create_engine(sqlite_url, connect_args=connect_args)
 
 # Atomic (no foreign key) database tables keyed by name for use in population
 _PERMISSIONS_GROUPS = {
-    "Admin": PermissionsGroup(id=1, name="Admin"),
-    "User": PermissionsGroup(id=2, name="User"),
+    "Admin": PermissionsGroup(name="Admin"),
+    "User": PermissionsGroup(name="User"),
 }
 _USERS = {
-    "Richard Johnston": User(id=1, name="Richard Johnston", permissions_group_id=1),
-    "Tim Storer": User(id=2, name="Tim Storer", permissions_group_id=2),
+    "Richard Johnston": User(
+        name="Richard Johnston", permissions_group=_PERMISSIONS_GROUPS["Admin"]
+    ),
+    "Tim Storer": User(
+        name="Tim Storer", permissions_group=_PERMISSIONS_GROUPS["User"]
+    ),
 }
 _TASK_STATUSES = {
-    "Unassigned": TaskStatus(id=1, name="Unassigned"),
-    "In Progress": TaskStatus(id=2, name="In Progress"),
-    "Completed": TaskStatus(id=3, name="Completed"),
+    "Unassigned": TaskStatus(name="Unassigned"),
+    "In Progress": TaskStatus(name="In Progress"),
+    "Completed": TaskStatus(name="Completed"),
 }
 _LEARNING_TYPES = {
-    "Acquisition": LearningType(id=1, name="Acquisition"),
-    "Collaboration": LearningType(id=2, name="Collaboration"),
-    "Discussion": LearningType(id=3, name="Discussion"),
-    "Investigation": LearningType(id=4, name="Investigation"),
-    "Practice": LearningType(id=5, name="Practice"),
-    "Production": LearningType(id=6, name="Production"),
-    "Assessment": LearningType(id=7, name="Assessment"),
+    "Acquisition": LearningType(name="Acquisition"),
+    "Collaboration": LearningType(name="Collaboration"),
+    "Discussion": LearningType(name="Discussion"),
+    "Investigation": LearningType(name="Investigation"),
+    "Practice": LearningType(name="Practice"),
+    "Production": LearningType(name="Production"),
+    "Assessment": LearningType(name="Assessment"),
 }
 _LEARNING_PLATFORMS = {
-    "Coursera": LearningPlatform(id=1, name="Coursera"),
-    "FutureLearn": LearningPlatform(id=2, name="FutureLearn"),
-    "Moodle": LearningPlatform(id=3, name="Moodle"),
-    "xSiTe": LearningPlatform(id=4, name="xSiTe"),
+    "Coursera": LearningPlatform(name="Coursera"),
+    "FutureLearn": LearningPlatform(name="FutureLearn"),
+    "Moodle": LearningPlatform(name="Moodle"),
+    "xSiTe": LearningPlatform(name="xSiTe"),
 }
 
 
