@@ -1,5 +1,8 @@
 import sys
 import os
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
+
 import uuid
 from sqlmodel import Session, SQLModel, select, create_engine
 from contextlib import contextmanager
