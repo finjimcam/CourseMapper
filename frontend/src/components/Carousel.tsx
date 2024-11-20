@@ -1,24 +1,37 @@
-import  { useState } from 'react';
+import  { useEffect, useState } from 'react';
 
-function Carousel({ items }: { items: Array<{ id: number; content: string }> }) {
+interface WorkbookInfo {
+  id: number; 
+  courseName: string;
+  startDate: string;
+  endDate: string;
+  courseLead: string;
+}
+
+function Carousel({ items }: { items: Array<{ id: number, courseName: string, startDate: string, endDate: string, courseLead: string }> }) {
   const [currentPosition, setCurrentPosition] = useState(0);
+  const carouselSize = 4;
+  const [visibleItems, setVisibleItems] = useState<Array<WorkbookInfo>>([])
+  
+  useEffect(() => {
+    if (items.length < carouselSize) {
+      setVisibleItems(items)
+    } else {
+      let settingItems: { id: number, courseName: string, startDate: string, endDate: string, courseLead: string }[] = []
+      for (let i=currentPosition; i<currentPosition+carouselSize; i++) {
+        settingItems.push(items[i % items.length])
+      }
+      setVisibleItems(settingItems)
+    }
+  }, [currentPosition])
 
   const nextSlide = () => {
-    setCurrentPosition((prevPosition) => (prevPosition + 3) % items.length);
+    setCurrentPosition((prevPosition) => (prevPosition + 1) % items.length);
   };
 
   const prevSlide = () => {
-    setCurrentPosition((prevPosition) =>
-      (prevPosition - 3 + items.length) % items.length
-    );
+    setCurrentPosition((prevPosition) => (prevPosition - 1 + items.length) % items.length);
   };
-
-  // Get the 3 items to display based on the current position
-  const visibleItems = [
-    items[currentPosition],
-    items[(currentPosition + 1) % items.length],
-    items[(currentPosition + 2) % items.length],
-  ];
 
   return (
     <div className="carousel-container max-w-3xl mx-auto overflow-hidden">
@@ -28,10 +41,21 @@ function Carousel({ items }: { items: Array<{ id: number; content: string }> }) 
             key={item.id}
             className="carousel-item flex-none w-1/3 p-4 bg-gray-100 rounded-lg shadow-lg"
           >
-            {item.content}
+            <img
+                src="https://via.placeholder.com/150"
+                alt="Item 3"
+                className="rounded-lg shadow-md"
+            />
+            <h3>{item.courseName}</h3>
+            {item.startDate}
+            {item.endDate}
+            {item.courseLead}
+
+
           </div>
         ))}
       </div>
+
       <div className="carousel-controls flex justify-between mt-4">
         <button
           onClick={prevSlide}
