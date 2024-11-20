@@ -16,12 +16,14 @@ import About from './pages/About'
 
 // Do we need the import below?
 import './App.css'
+import MyWorkbooks from './pages/MyWorkbooks'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<Layout />}>
       <Route index element={<Home />} />
       <Route path="home" element={<Home />} />
+      <Route path="MyWorkbooks" element={<MyWorkbooks />} />
       <Route path="about" element={<About />} />
     </Route>
   )
