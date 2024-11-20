@@ -7,29 +7,13 @@ import uuid
 
 # link models
 class WorkbookContributors(SQLModel, table=True):
-    contributor_id: uuid.UUID = Field(
-        default_factory=uuid.uuid4, foreign_key="user.id", primary_key=True
-    )
-    workbook_id: uuid.UUID = Field(
-        default_factory=uuid.uuid4, foreign_key="workbook.id", primary_key=True
-    )
+    contributor_id: uuid.UUID = Field(foreign_key="user.id", primary_key=True)
+    workbook_id: uuid.UUID = Field(foreign_key="workbook.id", primary_key=True)
 
 
 class ActivityStaff(SQLModel, table=True):
-    staff_id: uuid.UUID = Field(
-        default_factory=uuid.uuid4, foreign_key="user.id", primary_key=True
-    )
-    activity_workbook_id: uuid.UUID = Field(
-        default_factory=uuid.uuid4, foreign_key="workbook.id", primary_key=True
-    )
-    activity_week_number: Optional[int] = Field(primary_key=True)
-
-    __table_args__ = (
-        ForeignKeyConstraint(
-            ["activity_workbook_id", "activity_week_number"],
-            ["activity.workbook_id", "activity.week_number"],
-        ),
-    )
+    staff_id: uuid.UUID = Field(foreign_key="user.id", primary_key=True)
+    activity_id: uuid.UUID = Field(foreign_key="activity.id", primary_key=True)
 
 
 """
@@ -133,8 +117,9 @@ class Week(SQLModel, table=True):
 
 
 class Activity(SQLModel, table=True):
-    workbook_id: uuid.UUID = Field(foreign_key="workbook.id", primary_key=True)
-    week_number: Optional[int] = Field(foreign_key="week.number", primary_key=True)
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    workbook_id: uuid.UUID = Field(foreign_key="workbook.id")
+    week_number: Optional[int] = Field(foreign_key="week.number")
     name: str = Field(nullable=False)
     time_estimate_minutes: Optional[int] = Field(nullable=False)
     location: str = Field(nullable=False)
