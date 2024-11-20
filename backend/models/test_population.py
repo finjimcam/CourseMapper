@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 from sqlmodel import create_engine, Session, select
-from backend.models.population import main, engine
+from backend.models.populate import main, engine
 from backend.models.models import (
     User,
     PermissionsGroup,
