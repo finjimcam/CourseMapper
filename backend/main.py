@@ -115,8 +115,8 @@ def read_activities(
     return list(
         session.exec(
             select(Activity).where(
-                Activity.workbook_id == workbook_id
-                and Activity.week_number == week_number
+                (Activity.workbook_id == workbook_id)
+                & (Activity.week_number == week_number)
             )
         )
     )
