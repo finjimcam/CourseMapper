@@ -11,6 +11,9 @@ from backend.models.models import (
     User,
     PermissionsGroup,
     Course,
+    Week,
+    Workbook,
+    Activity,
     LearningPlatform,
     LearningActivity,
     TaskStatus,
@@ -80,35 +83,19 @@ def read_learning_types(session: Session = Depends(get_session)) -> List[Learnin
     return learning_types
 
 
-# Fetches all or a specified workbooks
 @app.get("/workbooks/")
-def read_workbooks(
-    workbook_id: int | None = None,
-    session: Session = Depends(get_session),
-) -> List[Workbook]:
-    if not workbook_id:
-        return list(session.exec(select(Workbook)).all())
-    return list(session.exec(select(Workbook).where(Workbook.id == workbook_id)))
+def read_workbooks(session: Session = Depends(get_session)) -> List[Workbook]:
+    workbooks = list(session.exec(select(Workbook)).all())
+    return workbooks
 
 
-# Fetches all activities for a specified workbook week or specified activity
+@app.get("/weeks/")
+def read_weeks(session: Session = Depends(get_session)) -> List[Week]:
+    weeks = list(session.exec(select(Week)).all())
+    return weeks
+
+
 @app.get("/activities/")
-def read_workbook_week(
-    workbook_id: int | None = None,
-    week_number: int | None = None,
-    session: Session = Depends(get_session),
-) -> List[Activity]:
-    if not workbook_id:
-        return list(session.exec(select(Activity)).all())
-    if not week_number:
-        return list(
-            session.exec(select(Activity).where(Activity.workbook_id == workbook_id))
-        )
-    return list(
-        session.exec(
-            select(Activity).where(
-                Activity.workbook_id == workbook_id
-                and Activity.week_number == week_number
-            )
-        )
-    )
+def read_activities(session: Session = Depends(get_session)) -> List[Activity]:
+    activities = list(session.exec(select(Activity)).all())
+    return activities
