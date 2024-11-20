@@ -1,5 +1,5 @@
-import SearchBar from '/src/components/Searchbar.tsx';
-import Carousel from '/src/components/Carousel.tsx';
+import SearchBar from '../components/Searchbar.tsx';
+import Carousel from '../components/Carousel.tsx';
 
 function Home() {
     const items = [
