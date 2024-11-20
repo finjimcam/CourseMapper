@@ -46,8 +46,8 @@ def _populate_initial_data() -> None:
         group_user = PermissionsGroup(name="User")
 
         # Insert user
-        user_admin = User(name="Admin User", permissions_group_id=1)
-        user_regular = User(name="Regular User", permissions_group_id=2)
+        user_admin = User(name="Admin User", permissions_group=group_admin)
+        user_regular = User(name="Regular User", permissions_group=group_user)
 
         # Insert course
         course_math = Course(course_code="MATH101", name="Mathematics 101")
@@ -58,8 +58,12 @@ def _populate_initial_data() -> None:
         platform_inperson = LearningPlatform(name="In-person Platform")
 
         # Intercalated learning activity
-        activity_lecture = LearningActivity(name="Lecture", learning_platform_id=1)
-        activity_lab = LearningActivity(name="Lab Session", learning_platform_id=2)
+        activity_lecture = LearningActivity(
+            name="Lecture", learning_platform=platform_online
+        )
+        activity_lab = LearningActivity(
+            name="Lab Session", learning_platform=platform_inperson
+        )
 
         # Insert task status
         status_pending = TaskStatus(name="Pending")

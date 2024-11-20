@@ -1,5 +1,6 @@
 import datetime
 from sqlmodel import Field, Relationship, SQLModel
+from sqlalchemy import ForeignKeyConstraint
 from typing import Optional
 
 
@@ -18,6 +19,13 @@ class ActivityStaff(SQLModel, table=True):
     activity_week_number: Optional[int] = Field(
         foreign_key="week.number",
         primary_key=True,
+    )
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["activity_workbook_id", "activity_week_number"],
+            ["activity.workbook_id", "activity.week_number"],
+        ),
     )
 
 
@@ -44,7 +52,7 @@ class User(SQLModel, table=True):
     workbooks_leading: list["Workbook"] = Relationship(back_populates="course_lead")
 
     workbooks_contributing_to: list["Workbook"] = Relationship(
-        back_populates="users", link_model=WorkbookContributors
+        back_populates="contributors", link_model=WorkbookContributors
     )
     responsible_activity: list["Activity"] = Relationship(
         back_populates="staff_responsible", link_model=ActivityStaff
@@ -76,7 +84,7 @@ class Workbook(SQLModel, table=True):
     activities: list["Activity"] = Relationship(back_populates="workbook")
 
     contributors: list["User"] = Relationship(
-        back_populates="workbooks", link_model=WorkbookContributors
+        back_populates="workbooks_contributing_to", link_model=WorkbookContributors
     )
 
 
