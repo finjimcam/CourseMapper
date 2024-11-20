@@ -3,7 +3,8 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
-import uuid
+import datetime
+import pandas as pd
 from typing import Iterator
 from sqlmodel import Session, SQLModel, select, create_engine
 from contextlib import contextmanager
@@ -11,144 +12,26 @@ from backend.models.models import (
     User,
     PermissionsGroup,
     Course,
+    Week,
+    Workbook,
+    Activity,
     LearningPlatform,
     LearningActivity,
     TaskStatus,
     LearningType,
 )
 
-sqlite_file_name = "backend/database.db"
-sqlite_url = f"sqlite:///{sqlite_file_name}"
+_SQLITE_FILE_NAME = "backend/database.db"
+_SQLITE_URL = f"sqlite:///{_SQLITE_FILE_NAME}"
+
+_LEGEND_CSV_PATH = os.path.join(os.path.dirname(__file__), "../data/Legend.csv")
+_WEEK_CSV_PATHS = {
+    n: os.path.join(os.path.dirname(__file__), f"../data/Week{n}.csv")
+    for n in range(1, 4)
+}
 
 connect_args = {"check_same_thread": False}
-engine = create_engine(sqlite_url, connect_args=connect_args)
-
-# Atomic (no foreign key) database tables keyed by name for use in population
-_PERMISSIONS_GROUPS = {
-    "Admin": PermissionsGroup(name="Admin"),
-    "User": PermissionsGroup(name="User"),
-}
-_USERS = {
-    "Richard Johnston": User(
-        name="Richard Johnston", permissions_group=_PERMISSIONS_GROUPS["Admin"]
-    ),
-    "Tim Storer": User(
-        name="Tim Storer", permissions_group=_PERMISSIONS_GROUPS["User"]
-    ),
-}
-_TASK_STATUSES = {
-    "Unassigned": TaskStatus(name="Unassigned"),
-    "In Progress": TaskStatus(name="In Progress"),
-    "Completed": TaskStatus(name="Completed"),
-}
-_LEARNING_TYPES = {
-    "Acquisition": LearningType(name="Acquisition"),
-    "Collaboration": LearningType(name="Collaboration"),
-    "Discussion": LearningType(name="Discussion"),
-    "Investigation": LearningType(name="Investigation"),
-    "Practice": LearningType(name="Practice"),
-    "Production": LearningType(name="Production"),
-    "Assessment": LearningType(name="Assessment"),
-}
-_LEARNING_PLATFORMS = {
-    "Coursera": LearningPlatform(name="Coursera"),
-    "FutureLearn": LearningPlatform(name="FutureLearn"),
-    "Moodle": LearningPlatform(name="Moodle"),
-    "xSiTe": LearningPlatform(name="xSiTe"),
-}
-
-# Static data to be used when filling in composite tables
-_LEARNING_ACTIVITIES = {
-    "Coursera": [
-        "Video",
-        "Reading",
-        "Assignment",
-        "Discussion Prompt",
-        "Programming Assignment",
-        "Peer Review",
-        "App Item",
-        "Ungraded Lab",
-        "Quiz",
-        "Ungraded Plugin",
-    ],
-    "FutureLearn": [
-        "Article",
-        "Audio",
-        "Discussion",
-        "Exercise / External Tools",
-        "Peer Graded Assignment",
-        "Poll",
-        "Quiz",
-        "Video",
-    ],
-    "Moodle": [
-        "Assignment",
-        "Attendance",
-        "Board",
-        "Book",
-        "Chat",
-        "Checklist",
-        "Choice",
-        "Custom Certificate",
-        "Database",
-        "Echo360",
-        "External Tool",
-        "File",
-        "Feedback",
-        "Folder",
-        "Forum",
-        "Game",
-        "Glossary",
-        "Group Choice",
-        "H5P Interactive",
-        "IMS Content Package",
-        "Kaltura Media Assignment",
-        "Kaltura Video Resource",
-        "Lesson",
-        "Mahara",
-        "Open Forum",
-        "OU Blog",
-        "Page",
-        "Questionnaire",
-        "Quiz",
-        "Reading List",
-        "Re-engagement",
-        "Scheduler",
-        "SCORM",
-        "Text and Media Area",
-        "Turnitin",
-        "URL",
-        "Wiki",
-        "Workshop",
-        "Zoom",
-    ],
-    "xSiTe": [
-        "Announcements",
-        "Assignment",
-        "Blog",
-        "Calendar",
-        "Check List",
-        "Class Progress",
-        "Discussion",
-        "Echo360",
-        "Email",
-        "File",
-        "Glossary",
-        "Groups",
-        "HTML Document",
-        "Manage Files",
-        "New Lesson",
-        "Media Library",
-        "Portfolio",
-        "OneDrive",
-        "Quiz",
-        "SCORM",
-        "Self Assessment",
-        "Surveys",
-        "Weblink",
-        "Zoom",
-    ],
-}
+engine = create_engine(_SQLITE_URL, connect_args=connect_args)
 
 
 @contextmanager
@@ -169,11 +52,107 @@ def _populate_initial_data() -> None:
             print("Initial data already populated.")
             return
 
-        session.add_all(_PERMISSIONS_GROUPS.items())
-        session.add_all(_USERS.items())
-        session.add_all(_TASK_STATUSES.items())
-        session.add_all(_LEARNING_TYPES.items())
-        session.add_all(_LEARNING_PLATFORMS.items())
+        dataframe = pd.read_csv(_LEGEND_CSV_PATH)
+
+        task_statuses = {}
+        learning_types = {}
+        learning_platforms = {}
+        learning_activities: dict[str, dict[str, LearningActivity]] = {}
+
+        for task_status in dataframe["Task Status"].dropna():
+            task_statuses[task_status] = TaskStatus(name=task_status)
+        for learning_type in dataframe["Learning Type"].dropna():
+            learning_types[learning_type] = LearningType(name=learning_type)
+        for learning_platform in dataframe["Learning Platform"].dropna():
+            learning_platforms[learning_platform] = LearningPlatform(
+                name=learning_platform
+            )
+            learning_activities[learning_platform] = {}
+            for learning_activity in dataframe[learning_platform].dropna():
+                learning_activities[learning_platform][learning_activity] = (
+                    LearningActivity(
+                        name=learning_activity,
+                        learning_platform=learning_platforms[learning_platform],
+                    )
+                )
+
+        weeks = {}
+        activities = []
+        permissions_groups = {
+            "User": PermissionsGroup(name="User"),
+            "Admin": PermissionsGroup(name="Admin"),
+        }
+        users = {
+            "Tim Storer": User(
+                name="Tim Storer", permissions_group=permissions_groups["User"]
+            ),
+            "Richard Johnston": User(
+                name="Richard Johnston", permissions_group=permissions_groups["Admin"]
+            ),
+        }
+        courses = {
+            "COMPSCI4015": Course(
+                course_code="COMPSCI4015", name="Professional Software Development"
+            ),
+        }
+        workbook = Workbook(
+            start_date=datetime.date(2024, 9, 23),
+            end_date=datetime.date(2024, 9, 23) + datetime.timedelta(weeks=3),
+            course_lead=users["Tim Storer"],
+            course=courses["COMPSCI4015"],
+            learning_platform=learning_platforms["Moodle"],
+        )
+        if workbook.learning_platform is None:
+            raise Exception(
+                "Workbook not correctly populated. This is a problem with the script."
+            )
+        for week_no in _WEEK_CSV_PATHS:
+            dataframe = pd.read_csv(_WEEK_CSV_PATHS[week_no])
+            weeks[week_no] = Week(
+                number=week_no,
+                workbook=workbook,
+                start_date=workbook.start_date + datetime.timedelta(weeks=week_no - 1),
+                end_date=workbook.start_date
+                + datetime.timedelta(weeks=week_no - 1)
+                + datetime.timedelta(days=4),
+            )
+            for i in range(1, len(dataframe)):
+                name = dataframe["Title / Name"].iloc[i]
+                learning_activity = dataframe["Learning Activity"].iloc[i]
+                learning_type = dataframe["Learning Type"].iloc[i]
+                time_estimate = int(dataframe["Time (in mins)"].iloc[i])
+                task_status = dataframe["Task Status"].iloc[i]
+                location = dataframe["Activity Location"].iloc[i]
+                activities.append(
+                    Activity(
+                        week=weeks[week_no],
+                        workbook=workbook,
+                        name=name,
+                        location=location if not pd.isna(location) else "On Campus",
+                        learning_activity=learning_activities[
+                            workbook.learning_platform.name
+                        ][learning_activity],
+                        learning_type=learning_types[learning_type],
+                        time_estimate_minutes=time_estimate,
+                        task_status=(
+                            task_statuses[task_status]
+                            if not pd.isna(task_status)
+                            else task_statuses["Unassigned"]
+                        ),
+                    )
+                )
+
+        session.add_all(task_statuses.values())
+        session.add_all(learning_types.values())
+        session.add_all(learning_platforms.values())
+        for platform_activities in learning_activities.values():
+            session.add_all(platform_activities.values())
+        session.add_all(weeks.values())
+        session.add_all(activities)
+        session.add_all(permissions_groups.values())
+        session.add_all(users.values())
+        session.add_all(courses.values())
+        session.add(workbook)
 
         session.commit()
         print("Database populated with initial data.")
