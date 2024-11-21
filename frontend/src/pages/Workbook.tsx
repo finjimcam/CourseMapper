@@ -24,22 +24,6 @@ interface LearningPlatform {
   name: string;
 }
 
-interface LearningActivity {
-  id: string;
-  name: string;
-  learning_platform_id: string;
-}
-
-interface LearningType {
-  id: string;
-  name: string;
-}
-
-interface TaskStatus {
-  id: string;
-  name: string;
-}
-
 interface WorkbookData {
   id: string;
   start_date: string;
@@ -55,10 +39,10 @@ interface ActivityData {
   time_estimate_minutes: number;
   location: string;
   week_number: number;
-  workbook_id: string;
-  learning_activity_id: string;
-  learning_type_id: string;
-  task_status_id: string;
+  learning_activity: string;
+  learning_type: string;
+  task_status: string;
+  staff: User[]; // Added staff array
 }
 
 interface WeekData {
@@ -76,6 +60,14 @@ interface WeekInfo {
   data: WeekData[];
 }
 
+interface WorkbookDetailsResponse {
+  workbook: WorkbookData;
+  course: Course | null;
+  course_lead: User | null;
+  learning_platform: LearningPlatform | null;
+  activities: ActivityData[];
+}
+
 function Workbook(): JSX.Element {
   // Get the workbook_id from the URL parameters
   const { workbook_id } = useParams<{ workbook_id: string }>();
@@ -85,10 +77,6 @@ function Workbook(): JSX.Element {
   const [courseData, setCourseData] = useState<Course | null>(null);
   const [courseLeadData, setCourseLeadData] = useState<User | null>(null);
   const [learningPlatformData, setLearningPlatformData] = useState<LearningPlatform | null>(null);
-  const [activitiesData, setActivitiesData] = useState<ActivityData[]>([]);
-  const [learningActivities, setLearningActivities] = useState<{ [key: string]: LearningActivity }>({});
-  const [learningTypes, setLearningTypes] = useState<{ [key: string]: LearningType }>({});
-  const [taskStatuses, setTaskStatuses] = useState<{ [key: string]: TaskStatus }>({});
   const [weeksData, setWeeksData] = useState<WeekInfo[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -101,68 +89,20 @@ function Workbook(): JSX.Element {
         setLoading(true);
         setError(null);
 
-        // Fetch workbook details
-        const workbookResponse = await axios.get('http://127.0.0.1:8000/workbooks/', {
-          params: { workbook_id },
-        });
-        
-        if (!workbookResponse.data || workbookResponse.data.length === 0) {
-          throw new Error('Workbook not found');
-        }
+        // Fetch all workbook-related data in one call
+        const response = await axios.get<WorkbookDetailsResponse>(
+          `http://127.0.0.1:8000/workbooks/${workbook_id}/details`
+        );
+        const { workbook, course, course_lead, learning_platform, activities } = response.data;
 
-        const workbook = workbookResponse.data[0];
         setWorkbookData(workbook);
-
-        // Fetch course data
-        const courseResponse = await axios.get('http://127.0.0.1:8000/courses/');
-        const course = courseResponse.data.find((c: Course) => c.id === workbook.course_id);
-        setCourseData(course || null);
-
-        // Fetch user data for course lead
-        const usersResponse = await axios.get('http://127.0.0.1:8000/users/');
-        const courseLead = usersResponse.data.find((u: User) => u.id === workbook.course_lead_id);
-        setCourseLeadData(courseLead || null);
-
-        // Fetch learning platform data
-        const platformResponse = await axios.get('http://127.0.0.1:8000/learning-platforms/');
-        const platform = platformResponse.data.find((p: LearningPlatform) => p.id === workbook.learning_platform_id);
-        setLearningPlatformData(platform || null);
-
-        // Fetch all learning activities
-        const learningActivitiesResponse = await axios.get('http://127.0.0.1:8000/learning-activities/');
-        const activitiesMap = learningActivitiesResponse.data.reduce((acc: any, curr: LearningActivity) => {
-          acc[curr.id] = curr;
-          return acc;
-        }, {});
-        setLearningActivities(activitiesMap);
-
-        // Fetch all learning types
-        const learningTypesResponse = await axios.get('http://127.0.0.1:8000/learning-types/');
-        const typesMap = learningTypesResponse.data.reduce((acc: any, curr: LearningType) => {
-          acc[curr.id] = curr;
-          return acc;
-        }, {});
-        setLearningTypes(typesMap);
-
-        // Fetch all task statuses
-        const taskStatusesResponse = await axios.get('http://127.0.0.1:8000/task-statuses/');
-        const statusesMap = taskStatusesResponse.data.reduce((acc: any, curr: TaskStatus) => {
-          acc[curr.id] = curr;
-          return acc;
-        }, {});
-        setTaskStatuses(statusesMap);
-
-        // Fetch activities associated with the workbook
-        const activitiesResponse = await axios.get('http://127.0.0.1:8000/activities/', {
-          params: { workbook_id },
-        });
-        
-        const activities = activitiesResponse.data || [];
-        setActivitiesData(activities);
+        setCourseData(course);
+        setCourseLeadData(course_lead);
+        setLearningPlatformData(learning_platform);
 
         // Process activities data into weeksData
         if (activities.length > 0) {
-          const weeksDataArray = processActivitiesData(activities, activitiesMap, typesMap, statusesMap);
+          const weeksDataArray = processActivitiesData(activities);
           setWeeksData(weeksDataArray);
         }
 
@@ -180,13 +120,8 @@ function Workbook(): JSX.Element {
   }, [workbook_id]);
 
   // Function to process activities data into weeksData
-  const processActivitiesData = (
-    activities: ActivityData[],
-    learningActivitiesMap: { [key: string]: LearningActivity },
-    learningTypesMap: { [key: string]: LearningType },
-    taskStatusesMap: { [key: string]: TaskStatus }
-  ) => {
-    const weeksMap: { [key: number]: { weekNumber: number; data: WeekData[] } } = {};
+  const processActivitiesData = (activities: ActivityData[]) => {
+    const weeksMap: { [key: number]: WeekInfo } = {};
 
     activities.forEach((activity) => {
       const weekNumber = activity.week_number || 1;
@@ -198,14 +133,14 @@ function Workbook(): JSX.Element {
       }
 
       weeksMap[weekNumber].data.push({
-        staff: [], // Currently not populated in backend
+        staff: activity.staff.map((user) => user.name),
         title: activity.name || 'Untitled',
-        activity: learningActivitiesMap[activity.learning_activity_id]?.name || 'N/A',
-        type: learningTypesMap[activity.learning_type_id]?.name || 'N/A',
+        activity: activity.learning_activity || 'N/A',
+        type: activity.learning_type || 'N/A',
         time: activity.time_estimate_minutes
           ? formatMinutes(activity.time_estimate_minutes)
           : '00:00',
-        status: taskStatusesMap[activity.task_status_id]?.name || 'Unassigned',
+        status: activity.task_status || 'Unassigned',
         location: activity.location || 'On Campus',
       });
     });
@@ -446,7 +381,9 @@ function Workbook(): JSX.Element {
                     <Table.Body>
                       {week.data.map((row: WeekData, index: number) => (
                         <Table.Row key={index}>
-                          <Table.Cell>{row.staff.length > 0 ? row.staff.join(', ') : 'N/A'}</Table.Cell>
+                          <Table.Cell>
+                            {row.staff.length > 0 ? row.staff.join(', ') : 'N/A'}
+                          </Table.Cell>
                           <Table.Cell>{row.title}</Table.Cell>
                           <Table.Cell>{row.activity}</Table.Cell>
                           <Table.Cell>{row.type}</Table.Cell>
