@@ -1,8 +1,9 @@
-from typing import Union, Annotated, AsyncGenerator, List
+from typing import Union, Annotated, AsyncGenerator, List, Dict, Any
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from sqlmodel import Session, select
 import uuid
+from fastapi.middleware.cors import CORSMiddleware
 
 from backend.models.database import (
     create_db_and_tables,
@@ -19,8 +20,7 @@ from backend.models.models import (
     LearningActivity,
     TaskStatus,
     LearningType,
-    Activity,
-    Workbook,
+    ActivityStaff,
 )
 
 SessionDep = Annotated[Session, Depends(get_session)]
@@ -33,6 +33,14 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
 
 
 app = FastAPI(lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # Frontend's origin
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
 
 
 # Views for individual models for testing purposes
@@ -120,3 +128,114 @@ def read_activities(
             )
         )
     )
+
+
+# New endpoint to fetch all workbook details and related data
+@app.get("/workbooks/{workbook_id}/details")
+def get_workbook_details(
+    workbook_id: uuid.UUID,
+    session: Session = Depends(get_session),
+) -> Dict[str, Any]:
+    # Fetch workbook
+    workbook = session.exec(select(Workbook).where(Workbook.id == workbook_id)).first()
+    if not workbook:
+        raise HTTPException(status_code=404, detail="Workbook not found")
+
+    # Fetch related data
+    course = session.exec(select(Course).where(Course.id == workbook.course_id)).first()
+    course_lead = session.exec(
+        select(User).where(User.id == workbook.course_lead_id)
+    ).first()
+    learning_platform = session.exec(
+        select(LearningPlatform).where(
+            LearningPlatform.id == workbook.learning_platform_id
+        )
+    ).first()
+    activities = list(
+        session.exec(select(Activity).where(Activity.workbook_id == workbook_id))
+    )
+
+    # Build response
+    response: Dict[str, Any] = {
+        "workbook": {
+            "id": str(workbook.id),
+            "start_date": workbook.start_date.isoformat(),
+            "end_date": workbook.end_date.isoformat(),
+            "course_id": str(workbook.course_id),
+            "course_lead_id": str(workbook.course_lead_id),
+            "learning_platform_id": str(workbook.learning_platform_id),
+        },
+        "course": (
+            {
+                "id": str(course.id),
+                "course_code": course.course_code,
+                "name": course.name,
+            }
+            if course
+            else None
+        ),
+        "course_lead": (
+            {
+                "id": str(course_lead.id),
+                "name": course_lead.name,
+            }
+            if course_lead
+            else None
+        ),
+        "learning_platform": (
+            {
+                "id": str(learning_platform.id),
+                "name": learning_platform.name,
+            }
+            if learning_platform
+            else None
+        ),
+        "activities": [],
+    }
+
+    # Process activities
+    activities_list: List[Dict[str, Any]] = []
+    for activity in activities:
+        # Fetch related data for each activity
+        learning_activity = session.exec(
+            select(LearningActivity).where(
+                LearningActivity.id == activity.learning_activity_id
+            )
+        ).first()
+        learning_type = session.exec(
+            select(LearningType).where(LearningType.id == activity.learning_type_id)
+        ).first()
+        task_status = session.exec(
+            select(TaskStatus).where(TaskStatus.id == activity.task_status_id)
+        ).first()
+
+        # Get staff using the link model
+        staff = list(
+            session.exec(
+                select(User)
+                .join(ActivityStaff)
+                .where(ActivityStaff.activity_id == activity.id)
+            )
+        )
+
+        activity_data = {
+            "id": str(activity.id),
+            "name": activity.name,
+            "time_estimate_minutes": activity.time_estimate_minutes,
+            "location": activity.location,
+            "week_number": activity.week_number,
+            "learning_activity": learning_activity.name if learning_activity else None,
+            "learning_type": learning_type.name if learning_type else None,
+            "task_status": task_status.name if task_status else None,
+            "staff": [
+                {
+                    "id": str(user.id),
+                    "name": user.name,
+                }
+                for user in staff
+            ],
+        }
+        activities_list.append(activity_data)
+    response["activities"] = activities_list
+
+    return response
