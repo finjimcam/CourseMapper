@@ -44,6 +44,7 @@ app.add_middleware(
 
 # Existing endpoints...
 
+
 # New endpoint to fetch all workbook details and related data
 @app.get("/workbooks/{workbook_id}/details")
 def get_workbook_details(
@@ -62,14 +63,10 @@ def get_workbook_details(
             selectinload(Workbook.course),
             selectinload(Workbook.course_lead),
             selectinload(Workbook.learning_platform),
-            selectinload(Workbook.activities)
-            .selectinload(Activity.learning_activity),
-            selectinload(Workbook.activities)
-            .selectinload(Activity.learning_type),
-            selectinload(Workbook.activities)
-            .selectinload(Activity.task_status),
-            selectinload(Workbook.activities)
-            .selectinload(Activity.staff_responsible),
+            selectinload(Workbook.activities).selectinload(Activity.learning_activity),
+            selectinload(Workbook.activities).selectinload(Activity.learning_type),
+            selectinload(Workbook.activities).selectinload(Activity.task_status),
+            selectinload(Workbook.activities).selectinload(Activity.staff_responsible),
         )
     ).first()
 
@@ -86,19 +83,31 @@ def get_workbook_details(
             "course_lead_id": str(workbook.course_lead_id),
             "learning_platform_id": str(workbook.learning_platform_id),
         },
-        "course": {
-            "id": str(workbook.course.id),
-            "course_code": workbook.course.course_code,
-            "name": workbook.course.name,
-        } if workbook.course else None,
-        "course_lead": {
-            "id": str(workbook.course_lead.id),
-            "name": workbook.course_lead.name,
-        } if workbook.course_lead else None,
-        "learning_platform": {
-            "id": str(workbook.learning_platform.id),
-            "name": workbook.learning_platform.name,
-        } if workbook.learning_platform else None,
+        "course": (
+            {
+                "id": str(workbook.course.id),
+                "course_code": workbook.course.course_code,
+                "name": workbook.course.name,
+            }
+            if workbook.course
+            else None
+        ),
+        "course_lead": (
+            {
+                "id": str(workbook.course_lead.id),
+                "name": workbook.course_lead.name,
+            }
+            if workbook.course_lead
+            else None
+        ),
+        "learning_platform": (
+            {
+                "id": str(workbook.learning_platform.id),
+                "name": workbook.learning_platform.name,
+            }
+            if workbook.learning_platform
+            else None
+        ),
         "activities": [],
     }
 
@@ -110,14 +119,19 @@ def get_workbook_details(
             "time_estimate_minutes": activity.time_estimate_minutes,
             "location": activity.location,
             "week_number": activity.week_number,
-            "learning_activity": activity.learning_activity.name if activity.learning_activity else None,
-            "learning_type": activity.learning_type.name if activity.learning_type else None,
+            "learning_activity": (
+                activity.learning_activity.name if activity.learning_activity else None
+            ),
+            "learning_type": (
+                activity.learning_type.name if activity.learning_type else None
+            ),
             "task_status": activity.task_status.name if activity.task_status else None,
             "staff": [
                 {
                     "id": str(user.id),
                     "name": user.name,
-                } for user in activity.staff_responsible
+                }
+                for user in activity.staff_responsible
             ],
         }
         response["activities"].append(activity_data)
@@ -126,6 +140,7 @@ def get_workbook_details(
 
 
 # Other endpoints (if any)...
+
 
 # Existing views for individual models with query parameters
 @app.get("/users/")
