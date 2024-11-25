@@ -1,19 +1,40 @@
 Task Status,Learning Type,Extra Options,VLE Platform,Activity Location,Learning Approach,Calculated Time,Graduate Attribute,Learning Platform,Coursera,FutureLearn,Moodle,xSiTe
-Unassigned,Acquisition,Published,Coursera,On Campus,Asynchronous,0:05,Adaptable,Coursera,Video,Article,Video,Announcements
-In Progress,Collaboration,Uploaded,FutureLearn,Remote (Home),Synchronous,0:10,Confident,FutureLearn,Reading,Audio,Reading,Assignment
-Completed,Discussion,,Moodle,,,0:15,Effective Communication,Moodle,Assignment,Discussion,Discussion Prompt,Blog
-,Investigation,,,,,0:20,Ethically and Socially Aware,xSiTe,Discussion Prompt,Exercise,Quiz,Calendar
-,Practice,,,,,0:25,Experienced Collaborators,,Programming,Peer Graded,Assignment,Check List
-,Production,,,,,0:30,Independent and Critical Thinkers,,Peer Review,Poll,,Class Progress
-,Assessment,,,,,0:35,Investigative,,App Item,Quiz,,Discussion
-,,,,,,0:40,Reflective Learners,,Lab,Video,,Echo360
-,,,,,,0:45,Resourceful and Responsible,,Quiz,,,Email
-,,,,,,0:50,Subject Specialists,,Plugin,,,File
-,,,,,,0:55,,,,,,Glossary
-,,,,,,1:00,,,,,,Groups
-,,,,,,1:10,,,,,,HTML Document
-,,,,,,1:20,,,,,,Manage Files
-,,,,,,1:30,,,,,,New Lesson
-,,,,,,1:40,,,,,,Media Library
-,,,,,,1:50,,,,,,Portfolio
-,,,,,,2:00,,,,,,OneDrive
+Unassigned,Acquisition,Published,Coursera,On Campus,Asynchronous,0:05,Adaptable,Coursera,Video,Article,Assignment,Announcements
+In Progress,Collaboration,Uploaded,FutureLearn,Remote (Home),Synchronous,0:10,Confident,FutureLearn,Reading,Audio,Attendance,Assignment
+Completed,Discussion,,Moodle,,,0:15,Effective Communication,Moodle,Assignment,Discussion,Board,Blog
+,Investigation,,,,,0:20,Ethically and Socially Aware,xSiTe,Discussion Prompt,Exercise / External Tools,Book,Calendar
+,Practice,,,,,0:25,Experienced Collaborators,,Programming Assignment,Peer Graded Assignment,Chat,Check List
+,Production,,,,,0:30,Independent and Critical Thinkers,,Peer Review,Poll,Checklist,Class Progress
+,Assessment,,,,,0:35,Investigative,,App Item,Quiz,Choice,Discussion
+,,,,,,0:40,Reflective Learners,,Ungraded Lab,Video,Custom Certificate,Echo360
+,,,,,,0:45,Resourceful and Responsible,,Quiz,,Database,Email
+,,,,,,0:50,Subject Specialists,,Ungraded Plugin,,Echo360,File
+,,,,,,0:55,,,,,External Tool,Glossary
+,,,,,,1:00,,,,,File,Groups
+,,,,,,1:10,,,,,Feedback,HTML Document
+,,,,,,1:20,,,,,Folder,Manage Files
+,,,,,,1:30,,,,,Forum,New Lesson
+,,,,,,1:40,,,,,Game,Media Library
+,,,,,,1:50,,,,,Glossary,Portfolio
+,,,,,,2:00,,,,,Group Choice,OneDrive
+,,,,,,,,,,,H5P Interactive,Quiz
+,,,,,,,,,,,IMS Content Package,SCORM
+,,,,,,,,,,,Kaltura Media Assignment,Self Assessment
+,,,,,,,,,,,Kaltura Video Resource,Surveys
+,,,,,,,,,,,Lesson,Weblink
+,,,,,,,,,,,Mahara,Zoom
+,,,,,,,,,,,Open Forum,
+,,,,,,,,,,,OU Blog,
+,,,,,,,,,,,Page,
+,,,,,,,,,,,Questionnaire,
+,,,,,,,,,,,Quiz,
+,,,,,,,,,,,Reading List,
+,,,,,,,,,,,Re-engagement,
+,,,,,,,,,,,Scheduler,
+,,,,,,,,,,,SCORM,
+,,,,,,,,,,,Text and Media Area,
+,,,,,,,,,,,Turnitin,
+,,,,,,,,,,,URL,
+,,,,,,,,,,,Wiki,
+,,,,,,,,,,,Workshop,
+,,,,,,,,,,,Zoom,
