@@ -17,9 +17,17 @@ class ActivityStaff(SQLModel, table=True):
 
 
 class WeekGraduateAttributes(SQLModel, table=True):
-    week_id: uuid.UUID = Field(foreign_key="week.id", primary_key=True)
+    week_workbook_id: uuid.UUID = Field(primary_key=True)
+    week_number: int = Field(primary_key=True)
     graduate_attribute_id: uuid.UUID = Field(
-        foreign_key="graduate_attribute.id", primary_key=True
+        foreign_key="graduateattribute.id", primary_key=True
+    )
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["week_workbook_id", "week_number"],
+            ["week.workbook_id", "week.number"],
+        ),
     )
 
 
