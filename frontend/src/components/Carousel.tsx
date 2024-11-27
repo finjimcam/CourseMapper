@@ -1,24 +1,34 @@
-import  { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-function Carousel({ items }: { items: Array<{ id: number; content: string }> }) {
+interface CarouselItem {
+  id: number;
+  content: JSX.Element;
+}
+
+function Carousel({ items }: { items: Array<CarouselItem> }) {
   const [currentPosition, setCurrentPosition] = useState(0);
+  const carouselSize = 3;
+  const [visibleItems, setVisibleItems] = useState<Array<CarouselItem>>([]);
+  
+  useEffect(() => {
+    if (items.length < carouselSize) {
+      setVisibleItems(items);
+    } else {
+      let settingItems: CarouselItem[] = [];
+      for (let i = currentPosition; i < currentPosition + carouselSize; i++) {
+        settingItems.push(items[i % items.length]);
+      }
+      setVisibleItems(settingItems);
+    }
+  }, [currentPosition, items]);
 
   const nextSlide = () => {
-    setCurrentPosition((prevPosition) => (prevPosition + 3) % items.length);
+    setCurrentPosition((prevPosition) => (prevPosition + 1) % items.length);
   };
 
   const prevSlide = () => {
-    setCurrentPosition((prevPosition) =>
-      (prevPosition - 3 + items.length) % items.length
-    );
+    setCurrentPosition((prevPosition) => (prevPosition - 1 + items.length) % items.length);
   };
-
-  // Get the 3 items to display based on the current position
-  const visibleItems = [
-    items[currentPosition],
-    items[(currentPosition + 1) % items.length],
-    items[(currentPosition + 2) % items.length],
-  ];
 
   return (
     <div className="carousel-container max-w-3xl mx-auto overflow-hidden">
@@ -32,6 +42,7 @@ function Carousel({ items }: { items: Array<{ id: number; content: string }> }) 
           </div>
         ))}
       </div>
+
       <div className="carousel-controls flex justify-between mt-4">
         <button
           onClick={prevSlide}

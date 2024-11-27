@@ -3,7 +3,8 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
 
-import uuid
+import datetime
+import pandas as pd
 from typing import Iterator
 from sqlmodel import Session, SQLModel, select, create_engine
 from contextlib import contextmanager
@@ -11,17 +12,26 @@ from backend.models.models import (
     User,
     PermissionsGroup,
     Course,
+    Week,
+    Workbook,
+    Activity,
     LearningPlatform,
     LearningActivity,
     TaskStatus,
     LearningType,
 )
 
-sqlite_file_name = "backend/database.db"
-sqlite_url = f"sqlite:///{sqlite_file_name}"
+_SQLITE_FILE_NAME = "backend/database.db"
+_SQLITE_URL = f"sqlite:///{_SQLITE_FILE_NAME}"
+
+_LEGEND_CSV_PATH = os.path.join(os.path.dirname(__file__), "../data/Legend.csv")
+_WEEK_CSV_PATHS = {
+    n: os.path.join(os.path.dirname(__file__), f"../data/Week{n}.csv")
+    for n in range(1, 4)
+}
 
 connect_args = {"check_same_thread": False}
-engine = create_engine(sqlite_url, connect_args=connect_args)
+engine = create_engine(_SQLITE_URL, connect_args=connect_args)
 
 
 @contextmanager
@@ -37,72 +47,113 @@ def _create_db_and_tables() -> None:
 def _populate_initial_data() -> None:
     """Populate the database with initial data."""
     with _get_session() as session:
-        # Check if initial data already exists
+
         if session.exec(select(User)).first() is not None:
             print("Initial data already populated.")
             return
 
-        # Insert permission groups
-        group_admin = PermissionsGroup(id=uuid.uuid4(), name="Admin")
-        group_user = PermissionsGroup(id=uuid.uuid4(), name="User")
+        dataframe = pd.read_csv(_LEGEND_CSV_PATH)
 
-        # Insert users
-        user_admin = User(
-            id=uuid.uuid4(), name="Admin User", permissions_group=group_admin
+        task_statuses = {}
+        learning_types = {}
+        learning_platforms = {}
+        learning_activities: dict[str, dict[str, LearningActivity]] = {}
+
+        for task_status in dataframe["Task Status"].dropna():
+            task_statuses[task_status] = TaskStatus(name=task_status)
+        for learning_type in dataframe["Learning Type"].dropna():
+            learning_types[learning_type] = LearningType(name=learning_type)
+        for learning_platform in dataframe["Learning Platform"].dropna():
+            learning_platforms[learning_platform] = LearningPlatform(
+                name=learning_platform
+            )
+            learning_activities[learning_platform] = {}
+            for learning_activity in dataframe[learning_platform].dropna():
+                learning_activities[learning_platform][learning_activity] = (
+                    LearningActivity(
+                        name=learning_activity,
+                        learning_platform=learning_platforms[learning_platform],
+                    )
+                )
+
+        weeks = {}
+        activities = []
+        permissions_groups = {
+            "User": PermissionsGroup(name="User"),
+            "Admin": PermissionsGroup(name="Admin"),
+        }
+        users = {
+            "Tim Storer": User(
+                name="Tim Storer", permissions_group=permissions_groups["User"]
+            ),
+            "Richard Johnston": User(
+                name="Richard Johnston", permissions_group=permissions_groups["Admin"]
+            ),
+        }
+        courses = {
+            "COMPSCI4015": Course(
+                course_code="COMPSCI4015", name="Professional Software Development"
+            ),
+        }
+        workbook = Workbook(
+            start_date=datetime.date(2024, 9, 23),
+            end_date=datetime.date(2024, 9, 23) + datetime.timedelta(weeks=3),
+            course_lead=users["Tim Storer"],
+            course=courses["COMPSCI4015"],
+            learning_platform=learning_platforms["Moodle"],
         )
-        user_regular = User(
-            id=uuid.uuid4(), name="Regular User", permissions_group=group_user
-        )
+        if workbook.learning_platform is None:
+            raise Exception(
+                "Workbook not correctly populated. This is a problem with the script."
+            )
+        for week_no in _WEEK_CSV_PATHS:
+            dataframe = pd.read_csv(_WEEK_CSV_PATHS[week_no])
+            weeks[week_no] = Week(
+                number=week_no,
+                workbook=workbook,
+                start_date=workbook.start_date + datetime.timedelta(weeks=week_no - 1),
+                end_date=workbook.start_date
+                + datetime.timedelta(weeks=week_no - 1)
+                + datetime.timedelta(days=4),
+            )
+            for i in range(1, len(dataframe)):
+                name = dataframe["Title / Name"].iloc[i]
+                learning_activity = dataframe["Learning Activity"].iloc[i]
+                learning_type = dataframe["Learning Type"].iloc[i]
+                time_estimate = int(dataframe["Time (in mins)"].iloc[i])
+                task_status = dataframe["Task Status"].iloc[i]
+                location = dataframe["Activity Location"].iloc[i]
+                activities.append(
+                    Activity(
+                        week=weeks[week_no],
+                        workbook=workbook,
+                        name=name,
+                        location=location if not pd.isna(location) else "On Campus",
+                        learning_activity=learning_activities[
+                            workbook.learning_platform.name
+                        ][learning_activity],
+                        learning_type=learning_types[learning_type],
+                        time_estimate_minutes=time_estimate,
+                        task_status=(
+                            task_statuses[task_status]
+                            if not pd.isna(task_status)
+                            else task_statuses["Unassigned"]
+                        ),
+                    )
+                )
 
-        # Insert courses
-        course_math = Course(
-            id=uuid.uuid4(), course_code="MATH101", name="Mathematics 101"
-        )
-        course_physics = Course(
-            id=uuid.uuid4(), course_code="PHYS101", name="Physics 101"
-        )
+        session.add_all(task_statuses.values())
+        session.add_all(learning_types.values())
+        session.add_all(learning_platforms.values())
+        for platform_activities in learning_activities.values():
+            session.add_all(platform_activities.values())
+        session.add_all(weeks.values())
+        session.add_all(activities)
+        session.add_all(permissions_groups.values())
+        session.add_all(users.values())
+        session.add_all(courses.values())
+        session.add(workbook)
 
-        # Insert learning platforms
-        platform_online = LearningPlatform(id=uuid.uuid4(), name="Online Platform")
-        platform_inperson = LearningPlatform(id=uuid.uuid4(), name="In-person Platform")
-
-        # Insert learning activities
-        activity_lecture = LearningActivity(
-            id=uuid.uuid4(), name="Lecture", learning_platform=platform_online
-        )
-        activity_lab = LearningActivity(
-            id=uuid.uuid4(), name="Lab Session", learning_platform=platform_inperson
-        )
-
-        # Insert task statuses
-        status_pending = TaskStatus(id=uuid.uuid4(), name="Pending")
-        status_completed = TaskStatus(id=uuid.uuid4(), name="Completed")
-
-        # Insert learning types
-        type_homework = LearningType(id=uuid.uuid4(), name="Homework")
-        type_exam = LearningType(id=uuid.uuid4(), name="Exam")
-
-        # Add all initial data to the session
-        session.add_all(
-            [
-                group_admin,
-                group_user,
-                user_admin,
-                user_regular,
-                course_math,
-                course_physics,
-                platform_online,
-                platform_inperson,
-                activity_lecture,
-                activity_lab,
-                status_pending,
-                status_completed,
-                type_homework,
-                type_exam,
-            ]
-        )
-
-        # Commit changes to the database
         session.commit()
         print("Database populated with initial data.")
 

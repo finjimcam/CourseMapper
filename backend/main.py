@@ -1,7 +1,9 @@
-from typing import Union, Annotated, AsyncGenerator, List
+from typing import Union, Annotated, AsyncGenerator, List, Dict, Any
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from sqlmodel import Session, select
+import uuid
+from fastapi.middleware.cors import CORSMiddleware
 
 from backend.models.database import (
     create_db_and_tables,
@@ -11,12 +13,14 @@ from backend.models.models import (
     User,
     PermissionsGroup,
     Course,
+    Week,
+    Workbook,
+    Activity,
     LearningPlatform,
     LearningActivity,
     TaskStatus,
     LearningType,
-    Activity,
-    Workbook,
+    ActivityStaff,
 )
 
 SessionDep = Annotated[Session, Depends(get_session)]
@@ -30,15 +34,22 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
 
 app = FastAPI(lifespan=lifespan)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # Frontend's origin
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
 
-# Fetch all Users
+
+# Views for individual models for testing purposes
 @app.get("/users/")
 def read_users(session: Session = Depends(get_session)) -> List[User]:
     users = list(session.exec(select(User)).all())
     return users
 
 
-# Fetch all PermissionsGroups
 @app.get("/permissions-groups/")
 def read_permissions_groups(
     session: Session = Depends(get_session),
@@ -47,14 +58,12 @@ def read_permissions_groups(
     return permissions_groups
 
 
-# Fetch all Courses
 @app.get("/courses/")
 def read_courses(session: Session = Depends(get_session)) -> List[Course]:
     courses = list(session.exec(select(Course)).all())
     return courses
 
 
-# Fetch all LearningPlatforms
 @app.get("/learning-platforms/")
 def read_learning_platforms(
     session: Session = Depends(get_session),
@@ -63,7 +72,6 @@ def read_learning_platforms(
     return learning_platforms
 
 
-# Fetch all LearningActivities
 @app.get("/learning-activities/")
 def read_learning_activities(
     session: Session = Depends(get_session),
@@ -72,24 +80,21 @@ def read_learning_activities(
     return learning_activities
 
 
-# Fetch all TaskStatuses
 @app.get("/task-statuses/")
 def read_task_statuses(session: Session = Depends(get_session)) -> List[TaskStatus]:
     task_statuses = list(session.exec(select(TaskStatus)).all())
     return task_statuses
 
 
-# Fetch all LearningTypes
 @app.get("/learning-types/")
 def read_learning_types(session: Session = Depends(get_session)) -> List[LearningType]:
     learning_types = list(session.exec(select(LearningType)).all())
     return learning_types
 
 
-# Fetches all or a specified workbooks
 @app.get("/workbooks/")
 def read_workbooks(
-    workbook_id: int | None = None,
+    workbook_id: uuid.UUID | None = None,
     session: Session = Depends(get_session),
 ) -> List[Workbook]:
     if not workbook_id:
@@ -97,10 +102,15 @@ def read_workbooks(
     return list(session.exec(select(Workbook).where(Workbook.id == workbook_id)))
 
 
-# Fetches all activities for a specified workbook week or specified activity
+@app.get("/weeks/")
+def read_weeks(session: Session = Depends(get_session)) -> List[Week]:
+    weeks = list(session.exec(select(Week)).all())
+    return weeks
+
+
 @app.get("/activities/")
-def read_workbook_week(
-    workbook_id: int | None = None,
+def read_activities(
+    workbook_id: uuid.UUID | None = None,
     week_number: int | None = None,
     session: Session = Depends(get_session),
 ) -> List[Activity]:
@@ -113,8 +123,119 @@ def read_workbook_week(
     return list(
         session.exec(
             select(Activity).where(
-                Activity.workbook_id == workbook_id
-                and Activity.week_number == week_number
+                (Activity.workbook_id == workbook_id)
+                & (Activity.week_number == week_number)
             )
         )
     )
+
+
+# New endpoint to fetch all workbook details and related data
+@app.get("/workbooks/{workbook_id}/details")
+def get_workbook_details(
+    workbook_id: uuid.UUID,
+    session: Session = Depends(get_session),
+) -> Dict[str, Any]:
+    # Fetch workbook
+    workbook = session.exec(select(Workbook).where(Workbook.id == workbook_id)).first()
+    if not workbook:
+        raise HTTPException(status_code=404, detail="Workbook not found")
+
+    # Fetch related data
+    course = session.exec(select(Course).where(Course.id == workbook.course_id)).first()
+    course_lead = session.exec(
+        select(User).where(User.id == workbook.course_lead_id)
+    ).first()
+    learning_platform = session.exec(
+        select(LearningPlatform).where(
+            LearningPlatform.id == workbook.learning_platform_id
+        )
+    ).first()
+    activities = list(
+        session.exec(select(Activity).where(Activity.workbook_id == workbook_id))
+    )
+
+    # Build response
+    response: Dict[str, Any] = {
+        "workbook": {
+            "id": str(workbook.id),
+            "start_date": workbook.start_date.isoformat(),
+            "end_date": workbook.end_date.isoformat(),
+            "course_id": str(workbook.course_id),
+            "course_lead_id": str(workbook.course_lead_id),
+            "learning_platform_id": str(workbook.learning_platform_id),
+        },
+        "course": (
+            {
+                "id": str(course.id),
+                "course_code": course.course_code,
+                "name": course.name,
+            }
+            if course
+            else None
+        ),
+        "course_lead": (
+            {
+                "id": str(course_lead.id),
+                "name": course_lead.name,
+            }
+            if course_lead
+            else None
+        ),
+        "learning_platform": (
+            {
+                "id": str(learning_platform.id),
+                "name": learning_platform.name,
+            }
+            if learning_platform
+            else None
+        ),
+        "activities": [],
+    }
+
+    # Process activities
+    activities_list: List[Dict[str, Any]] = []
+    for activity in activities:
+        # Fetch related data for each activity
+        learning_activity = session.exec(
+            select(LearningActivity).where(
+                LearningActivity.id == activity.learning_activity_id
+            )
+        ).first()
+        learning_type = session.exec(
+            select(LearningType).where(LearningType.id == activity.learning_type_id)
+        ).first()
+        task_status = session.exec(
+            select(TaskStatus).where(TaskStatus.id == activity.task_status_id)
+        ).first()
+
+        # Get staff using the link model
+        staff = list(
+            session.exec(
+                select(User)
+                .join(ActivityStaff)
+                .where(ActivityStaff.activity_id == activity.id)
+            )
+        )
+
+        activity_data = {
+            "id": str(activity.id),
+            "name": activity.name,
+            "time_estimate_minutes": activity.time_estimate_minutes,
+            "location": activity.location,
+            "week_number": activity.week_number,
+            "learning_activity": learning_activity.name if learning_activity else None,
+            "learning_type": learning_type.name if learning_type else None,
+            "task_status": task_status.name if task_status else None,
+            "staff": [
+                {
+                    "id": str(user.id),
+                    "name": user.name,
+                }
+                for user in staff
+            ],
+        }
+        activities_list.append(activity_data)
+    response["activities"] = activities_list
+
+    return response

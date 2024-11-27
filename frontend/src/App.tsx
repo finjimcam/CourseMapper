@@ -2,37 +2,36 @@ import {
   createBrowserRouter, 
   Route, 
   createRoutesFromElements,
-  RouterProvider} from 'react-router-dom'
-
-// Do we need the import below?
-import { Flowbite } from 'flowbite-react'
+  RouterProvider
+} from 'react-router-dom';
 
 // Layout
-import Layout from './Layout'
+import Layout from './Layout';
 
 // Pages
-import Home from './pages/Home'
-import About from './pages/About'
+import Home from './pages/Home';
+import About from './pages/About';
+import MyWorkbooks from './pages/MyWorkbooks';
+import Workbook from './pages/Workbook'; // Import the Workbook component
 
-// Do we need the import below?
-import './App.css'
-import MyWorkbooks from './pages/MyWorkbooks'
+import './App.css';
 
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<Layout />}>
       <Route index element={<Home />} />
       <Route path="home" element={<Home />} />
-      <Route path="MyWorkbooks" element={<MyWorkbooks />} />
+      <Route path="my-workbooks" element={<MyWorkbooks />} />
       <Route path="about" element={<About />} />
+      <Route path="workbook/:workbook_id" element={<Workbook />} /> {/* Add this route */}
     </Route>
   )
-)
+);
 
 function App() {
   return (
-    <RouterProvider router = {router}/>
+    <RouterProvider router={router} />
   );
 }
 
-export default App
+export default App;
