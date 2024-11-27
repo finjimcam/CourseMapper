@@ -136,7 +136,7 @@ def _populate_initial_data() -> None:
                 time_estimate = int(dataframe["Time (in mins)"].iloc[i])
                 task_status = dataframe["Task Status"].iloc[i]
                 location = dataframe["Activity Location"].iloc[i]
-                
+
                 activity = Activity(
                     week=weeks[week_no],
                     workbook=workbook,
@@ -153,11 +153,11 @@ def _populate_initial_data() -> None:
                         else task_statuses["Unassigned"]
                     ),
                 )
-                
+
                 # Add staff responsibility if staff is specified
                 if not pd.isna(staff_responsible) and staff_responsible in users:
                     activity.staff_responsible.append(users[staff_responsible])
-                
+
                 activities.append(activity)
 
         session.add_all(task_statuses.values())
