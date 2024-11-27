@@ -14,7 +14,6 @@ before_script:
 stages:
   - Static Analysis
   - Dynamic Analysis
-  - Type Checking
 
 Linting with black in backend:
   stage: Static Analysis
@@ -24,7 +23,7 @@ Linting with black in backend:
     changes:
       - backend/**/*
 
-Type checking with mypy:
+Type checking with mypy in backend:
   stage: Static Analysis
   script:
     - mypy --strict backend
@@ -40,12 +39,10 @@ Unit tests on backend:
     changes:
       - backend/**/*
 
-Type Checking on frontend:
-  stage: Type Checking
+Type checking with mypy in frontend:
+  stage: Static Analysis
   script:
-    - cd frontend
-    - nom install
-    - npx tsc --noEmit
+    - mypy --strict frontend
   only:
     changes:
       - frontend/**/*
