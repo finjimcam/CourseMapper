@@ -22,7 +22,8 @@ from backend.models.models import (
     GraduateAttribute,
 )
 
-_SQLITE_FILE_NAME = "backend/database.db"
+_BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+_SQLITE_FILE_NAME = os.path.join(_BACKEND_DIR, "database.db")
 _SQLITE_URL = f"sqlite:///{_SQLITE_FILE_NAME}"
 
 _LEGEND_CSV_PATH = os.path.join(os.path.dirname(__file__), "../data/Legend.csv")
