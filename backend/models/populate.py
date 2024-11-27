@@ -95,6 +95,18 @@ def _populate_initial_data() -> None:
             "Richard Johnston": User(
                 name="Richard Johnston", permissions_group=permissions_groups["Admin"]
             ),
+            "Scott Ramsey": User(
+                name="Scott Ramsey", permissions_group=permissions_groups["User"]
+            ),
+            "Andrew Struan": User(
+                name="Andrew Struan", permissions_group=permissions_groups["User"]
+            ),
+            "Caitlin Diver": User(
+                name="Caitlin Diver", permissions_group=permissions_groups["User"]
+            ),
+            "Jennifer Boyle": User(
+                name="Jennifer Boyle", permissions_group=permissions_groups["User"]
+            ),
         }
         courses = {
             "COMPSCI4015": Course(
@@ -128,29 +140,35 @@ def _populate_initial_data() -> None:
             )
             for i in range(1, len(dataframe)):
                 name = dataframe["Title / Name"].iloc[i]
+                staff_responsible = dataframe["Staff Responsible"].iloc[i]
                 learning_activity = dataframe["Learning Activity"].iloc[i]
                 learning_type = dataframe["Learning Type"].iloc[i]
                 time_estimate = int(dataframe["Time (in mins)"].iloc[i])
                 task_status = dataframe["Task Status"].iloc[i]
                 location = dataframe["Activity Location"].iloc[i]
-                activities.append(
-                    Activity(
-                        week=weeks[week_no],
-                        workbook=workbook,
-                        name=name,
-                        location=location if not pd.isna(location) else "On Campus",
-                        learning_activity=learning_activities[
-                            workbook.learning_platform.name
-                        ][learning_activity],
-                        learning_type=learning_types[learning_type],
-                        time_estimate_minutes=time_estimate,
-                        task_status=(
-                            task_statuses[task_status]
-                            if not pd.isna(task_status)
-                            else task_statuses["Unassigned"]
-                        ),
-                    )
+
+                activity = Activity(
+                    week=weeks[week_no],
+                    workbook=workbook,
+                    name=name,
+                    location=location if not pd.isna(location) else "On Campus",
+                    learning_activity=learning_activities[
+                        workbook.learning_platform.name
+                    ][learning_activity],
+                    learning_type=learning_types[learning_type],
+                    time_estimate_minutes=time_estimate,
+                    task_status=(
+                        task_statuses[task_status]
+                        if not pd.isna(task_status)
+                        else task_statuses["Unassigned"]
+                    ),
                 )
+
+                # Add staff responsibility if staff is specified
+                if not pd.isna(staff_responsible) and staff_responsible in users:
+                    activity.staff_responsible.append(users[staff_responsible])
+
+                activities.append(activity)
 
         session.add_all(task_statuses.values())
         session.add_all(learning_types.values())

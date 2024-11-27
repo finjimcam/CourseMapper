@@ -7,15 +7,25 @@ that reviewers can understand your intent. Keeping the description updated is
 especially important if they didn't participate in the discussion.
 -->
 
-### References
+### References and Related Issues
 <!-- Please include cross links to any resources that are relevant to this MR.
 
 This will give reviewers and future readers helpful context to give an efficient review of the changes introduced. 
 
 If no references exist, delete this heading.
+
+Also, add any related issues using #(issue number).
+
 -->
 
-- 
+## Type of change
+
+<!-- Please delete options that are not relevant. -->
+
+- Bug fix (non-breaking change which fixes an issue)
+- New feature (non-breaking change which adds functionality)
+- Breaking change (fix or feature that would cause existing functionality to not work as expected)
+- This change requires a documentation update
 
 ### MR acceptance checklist
 
