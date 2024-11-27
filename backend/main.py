@@ -46,30 +46,26 @@ app.add_middleware(
 # Views for individual models for testing purposes
 @app.get("/users/")
 def read_users(session: Session = Depends(get_session)) -> List[User]:
-    users = list(session.exec(select(User)).all())
-    return users
+    return list(session.exec(select(User)).all())
 
 
 @app.get("/permissions-groups/")
 def read_permissions_groups(
     session: Session = Depends(get_session),
 ) -> List[PermissionsGroup]:
-    permissions_groups = list(session.exec(select(PermissionsGroup)).all())
-    return permissions_groups
+    return list(session.exec(select(PermissionsGroup)).all())
 
 
 @app.get("/courses/")
 def read_courses(session: Session = Depends(get_session)) -> List[Course]:
-    courses = list(session.exec(select(Course)).all())
-    return courses
+    return list(session.exec(select(Course)).all())
 
 
 @app.get("/learning-platforms/")
 def read_learning_platforms(
     session: Session = Depends(get_session),
 ) -> List[LearningPlatform]:
-    learning_platforms = list(session.exec(select(LearningPlatform)).all())
-    return learning_platforms
+    return list(session.exec(select(LearningPlatform)).all())
 
 
 @app.get("/learning-activities/")
@@ -88,14 +84,12 @@ def read_learning_activities(
 
 @app.get("/task-statuses/")
 def read_task_statuses(session: Session = Depends(get_session)) -> List[TaskStatus]:
-    task_statuses = list(session.exec(select(TaskStatus)).all())
-    return task_statuses
+    return list(session.exec(select(TaskStatus)).all())
 
 
 @app.get("/learning-types/")
 def read_learning_types(session: Session = Depends(get_session)) -> List[LearningType]:
-    learning_types = list(session.exec(select(LearningType)).all())
-    return learning_types
+    return list(session.exec(select(LearningType)).all())
 
 
 @app.get("/workbooks/")
@@ -110,8 +104,7 @@ def read_workbooks(
 
 @app.get("/weeks/")
 def read_weeks(session: Session = Depends(get_session)) -> List[Week]:
-    weeks = list(session.exec(select(Week)).all())
-    return weeks
+    return list(session.exec(select(Week)).all())
 
 
 @app.get("/activities/")
