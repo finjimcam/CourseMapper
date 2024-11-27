@@ -7,8 +7,8 @@ from fastapi import Depends
 from sqlmodel import Session, SQLModel, create_engine
 
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
-sqlite_file_name = os.path.join(current_dir, "database.db")
+backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sqlite_file_name = os.path.join(backend_dir, "database.db")
 sqlite_url = f"sqlite:///{sqlite_file_name}"
 
 connect_args = {"check_same_thread": False}
