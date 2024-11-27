@@ -18,7 +18,7 @@ stages:
 Linting with black:
   stage: Static Analysis
   script:
-    - black --check --diff backend
+    - black --check --diff --line-length 99 backend
   only:
     changes:
       - backend/**/*
