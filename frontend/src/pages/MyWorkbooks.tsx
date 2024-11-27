@@ -14,6 +14,7 @@ function MyWorkbooks() {
   useEffect(() => {
     const fetchWorkbooks = async () => {
       try {
+        // TODO: specify the user to get workbooks they are involved in 
         const response = await axios.get('http://127.0.0.1:8000/workbooks/');
         setWorkbooks(response.data);
         setLoading(false);
@@ -28,22 +29,6 @@ function MyWorkbooks() {
 
   if (loading) return <div className="text-center mt-10">Loading...</div>;
   if (error) return <div className="text-center mt-10 text-red-500">Error: {error}</div>;
-
-  const items = workbooks.map((workbook) => ({
-    id: workbook.id,
-    content: (
-      <Link to={`/workbook/${workbook.id}`} key={workbook.id}>
-        <div className="text-center">
-          <img
-            src="https://via.placeholder.com/150"
-            alt="Workbook"
-            className="rounded-lg shadow-md"
-          />
-          <p className="mt-2 text-sm text-gray-700">{workbook.title || 'Untitled Workbook'}</p>
-        </div>
-      </Link>
-    ),
-  }));
 
   return (
     <>
@@ -67,7 +52,7 @@ function MyWorkbooks() {
 
         {/* Carousel Section */}
         <div className="space-y-4">
-          <Carousel items={items} />
+          <Carousel items={workbooks} />
         </div>
       </div>
     </>
