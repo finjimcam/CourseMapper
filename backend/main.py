@@ -22,7 +22,6 @@ from backend.models.models import (
     LearningType,
     ActivityStaff,
     GraduateAttribute,
-    WeekGraduateAttributes,
 )
 
 SessionDep = Annotated[Session, Depends(get_session)]
@@ -138,16 +137,6 @@ def read_activities(
             )
         )
     )
-
-
-@app.get("/week_graduate_attributes/")
-def read_week_graduate_attributes(
-    session: Session = Depends(get_session),
-) -> List[WeekGraduateAttributes]:
-    read_week_graduate_attributes = list(
-        session.exec(select(WeekGraduateAttributes)).all()
-    )
-    return read_week_graduate_attributes
 
 
 # New endpoint to fetch all workbook details and related data
