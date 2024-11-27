@@ -77,7 +77,9 @@ def read_learning_activities(
         return list(session.exec(select(LearningActivity)).all())
     return list(
         session.exec(
-            select(LearningActivity).where(LearningPlatform.id == learning_platform_id)
+            select(LearningActivity).where(
+                LearningActivity.learning_platform_id == learning_platform_id
+            )
         )
     )
 
