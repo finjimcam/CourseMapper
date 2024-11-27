@@ -14,27 +14,46 @@ before_script:
 stages:
   - Static Analysis
   - Dynamic Analysis
+  - Type Checking
 
-Linting with black:
+Linting with black in backend:
   stage: Static Analysis
-  only:
-    - main
-    - merge_requests
   script:
     - black --check --diff backend
+  only:
+    changes:
+      - backend/**/*
 
 Type checking with mypy:
   stage: Static Analysis
-  only:
-    - main
-    - merge_requests
   script:
     - mypy --strict backend
+  only:
+    changes:
+      - backend/**/*
 
 Unit tests on backend:
   stage: Dynamic Analysis
-  only:
-    - main
-    - merge_requests
   script:
     - python -m unittest discover -s backend -p "test_*.py"
+  only:
+    changes:
+      - backend/**/*
+
+Type Checking on frontend:
+  stage: Type Checking
+  script:
+    - cd frontend
+    - nom install
+    - npx tsc --noEmit
+  only:
+    changes:
+      - frontend/**/*
+
+Linting with black in frontend:
+  stage: Static Analysis
+  script:
+    - black --check --diff frontend
+  only:
+    changes:
+      - frontend/**/*
