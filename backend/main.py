@@ -75,9 +75,15 @@ def read_learning_platforms(
 @app.get("/learning-activities/")
 def read_learning_activities(
     session: Session = Depends(get_session),
+    learning_platform_id: uuid.UUID | None = None,
 ) -> List[LearningActivity]:
-    learning_activities = list(session.exec(select(LearningActivity)).all())
-    return learning_activities
+    if not learning_platform_id:
+        return list(session.exec(select(LearningActivity)).all())
+    return list(
+        session.exec(
+            select(LearningActivity).where(LearningPlatform.id == learning_platform_id)
+        )
+    )
 
 
 @app.get("/task-statuses/")
