@@ -39,7 +39,7 @@ Unit tests on backend:
     changes:
       - backend/**/*
 
-Type checking with mypy in frontend:
+Type checking for frontend:
   stage: Static Analysis
   image: node:16
   cache:
