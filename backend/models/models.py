@@ -16,14 +16,21 @@ class ActivityStaff(SQLModel, table=True):
     activity_id: uuid.UUID = Field(foreign_key="activity.id", primary_key=True)
 
 
+class WeekGraduateAttributes(SQLModel, table=True):
+    week_id: uuid.UUID = Field(foreign_key="week.id", primary_key=True)
+    graduate_attribute_id: uuid.UUID = Field(
+        foreign_key="graduate_attribute.id", primary_key=True
+    )
+
+
 """
 models
 
 format:
-    fields
-    1->N relationships
-    N->1 relationships
-    N->M relationships
+    fields \\
+    1->N relationships \\
+    N->1 relationships \\
+    N->M relationships \\
 """
 
 
@@ -114,6 +121,19 @@ class Week(SQLModel, table=True):
     workbook: Optional["Workbook"] = Relationship(back_populates="weeks")
 
     activities: list["Activity"] = Relationship(back_populates="week")
+
+    graduate_attributes: list["GraduateAttribute"] = Relationship(
+        back_populates="weeks", link_model=WeekGraduateAttributes
+    )
+
+
+class GraduateAttribute(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    name: str = Field(nullable=False)
+
+    weeks: list["Week"] = Relationship(
+        back_populates="graduate_attributes", link_model=WeekGraduateAttributes
+    )
 
 
 class Activity(SQLModel, table=True):
