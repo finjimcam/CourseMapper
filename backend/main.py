@@ -21,6 +21,7 @@ from backend.models.models import (
     TaskStatus,
     LearningType,
     ActivityStaff,
+    GraduateAttribute,
 )
 
 SessionDep = Annotated[Session, Depends(get_session)]
@@ -106,6 +107,14 @@ def read_workbooks(
 def read_weeks(session: Session = Depends(get_session)) -> List[Week]:
     weeks = list(session.exec(select(Week)).all())
     return weeks
+
+
+@app.get("/graduate_attributes/")
+def read_graduate_attributes(
+    session: Session = Depends(get_session),
+) -> List[GraduateAttribute]:
+    graduate_attributes = list(session.exec(select(GraduateAttribute)).all())
+    return graduate_attributes
 
 
 @app.get("/activities/")

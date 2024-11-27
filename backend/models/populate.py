@@ -19,6 +19,7 @@ from backend.models.models import (
     LearningActivity,
     TaskStatus,
     LearningType,
+    GraduateAttribute,
 )
 
 _SQLITE_FILE_NAME = "backend/database.db"
@@ -56,6 +57,7 @@ def _populate_initial_data() -> None:
 
         task_statuses = {}
         learning_types = {}
+        graduate_attributes = {}
         learning_platforms = {}
         learning_activities: dict[str, dict[str, LearningActivity]] = {}
 
@@ -63,6 +65,10 @@ def _populate_initial_data() -> None:
             task_statuses[task_status] = TaskStatus(name=task_status)
         for learning_type in dataframe["Learning Type"].dropna():
             learning_types[learning_type] = LearningType(name=learning_type)
+        for graduate_attribute in dataframe["Graduate Attribute"].dropna():
+            graduate_attributes[graduate_attribute] = GraduateAttribute(
+                name=graduate_attribute
+            )
         for learning_platform in dataframe["Learning Platform"].dropna():
             learning_platforms[learning_platform] = LearningPlatform(
                 name=learning_platform
@@ -127,6 +133,10 @@ def _populate_initial_data() -> None:
                 end_date=workbook.start_date
                 + datetime.timedelta(weeks=week_no - 1)
                 + datetime.timedelta(days=4),
+                graduate_attributes=[
+                    graduate_attributes[graduate_attribute]
+                    for graduate_attribute in dataframe["Graduate Attribute"].dropna()
+                ],
             )
             for i in range(1, len(dataframe)):
                 name = dataframe["Title / Name"].iloc[i]
@@ -162,6 +172,7 @@ def _populate_initial_data() -> None:
 
         session.add_all(task_statuses.values())
         session.add_all(learning_types.values())
+        session.add_all(graduate_attributes.values())
         session.add_all(learning_platforms.values())
         for platform_activities in learning_activities.values():
             session.add_all(platform_activities.values())
