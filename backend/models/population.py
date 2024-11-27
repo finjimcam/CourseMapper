@@ -16,7 +16,8 @@ from backend.models.models import (
     LearningType,
 )
 
-sqlite_file_name = "backend/database.db"
+backend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sqlite_file_name = os.path.join(backend_dir, "database.db")
 sqlite_url = f"sqlite:///{sqlite_file_name}"
 
 connect_args = {"check_same_thread": False}
