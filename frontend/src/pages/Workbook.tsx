@@ -6,6 +6,8 @@ import axios from 'axios';
 import { Tabs, Table, Badge, Spinner } from 'flowbite-react';
 import ReactApexChart from 'react-apexcharts';
 import { ApexOptions } from 'apexcharts';
+import { statusColors, learningTypeColors, CustomBadge } from '../components/CustomBadge';
+
 
 // Backend data interfaces
 interface User {
@@ -277,7 +279,7 @@ function Workbook(): JSX.Element {
       position: 'bottom',
       horizontalAlign: 'left',
     },
-    colors: ['#a1f5ed', '#ffd21a', '#7aaeea', '#f8807f', '#bb98dc', '#bdea75', '#44546a'],
+    colors: ['#a1f5ed', '#ffd21a',  '#7aaeea', '#f8807f', '#bb98dc', '#bdea75', '#44546a'],
     fill: {
       opacity: 1,
     },
@@ -386,12 +388,12 @@ function Workbook(): JSX.Element {
                           </Table.Cell>
                           <Table.Cell>{row.title}</Table.Cell>
                           <Table.Cell>{row.activity}</Table.Cell>
-                          <Table.Cell>{row.type}</Table.Cell>
-                          <Table.Cell>{row.time}</Table.Cell>
                           <Table.Cell>
-                            <Badge color="success">{row.status}</Badge>
-                          </Table.Cell>
+                            <CustomBadge label={row.type} colorMapping={learningTypeColors} />                          </Table.Cell>
                           <Table.Cell>{row.location}</Table.Cell>
+                          <Table.Cell>
+                            <CustomBadge label={row.status} colorMapping={statusColors} />                          </Table.Cell>
+                          <Table.Cell>{row.time}</Table.Cell>
                         </Table.Row>
                       ))}
                     </Table.Body>

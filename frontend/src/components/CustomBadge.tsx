@@ -1,0 +1,45 @@
+import { Badge } from 'flowbite-react';
+
+interface CustomBadgeProps {
+    label: string;
+    colorMapping: { [key: string]: string }; // Accept a color mapping
+}
+
+const normaliseKey = (status: string): string => {
+    return status.trim().toLowerCase().replace(/\s+/g, ''); // Normalize spaces
+  };
+
+// Color mappings for statuses
+export const statusColors: { [key: string]: string } = {
+  completed: '#00b050', // Green
+  inprogress: '#ffc000', // Amber
+  unassigned: '#ff0000', // Red
+};
+
+// Color mappings for learning types
+export const learningTypeColors: { [key: string]: string } = {
+    practice: '#a1f5ed',     // turqoise
+    acquisition: '#ffd21a',    // Yellow
+    discussion: '#7aaeea',   // Blue
+    collaboration: '#f8807f',  // Red
+    production: '#bb98dc', // Purple
+    investigation: '#bdea75', // Green
+    assessment: '#44546a', // Navy
+  };  
+
+export const CustomBadge: React.FC<CustomBadgeProps> = ({ label, colorMapping }) => {
+  const normalizedKey = normaliseKey(label); // Normalize the label
+  const hexColor = colorMapping[normalizedKey] || '#6c757d'; // Default to gray if unmatched
+
+  return (
+    <Badge
+      style={{
+        backgroundColor: hexColor,
+        color: '#fff',
+        borderRadius: '12px',
+      }}
+    >
+      {label}
+    </Badge>
+  );
+};
