@@ -41,8 +41,14 @@ Unit tests on backend:
 
 Type checking with mypy in frontend:
   stage: Static Analysis
+  image: node:16
+  cache:
+    paths:
+      - node_modules/
+  before_script:
+    - npm ci
   script:
-    - mypy --strict frontend
+    - npx tsc --noEmit
   only:
     changes:
       - frontend/**/*
