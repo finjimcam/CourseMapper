@@ -37,6 +37,9 @@ export const CustomBadge: React.FC<CustomBadgeProps> = ({ label, colorMapping })
         backgroundColor: hexColor,
         color: '#fff',
         borderRadius: '12px',
+        textAlign: 'center',
+        justifyContent: 'center', // Center horizontally
+        alignItems: 'center', // Center vertically
       }}
     >
       {label}
