@@ -154,6 +154,7 @@ def _populate_initial_data() -> None:
 
         session.add_all(task_statuses.values())
         session.add_all(learning_types.values())
+        session.add_all(graduate_attributes.values())
         session.add_all(learning_platforms.values())
         for platform_activities in learning_activities.values():
             session.add_all(platform_activities.values())
