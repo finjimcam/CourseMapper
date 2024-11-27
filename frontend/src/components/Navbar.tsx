@@ -1,12 +1,12 @@
-import { Link } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 
 function Navbar() {
     return (
         <nav className="bg-white border-gray-200">
             <div className="flex flex-wrap items-center justify-between mx-auto p-4">
-                <Link to="/home" className="flex items-center space-x-3 rtl:space-x-reverse">
+                <NavLink to="/home" className="flex items-center space-x-3 rtl:space-x-reverse">
                     <img src="/src/assets/LISU.png" className="h-8" alt="LISU Logo" />
-                </Link>
+                </NavLink>
                 <div className="flex items-center md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
                     <button
                         type="button"
@@ -33,36 +33,36 @@ function Navbar() {
                         </div>
                         <ul className="py-2" aria-labelledby="user-menu-button">
                             <li>
-                                <Link
+                                <NavLink
                                     to="#"
                                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                 >
                                     Dashboard
-                                </Link>
+                                </NavLink>
                             </li>
                             <li>
-                                <Link
+                                <NavLink
                                     to="#"
                                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                 >
                                     Settings
-                                </Link>
+                                </NavLink>
                             </li>
                             <li>
-                                <Link
+                                <NavLink
                                     to="#"
                                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                 >
                                     Earnings
-                                </Link>
+                                </NavLink>
                             </li>
                             <li>
-                                <Link
+                                <NavLink
                                     to="#"
                                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                                 >
                                     Sign out
-                                </Link>
+                                </NavLink>
                             </li>
                         </ul>
                     </div>
@@ -97,21 +97,28 @@ function Navbar() {
                 >
                     <ul className="flex flex-col font-medium p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-gray-50 md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0 md:bg-white">
                         <li>
-                            <Link
+                            <NavLink
                                 to="/home"
-                                className="block py-2 px-3 text-white bg-blue-700 rounded md:bg-transparent md:text-blue-700 md:p-0 underline"
-                                aria-current="page"
+                                className={({ isActive }) =>
+                                    `block py-2 px-3 rounded md:p-0 ${
+                                        isActive ? 'text-white bg-blue-700 md:bg-transparent md:text-blue-700 underline' : 'text-gray-900 hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700'
+                                    }`
+                                }
                             >
                                 Home
-                            </Link>
+                            </NavLink>
                         </li>
                         <li>
-                            <Link
+                            <NavLink
                                 to="/my-workbooks"
-                                className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700 md:p-0"
+                                className={({ isActive }) =>
+                                    `block py-2 px-3 rounded md:p-0 ${
+                                        isActive ? 'text-white bg-blue-700 md:bg-transparent md:text-blue-700 underline' : 'text-gray-900 hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700'
+                                    }`
+                                }
                             >
                                 My Workbooks
-                            </Link>
+                            </NavLink>
                         </li>
                     </ul>
                 </div>
