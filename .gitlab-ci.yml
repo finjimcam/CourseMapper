@@ -14,37 +14,27 @@ before_script:
 stages:
   - Static Analysis
   - Dynamic Analysis
-  - test
 
-backend_pipeline:
-  stage: test
+Linting with black:
+  stage: Static Analysis
   script:
-    - echo "Running backend tests..."
-
+    - black --check --diff backend
   only:
     changes:
       - backend/**/*
 
-Linting with black:
-  stage: Static Analysis
-  only:
-    - main
-    - merge_requests
-  script:
-    - black --check --diff backend
-
 Type checking with mypy:
   stage: Static Analysis
-  only:
-    - main
-    - merge_requests
   script:
     - mypy --strict backend
+  only:
+    changes:
+      - backend/**/*
 
 Unit tests on backend:
   stage: Dynamic Analysis
-  only:
-    - main
-    - merge_requests
   script:
     - python -m unittest discover -s backend -p "test_*.py"
+  only:
+    changes:
+      - backend/**/*
