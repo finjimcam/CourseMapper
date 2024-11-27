@@ -136,16 +136,6 @@ class Week(SQLModel, table=True):
 
     activities: list["Activity"] = Relationship(back_populates="week")
 
-    graduate_attributes: list["GraduateAttribute"] = Relationship(back_populates="week")
-
-
-class GraduateAttribute(SQLModel, table=True):
-    Goal: str = Field(nullable=False)
-
-    week_number: Optional[int] = Field(foreign_key="week.number", primary_key=True)
-
-    week: Optional["Week"] = Relationship(back_populates="graduate_attributes")
-
 
 class Activity(SQLModel, table=True):
     workbook_id: Optional[UUID] = Field(foreign_key="workbook.id", primary_key=True)
