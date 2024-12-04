@@ -47,50 +47,52 @@ app.add_middleware(
 # Views for individual models for testing purposes
 @app.get("/users/")
 def read_users(session: Session = Depends(get_session)) -> List[User]:
-    users = list(session.exec(select(User)).all())
-    return users
+    return list(session.exec(select(User)).all())
 
 
 @app.get("/permissions-groups/")
 def read_permissions_groups(
     session: Session = Depends(get_session),
 ) -> List[PermissionsGroup]:
-    permissions_groups = list(session.exec(select(PermissionsGroup)).all())
-    return permissions_groups
+    return list(session.exec(select(PermissionsGroup)).all())
 
 
 @app.get("/courses/")
 def read_courses(session: Session = Depends(get_session)) -> List[Course]:
-    courses = list(session.exec(select(Course)).all())
-    return courses
+    return list(session.exec(select(Course)).all())
 
 
 @app.get("/learning-platforms/")
 def read_learning_platforms(
     session: Session = Depends(get_session),
 ) -> List[LearningPlatform]:
-    learning_platforms = list(session.exec(select(LearningPlatform)).all())
-    return learning_platforms
+    return list(session.exec(select(LearningPlatform)).all())
 
 
 @app.get("/learning-activities/")
 def read_learning_activities(
     session: Session = Depends(get_session),
+    learning_platform_id: uuid.UUID | None = None,
 ) -> List[LearningActivity]:
-    learning_activities = list(session.exec(select(LearningActivity)).all())
-    return learning_activities
+    if not learning_platform_id:
+        return list(session.exec(select(LearningActivity)).all())
+    return list(
+        session.exec(
+            select(LearningActivity).where(
+                LearningActivity.learning_platform_id == learning_platform_id
+            )
+        )
+    )
 
 
 @app.get("/task-statuses/")
 def read_task_statuses(session: Session = Depends(get_session)) -> List[TaskStatus]:
-    task_statuses = list(session.exec(select(TaskStatus)).all())
-    return task_statuses
+    return list(session.exec(select(TaskStatus)).all())
 
 
 @app.get("/learning-types/")
 def read_learning_types(session: Session = Depends(get_session)) -> List[LearningType]:
-    learning_types = list(session.exec(select(LearningType)).all())
-    return learning_types
+    return list(session.exec(select(LearningType)).all())
 
 
 @app.get("/workbooks/")
@@ -116,8 +118,7 @@ def read_workbooks(
 
 @app.get("/weeks/")
 def read_weeks(session: Session = Depends(get_session)) -> List[Week]:
-    weeks = list(session.exec(select(Week)).all())
-    return weeks
+    return list(session.exec(select(Week)).all())
 
 
 @app.get("/graduate_attributes/")
@@ -137,14 +138,11 @@ def read_activities(
     if not workbook_id:
         return list(session.exec(select(Activity)).all())
     if not week_number:
-        return list(
-            session.exec(select(Activity).where(Activity.workbook_id == workbook_id))
-        )
+        return list(session.exec(select(Activity).where(Activity.workbook_id == workbook_id)))
     return list(
         session.exec(
             select(Activity).where(
-                (Activity.workbook_id == workbook_id)
-                & (Activity.week_number == week_number)
+                (Activity.workbook_id == workbook_id) & (Activity.week_number == week_number)
             )
         )
     )
@@ -163,17 +161,11 @@ def get_workbook_details(
 
     # Fetch related data
     course = session.exec(select(Course).where(Course.id == workbook.course_id)).first()
-    course_lead = session.exec(
-        select(User).where(User.id == workbook.course_lead_id)
-    ).first()
+    course_lead = session.exec(select(User).where(User.id == workbook.course_lead_id)).first()
     learning_platform = session.exec(
-        select(LearningPlatform).where(
-            LearningPlatform.id == workbook.learning_platform_id
-        )
+        select(LearningPlatform).where(LearningPlatform.id == workbook.learning_platform_id)
     ).first()
-    activities = list(
-        session.exec(select(Activity).where(Activity.workbook_id == workbook_id))
-    )
+    activities = list(session.exec(select(Activity).where(Activity.workbook_id == workbook_id)))
 
     # Build response
     response: Dict[str, Any] = {
@@ -218,9 +210,7 @@ def get_workbook_details(
     for activity in activities:
         # Fetch related data for each activity
         learning_activity = session.exec(
-            select(LearningActivity).where(
-                LearningActivity.id == activity.learning_activity_id
-            )
+            select(LearningActivity).where(LearningActivity.id == activity.learning_activity_id)
         ).first()
         learning_type = session.exec(
             select(LearningType).where(LearningType.id == activity.learning_type_id)
@@ -232,9 +222,7 @@ def get_workbook_details(
         # Get staff using the link model
         staff = list(
             session.exec(
-                select(User)
-                .join(ActivityStaff)
-                .where(ActivityStaff.activity_id == activity.id)
+                select(User).join(ActivityStaff).where(ActivityStaff.activity_id == activity.id)
             )
         )
 

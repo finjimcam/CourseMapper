@@ -19,9 +19,7 @@ class ActivityStaff(SQLModel, table=True):
 class WeekGraduateAttributes(SQLModel, table=True):
     week_workbook_id: uuid.UUID = Field(primary_key=True)
     week_number: int = Field(primary_key=True)
-    graduate_attribute_id: uuid.UUID = Field(
-        foreign_key="graduateattribute.id", primary_key=True
-    )
+    graduate_attribute_id: uuid.UUID = Field(foreign_key="graduateattribute.id", primary_key=True)
 
     __table_args__ = (
         ForeignKeyConstraint(
@@ -47,9 +45,7 @@ class User(SQLModel, table=True):
     name: str = Field(index=True)
     permissions_group_id: uuid.UUID = Field(foreign_key="permissionsgroup.id")
 
-    permissions_group: Optional["PermissionsGroup"] = Relationship(
-        back_populates="users"
-    )
+    permissions_group: Optional["PermissionsGroup"] = Relationship(back_populates="users")
 
     workbooks_leading: list["Workbook"] = Relationship(back_populates="course_lead")
 
@@ -78,9 +74,7 @@ class Workbook(SQLModel, table=True):
 
     course_lead: Optional["User"] = Relationship(back_populates="workbooks_leading")
     course: Optional["Course"] = Relationship(back_populates="workbooks")
-    learning_platform: Optional["LearningPlatform"] = Relationship(
-        back_populates="workbooks"
-    )
+    learning_platform: Optional["LearningPlatform"] = Relationship(back_populates="workbooks")
 
     weeks: list["Week"] = Relationship(back_populates="workbook")
     activities: list["Activity"] = Relationship(back_populates="workbook")
@@ -163,9 +157,7 @@ class Activity(SQLModel, table=True):
 
     workbook: Optional["Workbook"] = Relationship(back_populates="activities")
     week: Optional["Week"] = Relationship(back_populates="activities")
-    learning_activity: Optional["LearningActivity"] = Relationship(
-        back_populates="activities"
-    )
+    learning_activity: Optional["LearningActivity"] = Relationship(back_populates="activities")
     learning_type: Optional["LearningType"] = Relationship(back_populates="activities")
     task_status: Optional["TaskStatus"] = Relationship(back_populates="activities")
 

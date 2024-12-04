@@ -1,40 +1,62 @@
-Task Status,Learning Type,Extra Options,VLE Platform,Activity Location,Learning Approach,Calculated Time,Graduate Attribute,Learning Platform,Coursera,FutureLearn,Moodle,xSiTe
-Unassigned,Acquisition,Published,Coursera,On Campus,Asynchronous,0:05,Adaptable,Coursera,Video,Article,Assignment,Announcements
-In Progress,Collaboration,Uploaded,FutureLearn,Remote (Home),Synchronous,0:10,Confident,FutureLearn,Reading,Audio,Attendance,Assignment
-Completed,Discussion,,Moodle,,,0:15,Effective Communication,Moodle,Assignment,Discussion,Board,Blog
-,Investigation,,,,,0:20,Ethically and Socially Aware,xSiTe,Discussion Prompt,Exercise / External Tools,Book,Calendar
-,Practice,,,,,0:25,Experienced Collaborators,,Programming Assignment,Peer Graded Assignment,Chat,Check List
-,Production,,,,,0:30,Independent and Critical Thinkers,,Peer Review,Poll,Checklist,Class Progress
-,Assessment,,,,,0:35,Investigative,,App Item,Quiz,Choice,Discussion
-,,,,,,0:40,Reflective Learners,,Ungraded Lab,Video,Custom Certificate,Echo360
-,,,,,,0:45,Resourceful and Responsible,,Quiz,,Database,Email
-,,,,,,0:50,Subject Specialists,,Ungraded Plugin,,Echo360,File
-,,,,,,0:55,,,,,External Tool,Glossary
-,,,,,,1:00,,,,,File,Groups
-,,,,,,1:10,,,,,Feedback,HTML Document
-,,,,,,1:20,,,,,Folder,Manage Files
-,,,,,,1:30,,,,,Forum,New Lesson
-,,,,,,1:40,,,,,Game,Media Library
-,,,,,,1:50,,,,,Glossary,Portfolio
-,,,,,,2:00,,,,,Group Choice,OneDrive
-,,,,,,,,,,,H5P Interactive,Quiz
-,,,,,,,,,,,IMS Content Package,SCORM
-,,,,,,,,,,,Kaltura Media Assignment,Self Assessment
-,,,,,,,,,,,Kaltura Video Resource,Surveys
-,,,,,,,,,,,Lesson,Weblink
-,,,,,,,,,,,Mahara,Zoom
-,,,,,,,,,,,Open Forum,
-,,,,,,,,,,,OU Blog,
-,,,,,,,,,,,Page,
-,,,,,,,,,,,Questionnaire,
-,,,,,,,,,,,Quiz,
-,,,,,,,,,,,Reading List,
-,,,,,,,,,,,Re-engagement,
-,,,,,,,,,,,Scheduler,
-,,,,,,,,,,,SCORM,
-,,,,,,,,,,,Text and Media Area,
-,,,,,,,,,,,Turnitin,
-,,,,,,,,,,,URL,
-,,,,,,,,,,,Wiki,
-,,,,,,,,,,,Workshop,
-,,,,,,,,,,,Zoom,
+Task Status,Learning Type,Activity Location,Learning Approach,Calculated Time,Graduate Attribute,Learning Platform,Coursera,FutureLearn,Moodle,xSiTe,COIL
+Unassigned,Acquisition,On Campus,Asynchronous,00:05,Adaptable,Coursera,Video,Article,Assignment,Announcements,Assignment
+In Progress,Collaboration,Remote (Home),Synchronous,00:10,Confident,FutureLearn,Reading,Audio,Attendance,Assignment,Attendance
+Completed,Discussion,,,00:15,Effective Communication,Moodle,Assignment,Discussion,Board,Blog,Blackboard Ally
+,Investigation,,,00:20,Ethically and Socially Aware,xSiTe,Discussion Prompt,Exercise / External Tools,Book,Calendar,Board
+,Practice,,,00:25,Experienced Collaborators,COIL,Programming Assignment,Peer Graded Assignment,Chat,Check List,Book
+,Production,,,00:30,Independent and Critical Thinkers,,Peer Review,Poll,Checklist,Class Progress,Camtasia
+,Assessment,,,00:35,Investigative,,App Item,Quiz,Choice,Discussion,Chat
+,,,,00:40,Reflective Learners,,Ungraded Lab,Video,CodeGrade,Echo360,Checklist
+,,,,00:45,Resourceful and Responsible,,Ungraded Plugin,,Custom Certificate,Email,Choice
+,,,,00:50,Subject Specialists,,,,Database,File,CodeGrade
+,,,,00:55,,,,,Echo360,Glossary,Custom Certificate
+,,,,01:00,,,,,EON-XR,Groups,Database
+,,,,01:10,,,,,ErysNotes,HTML Document,Echo360
+,,,,01:20,,,,,File,Manage Files,EON-XR
+,,,,01:30,,,,,Feedback,New Lesson,ErysNotes
+,,,,01:40,,,,,Folder,Media Library,File
+,,,,01:50,,,,,Forum,Portfolio,Feedback
+,,,,02:00,,,,,Game,OneDrive,Folder
+,,,,,,,,,Glossary,Quiz,Forum
+,,,,,,,,,Group Choice,SCORM,Game
+,,,,,,,,,H5P,Self Assessment,Glossary
+,,,,,,,,,H5P Interactive Content,Surveys,Group Choice
+,,,,,,,,,Harvard Business Publishing,Weblink,H5P
+,,,,,,,,,IMS Content Package,Zoom,H5P Interactive Content
+,,,,,,,,,Kaltura Media Assignment,,Harvard Business Publishing
+,,,,,,,,,Kaltura Video Quiz,,IMS Content Package
+,,,,,,,,,Kaltura Video Resource,,Kaltura Media Assignment
+,,,,,,,,,Labster,,Kaltura Video Quiz
+,,,,,,,,,LearningScience,,Kaltura Video Resource
+,,,,,,,,,Lesson,,Labster
+,,,,,,,,,Mahara,,LearningScience
+,,,,,,,,,MATLAB Coding Problem,,Lesson
+,,,,,,,,,Open Forum,,Mahara
+,,,,,,,,,OU Blog,,MATLAB Coding Problem
+,,,,,,,,,Page,,Mentimeter
+,,,,,,,,,Pearson MyLabs,,Microsoft Excel
+,,,,,,,,,Peer Assessment,,Microsoft OneNote
+,,,,,,,,,PDF Annotation,,Microsoft PowerPoint
+,,,,,,,,,Questionnaire,,Microsoft Sway
+,,,,,,,,,Quiz,,Microsoft Teams
+,,,,,,,,,Reading Lists @ Glasgow,,Microsoft Word
+,,,,,,,,,Re-engagement,,Miro
+,,,,,,,,,Scheduler,,Open Forum
+,,,,,,,,,SCORM,,OU Blog
+,,,,,,,,,Text and Media Area,,Page
+,,,,,,,,,Turnitin,,Pearson MyLabs
+,,,,,,,,,URL,,Peer Assessment
+,,,,,,,,,Wiki,,PDF Annotation
+,,,,,,,,,Workshop,,Qualtrics
+,,,,,,,,,Zoom,,Questionnaire
+,,,,,,,,,,,Quiz
+,,,,,,,,,,,Reading Lists @ Glasgow
+,,,,,,,,,,,Re-engagement
+,,,,,,,,,,,Scheduler
+,,,,,,,,,,,SCORM
+,,,,,,,,,,,Text and Media Area
+,,,,,,,,,,,Turnitin
+,,,,,,,,,,,URL
+,,,,,,,,,,,Wiki
+,,,,,,,,,,,Workshop
+,,,,,,,,,,,Zoom
