@@ -105,7 +105,7 @@ def read_workbooks(
         workbooks: List[Dict[str, Any]] = []
 
         for workbook in sqlmodel_workbooks:
-            wb  = dict(workbook)
+            wb = dict(workbook)
             wb["course_name"] = list(
                 session.exec(select(Course).where(Course.id == workbook.course_id))
             )[0].name
