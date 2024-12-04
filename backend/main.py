@@ -106,14 +106,27 @@ def read_workbooks(
 
         for workbook in sqlmodel_workbooks:
             wb: dict = dict(workbook)
-            wb["course_name"] = list(session.exec(select(Course).where(Course.id == workbook.course_id)))[0].name
-            wb["course_lead"] = list(session.exec(select(User).where(User.id == workbook.course_lead_id)))[0].name
-            wb["learning_platform"] = list(session.exec(select(LearningPlatform).where(LearningPlatform.id == workbook.learning_platform_id)))[0].name
+            wb["course_name"] = list(
+                session.exec(select(Course).where(Course.id == workbook.course_id))
+            )[0].name
+            wb["course_lead"] = list(
+                session.exec(select(User).where(User.id == workbook.course_lead_id))
+            )[0].name
+            wb["learning_platform"] = list(
+                session.exec(
+                    select(LearningPlatform).where(
+                        LearningPlatform.id == workbook.learning_platform_id
+                    )
+                )
+            )[0].name
             workbooks.append(wb)
 
         return workbooks
-            
-    return [dict(workbook) for workbook in session.exec(select(Workbook).where(Workbook.id == workbook_id))]
+
+    return [
+        dict(workbook)
+        for workbook in session.exec(select(Workbook).where(Workbook.id == workbook_id))
+    ]
 
 
 @app.get("/weeks/")
