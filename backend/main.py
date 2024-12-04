@@ -99,13 +99,13 @@ def read_learning_types(session: Session = Depends(get_session)) -> List[Learnin
 def read_workbooks(
     workbook_id: uuid.UUID | None = None,
     session: Session = Depends(get_session),
-) -> List[dict]:
+) -> List[Dict[str, Any]]:
     if not workbook_id:
         sqlmodel_workbooks: List[Workbook] = list(session.exec(select(Workbook)).all())
-        workbooks: List[dict] = []
+        workbooks: List[Dict[str, Any]] = []
 
         for workbook in sqlmodel_workbooks:
-            wb: dict = dict(workbook)
+            wb  = dict(workbook)
             wb["course_name"] = list(
                 session.exec(select(Course).where(Course.id == workbook.course_id))
             )[0].name
