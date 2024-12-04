@@ -390,10 +390,10 @@ function Workbook(): JSX.Element {
                           <Table.Cell>{row.activity}</Table.Cell>
                           <Table.Cell>
                             <CustomBadge label={row.type} colorMapping={learningTypeColors} />                          </Table.Cell>
-                          <Table.Cell>{row.location}</Table.Cell>
+                          <Table.Cell>{row.time}</Table.Cell>
                           <Table.Cell>
                             <CustomBadge label={row.status} colorMapping={statusColors} />                          </Table.Cell>
-                          <Table.Cell>{row.time}</Table.Cell>
+                          <Table.Cell>{row.location}</Table.Cell>
                         </Table.Row>
                       ))}
                     </Table.Body>
