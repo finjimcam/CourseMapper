@@ -138,13 +138,23 @@ class GraduateAttribute(SQLModel, table=True):
     )
 
 
+class Location(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    name: str = Field(nullable=False)
+
+    activities: list["Activity"] = Relationship(back_populates="location")
+
+
 class Activity(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     workbook_id: uuid.UUID = Field(foreign_key="workbook.id")
     week_number: Optional[int] = Field(foreign_key="week.number")
     name: str = Field(nullable=False)
     time_estimate_minutes: Optional[int] = Field(nullable=False)
-    location: str = Field(nullable=False)
+    location_id: uuid.UUID = Field(
+        nullable=False,
+        foreign_key="location.id",
+    )
     learning_activity_id: uuid.UUID = Field(
         nullable=False,
         foreign_key="learningactivity.id",
@@ -155,6 +165,7 @@ class Activity(SQLModel, table=True):
     )
     task_status_id: uuid.UUID = Field(nullable=False, foreign_key="taskstatus.id")
 
+    location: Optional["Location"] = Relationship(back_populates="activities")
     workbook: Optional["Workbook"] = Relationship(back_populates="activities")
     week: Optional["Week"] = Relationship(back_populates="activities")
     learning_activity: Optional["LearningActivity"] = Relationship(back_populates="activities")

@@ -19,6 +19,7 @@ from backend.models.models import (
     LearningPlatform,
     LearningActivity,
     TaskStatus,
+    Location,
     LearningType,
     ActivityStaff,
     GraduateAttribute,
@@ -118,6 +119,14 @@ def read_graduate_attributes(
     return graduate_attributes
 
 
+@app.get("/locations/")
+def read_locations(
+    session: Session = Depends(get_session)
+) -> List[Location]:
+    locations = list(session.exec(select(Location)).all())
+    return locations
+
+
 @app.get("/activities/")
 def read_activities(
     workbook_id: uuid.UUID | None = None,
@@ -198,6 +207,9 @@ def get_workbook_details(
     activities_list: List[Dict[str, Any]] = []
     for activity in activities:
         # Fetch related data for each activity
+        location = session.exec(
+            select(Location).where(Location.id == activity.location_id)
+        ).first()
         learning_activity = session.exec(
             select(LearningActivity).where(LearningActivity.id == activity.learning_activity_id)
         ).first()
@@ -219,8 +231,8 @@ def get_workbook_details(
             "id": str(activity.id),
             "name": activity.name,
             "time_estimate_minutes": activity.time_estimate_minutes,
-            "location": activity.location,
             "week_number": activity.week_number,
+            "location": location.name if location else None,
             "learning_activity": learning_activity.name if learning_activity else None,
             "learning_type": learning_type.name if learning_type else None,
             "task_status": task_status.name if task_status else None,

@@ -18,6 +18,7 @@ from backend.models.models import (
     LearningPlatform,
     LearningActivity,
     TaskStatus,
+    Location,
     LearningType,
     GraduateAttribute,
 )
@@ -55,12 +56,15 @@ def _populate_initial_data() -> None:
 
         dataframe = pd.read_csv(_LEGEND_CSV_PATH)
 
+        locations = {}
         task_statuses = {}
         learning_types = {}
         graduate_attributes = {}
         learning_platforms = {}
         learning_activities: dict[str, dict[str, LearningActivity]] = {}
 
+        for location in dataframe["Activity Location"].dropna():
+            locations[location] = Location(name=location)
         for task_status in dataframe["Task Status"].dropna():
             task_statuses[task_status] = TaskStatus(name=task_status)
         for learning_type in dataframe["Learning Type"].dropna():
@@ -136,12 +140,13 @@ def _populate_initial_data() -> None:
                 time_estimate = int(dataframe["Time (in mins)"].iloc[i])
                 task_status = dataframe["Task Status"].iloc[i]
                 location = dataframe["Activity Location"].iloc[i]
+                print(location)
 
                 activity = Activity(
                     week=weeks[week_no],
                     workbook=workbook,
                     name=name,
-                    location=location if not pd.isna(location) else "On Campus",
+                    location=locations[location],
                     learning_activity=learning_activities[workbook.learning_platform.name][
                         learning_activity
                     ],
@@ -160,6 +165,7 @@ def _populate_initial_data() -> None:
 
                 activities.append(activity)
 
+        session.add_all(locations.values())
         session.add_all(task_statuses.values())
         session.add_all(learning_types.values())
         session.add_all(graduate_attributes.values())
