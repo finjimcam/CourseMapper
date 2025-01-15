@@ -332,13 +332,19 @@ function Workbook(): JSX.Element {
                   <div className="overflow-x-auto">
                     <Table striped>
                       <Table.Head>
-                        <Table.HeadCell>Week</Table.HeadCell>
+                        <Table.HeadCell>
+                          <CustomBadge label="Week" colorMapping={{ default: '#6c757d' }} />
+                        </Table.HeadCell>
                         {learningTypesList.map((type) => (
-                          <Table.HeadCell key={type}>{type}</Table.HeadCell>
+                          <Table.HeadCell key={type}>
+                            <CustomBadge label={type} colorMapping={learningTypeColors} />
+                          </Table.HeadCell>
                         ))}
-                        <Table.HeadCell>Total Hours</Table.HeadCell>
+                        <Table.HeadCell>
+                          <CustomBadge label="Total Hours" colorMapping={{ default: '#6c757d' }} />
+                        </Table.HeadCell>
                       </Table.Head>
-                      <Table.Body>
+                      <Table.Body style={{ textAlign: 'center' }}>
                         {summaryData.map((row, index) => (
                           <Table.Row key={index}>
                             <Table.Cell>{row.week}</Table.Cell>
