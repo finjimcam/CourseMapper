@@ -28,7 +28,8 @@ _SQLITE_URL = f"sqlite:///{_SQLITE_FILE_NAME}"
 
 _LEGEND_CSV_PATH = os.path.join(os.path.dirname(__file__), "../data/Legend.csv")
 _WEEK_CSV_PATHS = {
-    n: os.path.join(os.path.dirname(__file__), f"../data/Week{n}.csv") for n in range(1, 4)
+    n: os.path.join(os.path.dirname(__file__), f"../data/Week{n}.csv")
+    for n in range(1, 4)
 }
 
 connect_args = {"check_same_thread": False}
@@ -66,14 +67,20 @@ def _populate_initial_data() -> None:
         for learning_type in dataframe["Learning Type"].dropna():
             learning_types[learning_type] = LearningType(name=learning_type)
         for graduate_attribute in dataframe["Graduate Attribute"].dropna():
-            graduate_attributes[graduate_attribute] = GraduateAttribute(name=graduate_attribute)
+            graduate_attributes[graduate_attribute] = GraduateAttribute(
+                name=graduate_attribute
+            )
         for learning_platform in dataframe["Learning Platform"].dropna():
-            learning_platforms[learning_platform] = LearningPlatform(name=learning_platform)
+            learning_platforms[learning_platform] = LearningPlatform(
+                name=learning_platform
+            )
             learning_activities[learning_platform] = {}
             for learning_activity in dataframe[learning_platform].dropna():
-                learning_activities[learning_platform][learning_activity] = LearningActivity(
-                    name=learning_activity,
-                    learning_platform=learning_platforms[learning_platform],
+                learning_activities[learning_platform][learning_activity] = (
+                    LearningActivity(
+                        name=learning_activity,
+                        learning_platform=learning_platforms[learning_platform],
+                    )
                 )
 
         weeks = {}
@@ -83,7 +90,9 @@ def _populate_initial_data() -> None:
             "Admin": PermissionsGroup(name="Admin"),
         }
         users = {
-            "Tim Storer": User(name="Tim Storer", permissions_group=permissions_groups["User"]),
+            "Tim Storer": User(
+                name="Tim Storer", permissions_group=permissions_groups["User"]
+            ),
             "Richard Johnston": User(
                 name="Richard Johnston", permissions_group=permissions_groups["Admin"]
             ),
@@ -113,7 +122,9 @@ def _populate_initial_data() -> None:
             learning_platform=learning_platforms["Moodle"],
         )
         if workbook.learning_platform is None:
-            raise Exception("Workbook not correctly populated. This is a problem with the script.")
+            raise Exception(
+                "Workbook not correctly populated. This is a problem with the script."
+            )
         for week_no in _WEEK_CSV_PATHS:
             dataframe = pd.read_csv(_WEEK_CSV_PATHS[week_no])
             weeks[week_no] = Week(
@@ -142,9 +153,9 @@ def _populate_initial_data() -> None:
                     workbook=workbook,
                     name=name,
                     location=location if not pd.isna(location) else "On Campus",
-                    learning_activity=learning_activities[workbook.learning_platform.name][
-                        learning_activity
-                    ],
+                    learning_activity=learning_activities[
+                        workbook.learning_platform.name
+                    ][learning_activity],
                     learning_type=learning_types[learning_type],
                     time_estimate_minutes=time_estimate,
                     task_status=(

@@ -25,7 +25,9 @@ _CLASSES = {
 
 
 # Setup a temporary in-memory SQLite database for testing
-test_engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+test_engine = create_engine(
+    "sqlite:///:memory:", connect_args={"check_same_thread": False}
+)
 
 
 class TestPopulation(unittest.TestCase):
