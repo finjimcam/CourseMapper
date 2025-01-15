@@ -250,6 +250,7 @@ def get_workbook_details(
 
     return response
 
+
 # post request for creating a new workbook
 class WorkbookCreateRequest(BaseModel):
     start_date: date
