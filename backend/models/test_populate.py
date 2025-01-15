@@ -16,7 +16,6 @@ from backend.models.models import (
 _CLASSES = {
     "user": User,
     "permissions_group": PermissionsGroup,
-    "course": Course,
     "learning_platform": LearningPlatform,
     "learning_activity": LearningActivity,
     "task_status": TaskStatus,
