@@ -376,9 +376,9 @@ function Workbook(): JSX.Element {
                       <Table.HeadCell>Title / Name</Table.HeadCell>
                       <Table.HeadCell>Learning Activity</Table.HeadCell>
                       <Table.HeadCell>Learning Type</Table.HeadCell>
-                      <Table.HeadCell>Time</Table.HeadCell>
-                      <Table.HeadCell>Task Status</Table.HeadCell>
                       <Table.HeadCell>Activity Location</Table.HeadCell>
+                      <Table.HeadCell>Task Status</Table.HeadCell>
+                      <Table.HeadCell>Time</Table.HeadCell>
                     </Table.Head>
                     <Table.Body>
                       {week.data.map((row: WeekData, index: number) => (

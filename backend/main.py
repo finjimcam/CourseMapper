@@ -1,8 +1,11 @@
 from typing import Union, Annotated, AsyncGenerator, List, Dict, Any
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException
-from sqlmodel import Session, select
+from sqlmodel import Session, select, Session
+from pydantic import BaseModel
 import uuid
+from uuid import UUID
+from datetime import date
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.models.database import (
@@ -19,6 +22,7 @@ from backend.models.models import (
     LearningPlatform,
     LearningActivity,
     TaskStatus,
+    Location,
     LearningType,
     ActivityStaff,
     GraduateAttribute,
@@ -118,6 +122,12 @@ def read_graduate_attributes(
     return graduate_attributes
 
 
+@app.get("/locations/")
+def read_locations(session: Session = Depends(get_session)) -> List[Location]:
+    locations = list(session.exec(select(Location)).all())
+    return locations
+
+
 @app.get("/activities/")
 def read_activities(
     workbook_id: uuid.UUID | None = None,
@@ -198,6 +208,9 @@ def get_workbook_details(
     activities_list: List[Dict[str, Any]] = []
     for activity in activities:
         # Fetch related data for each activity
+        location = session.exec(
+            select(Location).where(Location.id == activity.location_id)
+        ).first()
         learning_activity = session.exec(
             select(LearningActivity).where(LearningActivity.id == activity.learning_activity_id)
         ).first()
@@ -219,8 +232,8 @@ def get_workbook_details(
             "id": str(activity.id),
             "name": activity.name,
             "time_estimate_minutes": activity.time_estimate_minutes,
-            "location": activity.location,
             "week_number": activity.week_number,
+            "location": location.name if location else None,
             "learning_activity": learning_activity.name if learning_activity else None,
             "learning_type": learning_type.name if learning_type else None,
             "task_status": task_status.name if task_status else None,
@@ -236,3 +249,27 @@ def get_workbook_details(
     response["activities"] = activities_list
 
     return response
+
+# post request for creating a new workbook
+class WorkbookCreateRequest(BaseModel):
+    start_date: date
+    end_date: date
+    course_lead_id: UUID
+    course_id: UUID
+    learning_platform_id: UUID
+
+# POST: create a new workbook
+@app.post("/workbooks/")
+def create_workbook(data: WorkbookCreateRequest, session: Session = Depends(get_session)):
+    new_workbook = Workbook(
+        start_date=data.start_date,
+        end_date=data.end_date,
+        course_lead_id=data.course_lead_id,
+        course_id=data.course_id,
+        learning_platform_id=data.learning_platform_id,
+    )
+    session.add(new_workbook)
+    session.commit()
+    # refresh the object to get the id
+    session.refresh(new_workbook) 
+    return {"id": new_workbook.id}
