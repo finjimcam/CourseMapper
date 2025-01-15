@@ -1,4 +1,4 @@
-from typing import Union, Annotated, AsyncGenerator, List, Dict, Any
+from typing import Annotated, AsyncGenerator, List, Dict, Any
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException
 from sqlmodel import Session, select
@@ -51,7 +51,10 @@ app.add_middleware(
 def create_activity(activity: ActivityCreate, session: Session = Depends(get_session)) -> Activity:
     activity_dict = activity.model_dump()
     activity_dict["session"] = session
-    db_activity = Activity.model_validate(activity_dict)
+    try:
+        db_activity = Activity.model_validate(activity_dict)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
     session.add(db_activity)
     session.commit()
     session.refresh(db_activity)
