@@ -1,7 +1,9 @@
 import datetime
 from sqlmodel import Field, Relationship, SQLModel
 from sqlalchemy import ForeignKeyConstraint
-from typing import Optional
+from sqlalchemy.orm import Session
+from pydantic import model_validator
+from typing import Optional, Any, cast
 import uuid
 
 
@@ -178,6 +180,40 @@ class Activity(ActivityBase, table=True):
     staff_responsible: list["User"] = Relationship(
         back_populates="responsible_activity", link_model=ActivityStaff
     )
+
+    @model_validator(mode="before")
+    def check_foreign_keys(cls: "ActivityBase", values: dict[str, Any]) -> dict[str, Any]:
+        session: Session = cast(Session, values.get('session'))
+
+        if session is None:
+            raise ValueError("Session is required for foreign key validation")
+
+        # Validate the Workbook ID
+        workbook_id = values.get("workbook_id")
+        if workbook_id and not session.query(Workbook).filter(Workbook.id == workbook_id).first():
+            raise ValueError(f"Workbook with id {workbook_id} does not exist.")
+
+        # Validate the Location ID
+        location_id = values.get("location_id")
+        if location_id and not session.query(Location).filter(Location.id == location_id).first():
+            raise ValueError(f"Location with id {location_id} does not exist.")
+
+        # Validate the Learning Activity ID
+        learning_activity_id = values.get("learning_activity_id")
+        if learning_activity_id and not session.query(LearningActivity).filter(LearningActivity.id == learning_activity_id).first():
+            raise ValueError(f"Learning Activity with id {learning_activity_id} does not exist.")
+
+        # Validate the Learning Type ID
+        learning_type_id = values.get("learning_type_id")
+        if learning_type_id and not session.query(LearningType).filter(LearningType.id == learning_type_id).first():
+            raise ValueError(f"Learning Type with id {learning_type_id} does not exist.")
+
+        # Validate the Task Status ID
+        task_status_id = values.get("task_status_id")
+        if task_status_id and not session.query(TaskStatus).filter(TaskStatus.id == task_status_id).first():
+            raise ValueError(f"Task Status with id {task_status_id} does not exist.")
+
+        return values
 
 
 class ActivityCreate(ActivityBase):

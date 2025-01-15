@@ -49,7 +49,9 @@ app.add_middleware(
 # Post requests for creating new entries
 @app.post("/activities/", response_model=Activity)
 def create_activity(activity: ActivityCreate, session: Session = Depends(get_session)) -> Activity:
-    db_activity = Activity.model_validate(activity)
+    activity_dict = activity.model_dump()
+    activity_dict["session"] = session
+    db_activity = Activity.model_validate(activity_dict)
     session.add(db_activity)
     session.commit()
     session.refresh(db_activity)
