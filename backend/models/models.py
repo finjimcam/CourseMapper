@@ -145,8 +145,7 @@ class Location(SQLModel, table=True):
     activities: list["Activity"] = Relationship(back_populates="location")
 
 
-class Activity(SQLModel, table=True):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+class ActivityBase(SQLModel):
     workbook_id: uuid.UUID = Field(foreign_key="workbook.id")
     week_number: Optional[int] = Field(foreign_key="week.number")
     name: str = Field(nullable=False)
@@ -165,6 +164,10 @@ class Activity(SQLModel, table=True):
     )
     task_status_id: uuid.UUID = Field(nullable=False, foreign_key="taskstatus.id")
 
+
+class Activity(ActivityBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    
     location: Optional["Location"] = Relationship(back_populates="activities")
     workbook: Optional["Workbook"] = Relationship(back_populates="activities")
     week: Optional["Week"] = Relationship(back_populates="activities")
@@ -175,6 +178,10 @@ class Activity(SQLModel, table=True):
     staff_responsible: list["User"] = Relationship(
         back_populates="responsible_activity", link_model=ActivityStaff
     )
+
+
+class ActivityCreate(ActivityBase):
+    pass
 
 
 class LearningType(SQLModel, table=True):

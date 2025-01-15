@@ -16,6 +16,7 @@ from backend.models.models import (
     Week,
     Workbook,
     Activity,
+    ActivityCreate,
     LearningPlatform,
     LearningActivity,
     TaskStatus,
@@ -45,7 +46,17 @@ app.add_middleware(
 )
 
 
-# Views for individual models for testing purposes
+# Post requests for creating new entries
+@app.post("/activities/", response_model=Activity)
+def create_activity(activity: ActivityCreate, session: Session = Depends(get_session)) -> Activity:
+    db_activity = Activity.model_validate(activity)
+    session.add(db_activity)
+    session.commit()
+    session.refresh(db_activity)
+    return db_activity
+
+
+# Views for individual models
 @app.get("/users/")
 def read_users(session: Session = Depends(get_session)) -> List[User]:
     return list(session.exec(select(User)).all())
