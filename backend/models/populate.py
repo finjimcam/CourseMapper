@@ -140,7 +140,6 @@ def _populate_initial_data() -> None:
                 time_estimate = int(dataframe["Time (in mins)"].iloc[i])
                 task_status = dataframe["Task Status"].iloc[i]
                 location = dataframe["Activity Location"].iloc[i]
-                print(location)
 
                 activity = Activity(
                     week=weeks[week_no],
