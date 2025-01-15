@@ -120,9 +120,7 @@ def read_graduate_attributes(
 
 
 @app.get("/locations/")
-def read_locations(
-    session: Session = Depends(get_session)
-) -> List[Location]:
+def read_locations(session: Session = Depends(get_session)) -> List[Location]:
     locations = list(session.exec(select(Location)).all())
     return locations
 
