@@ -21,9 +21,7 @@ class ActivityStaff(SQLModel, table=True):
 class WeekGraduateAttributes(SQLModel, table=True):
     week_workbook_id: uuid.UUID = Field(primary_key=True)
     week_number: int = Field(primary_key=True)
-    graduate_attribute_id: uuid.UUID = Field(
-        foreign_key="graduateattribute.id", primary_key=True
-    )
+    graduate_attribute_id: uuid.UUID = Field(foreign_key="graduateattribute.id", primary_key=True)
 
     __table_args__ = (
         ForeignKeyConstraint(
@@ -49,9 +47,7 @@ class User(SQLModel, table=True):
     name: str = Field(index=True)
     permissions_group_id: uuid.UUID = Field(foreign_key="permissionsgroup.id")
 
-    permissions_group: Optional["PermissionsGroup"] = Relationship(
-        back_populates="users"
-    )
+    permissions_group: Optional["PermissionsGroup"] = Relationship(back_populates="users")
 
     workbooks_leading: list["Workbook"] = Relationship(back_populates="course_lead")
 
@@ -80,9 +76,7 @@ class Workbook(SQLModel, table=True):
 
     course_lead: Optional["User"] = Relationship(back_populates="workbooks_leading")
     course: Optional["Course"] = Relationship(back_populates="workbooks")
-    learning_platform: Optional["LearningPlatform"] = Relationship(
-        back_populates="workbooks"
-    )
+    learning_platform: Optional["LearningPlatform"] = Relationship(back_populates="workbooks")
 
     weeks: list["Week"] = Relationship(back_populates="workbook")
     activities: list["Activity"] = Relationship(back_populates="workbook")
@@ -179,9 +173,7 @@ class Activity(ActivityBase, table=True):
     location: Optional["Location"] = Relationship(back_populates="activities")
     workbook: Optional["Workbook"] = Relationship(back_populates="activities")
     week: Optional["Week"] = Relationship(back_populates="activities")
-    learning_activity: Optional["LearningActivity"] = Relationship(
-        back_populates="activities"
-    )
+    learning_activity: Optional["LearningActivity"] = Relationship(back_populates="activities")
     learning_type: Optional["LearningType"] = Relationship(back_populates="activities")
     task_status: Optional["TaskStatus"] = Relationship(back_populates="activities")
 
@@ -190,9 +182,7 @@ class Activity(ActivityBase, table=True):
     )
 
     @model_validator(mode="before")
-    def check_foreign_keys(
-        cls: "ActivityBase", values: dict[str, Any]
-    ) -> dict[str, Any]:
+    def check_foreign_keys(cls: "ActivityBase", values: dict[str, Any]) -> dict[str, Any]:
         session: Session = cast(Session, values.get("session"))
 
         if session is None:
@@ -200,18 +190,12 @@ class Activity(ActivityBase, table=True):
 
         # Validate the Workbook ID
         workbook_id = values.get("workbook_id")
-        if (
-            workbook_id
-            and not session.query(Workbook).filter(Workbook.id == workbook_id).first()
-        ):
+        if workbook_id and not session.query(Workbook).filter(Workbook.id == workbook_id).first():
             raise ValueError(f"Workbook with id {workbook_id} does not exist.")
 
         # Validate the Location ID
         location_id = values.get("location_id")
-        if (
-            location_id
-            and not session.query(Location).filter(Location.id == location_id).first()
-        ):
+        if location_id and not session.query(Location).filter(Location.id == location_id).first():
             raise ValueError(f"Location with id {location_id} does not exist.")
 
         # Validate the Learning Activity ID
@@ -222,29 +206,21 @@ class Activity(ActivityBase, table=True):
             .filter(LearningActivity.id == learning_activity_id)
             .first()
         ):
-            raise ValueError(
-                f"Learning Activity with id {learning_activity_id} does not exist."
-            )
+            raise ValueError(f"Learning Activity with id {learning_activity_id} does not exist.")
 
         # Validate the Learning Type ID
         learning_type_id = values.get("learning_type_id")
         if (
             learning_type_id
-            and not session.query(LearningType)
-            .filter(LearningType.id == learning_type_id)
-            .first()
+            and not session.query(LearningType).filter(LearningType.id == learning_type_id).first()
         ):
-            raise ValueError(
-                f"Learning Type with id {learning_type_id} does not exist."
-            )
+            raise ValueError(f"Learning Type with id {learning_type_id} does not exist.")
 
         # Validate the Task Status ID
         task_status_id = values.get("task_status_id")
         if (
             task_status_id
-            and not session.query(TaskStatus)
-            .filter(TaskStatus.id == task_status_id)
-            .first()
+            and not session.query(TaskStatus).filter(TaskStatus.id == task_status_id).first()
         ):
             raise ValueError(f"Task Status with id {task_status_id} does not exist.")
 

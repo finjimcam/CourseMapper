@@ -48,9 +48,7 @@ app.add_middleware(
 
 # Post requests for creating new entries
 @app.post("/activities/", response_model=Activity)
-def create_activity(
-    activity: ActivityCreate, session: Session = Depends(get_session)
-) -> Activity:
+def create_activity(activity: ActivityCreate, session: Session = Depends(get_session)) -> Activity:
     activity_dict = activity.model_dump()
     activity_dict["session"] = session
     try:
@@ -152,14 +150,11 @@ def read_activities(
     if not workbook_id:
         return list(session.exec(select(Activity)).all())
     if not week_number:
-        return list(
-            session.exec(select(Activity).where(Activity.workbook_id == workbook_id))
-        )
+        return list(session.exec(select(Activity).where(Activity.workbook_id == workbook_id)))
     return list(
         session.exec(
             select(Activity).where(
-                (Activity.workbook_id == workbook_id)
-                & (Activity.week_number == week_number)
+                (Activity.workbook_id == workbook_id) & (Activity.week_number == week_number)
             )
         )
     )
@@ -178,17 +173,11 @@ def get_workbook_details(
 
     # Fetch related data
     course = session.exec(select(Course).where(Course.id == workbook.course_id)).first()
-    course_lead = session.exec(
-        select(User).where(User.id == workbook.course_lead_id)
-    ).first()
+    course_lead = session.exec(select(User).where(User.id == workbook.course_lead_id)).first()
     learning_platform = session.exec(
-        select(LearningPlatform).where(
-            LearningPlatform.id == workbook.learning_platform_id
-        )
+        select(LearningPlatform).where(LearningPlatform.id == workbook.learning_platform_id)
     ).first()
-    activities = list(
-        session.exec(select(Activity).where(Activity.workbook_id == workbook_id))
-    )
+    activities = list(session.exec(select(Activity).where(Activity.workbook_id == workbook_id)))
 
     # Build response
     response: Dict[str, Any] = {
@@ -236,9 +225,7 @@ def get_workbook_details(
             select(Location).where(Location.id == activity.location_id)
         ).first()
         learning_activity = session.exec(
-            select(LearningActivity).where(
-                LearningActivity.id == activity.learning_activity_id
-            )
+            select(LearningActivity).where(LearningActivity.id == activity.learning_activity_id)
         ).first()
         learning_type = session.exec(
             select(LearningType).where(LearningType.id == activity.learning_type_id)
@@ -250,9 +237,7 @@ def get_workbook_details(
         # Get staff using the link model
         staff = list(
             session.exec(
-                select(User)
-                .join(ActivityStaff)
-                .where(ActivityStaff.activity_id == activity.id)
+                select(User).join(ActivityStaff).where(ActivityStaff.activity_id == activity.id)
             )
         )
 
