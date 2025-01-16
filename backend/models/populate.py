@@ -107,7 +107,7 @@ def _populate_initial_data() -> None:
             start_date=datetime.date(2024, 9, 23),
             end_date=datetime.date(2024, 9, 23) + datetime.timedelta(weeks=3),
             course_lead=users["Tim Storer"],
-            course_name = "COMPSCI4015",
+            course_name="Professional Software Development",
             learning_platform=learning_platforms["Moodle"],
         )
         if workbook.learning_platform is None:
