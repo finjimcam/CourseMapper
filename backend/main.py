@@ -1,11 +1,8 @@
 from typing import Union, Annotated, AsyncGenerator, List, Dict, Any
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException
-from sqlmodel import Session, select, Session
-from pydantic import BaseModel
+from sqlmodel import Session, select
 import uuid
-from uuid import UUID
-from datetime import date
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.models.database import (
@@ -18,6 +15,7 @@ from backend.models.models import (
     Course,
     Week,
     Workbook,
+    WorkbookCreate,
     Activity,
     LearningPlatform,
     LearningActivity,
@@ -137,11 +135,14 @@ def read_activities(
     if not workbook_id:
         return list(session.exec(select(Activity)).all())
     if not week_number:
-        return list(session.exec(select(Activity).where(Activity.workbook_id == workbook_id)))
+        return list(
+            session.exec(select(Activity).where(Activity.workbook_id == workbook_id))
+        )
     return list(
         session.exec(
             select(Activity).where(
-                (Activity.workbook_id == workbook_id) & (Activity.week_number == week_number)
+                (Activity.workbook_id == workbook_id)
+                & (Activity.week_number == week_number)
             )
         )
     )
@@ -160,11 +161,17 @@ def get_workbook_details(
 
     # Fetch related data
     course = session.exec(select(Course).where(Course.id == workbook.course_id)).first()
-    course_lead = session.exec(select(User).where(User.id == workbook.course_lead_id)).first()
-    learning_platform = session.exec(
-        select(LearningPlatform).where(LearningPlatform.id == workbook.learning_platform_id)
+    course_lead = session.exec(
+        select(User).where(User.id == workbook.course_lead_id)
     ).first()
-    activities = list(session.exec(select(Activity).where(Activity.workbook_id == workbook_id)))
+    learning_platform = session.exec(
+        select(LearningPlatform).where(
+            LearningPlatform.id == workbook.learning_platform_id
+        )
+    ).first()
+    activities = list(
+        session.exec(select(Activity).where(Activity.workbook_id == workbook_id))
+    )
 
     # Build response
     response: Dict[str, Any] = {
@@ -212,7 +219,9 @@ def get_workbook_details(
             select(Location).where(Location.id == activity.location_id)
         ).first()
         learning_activity = session.exec(
-            select(LearningActivity).where(LearningActivity.id == activity.learning_activity_id)
+            select(LearningActivity).where(
+                LearningActivity.id == activity.learning_activity_id
+            )
         ).first()
         learning_type = session.exec(
             select(LearningType).where(LearningType.id == activity.learning_type_id)
@@ -224,7 +233,9 @@ def get_workbook_details(
         # Get staff using the link model
         staff = list(
             session.exec(
-                select(User).join(ActivityStaff).where(ActivityStaff.activity_id == activity.id)
+                select(User)
+                .join(ActivityStaff)
+                .where(ActivityStaff.activity_id == activity.id)
             )
         )
 
@@ -251,29 +262,19 @@ def get_workbook_details(
     return response
 
 
-# post request for creating a new workbook
-class WorkbookCreateRequest(BaseModel):
-    start_date: date
-    end_date: date
-    course_lead_id: UUID
-    course_id: UUID
-    learning_platform_id: UUID
-
-
 # POST: create a new workbook
-@app.post("/workbooks/")
+@app.post("/workbooks/", response_model=Workbook)
 def create_workbook(
-    data: WorkbookCreateRequest, session: Session = Depends(get_session)
-) -> Dict[str, UUID]:
-    new_workbook = Workbook(
-        start_date=data.start_date,
-        end_date=data.end_date,
-        course_lead_id=data.course_lead_id,
-        course_id=data.course_id,
-        learning_platform_id=data.learning_platform_id,
-    )
-    session.add(new_workbook)
+    workbook: WorkbookCreate, session: Session = Depends(get_session)
+) -> Workbook:
+    # Validate and create new workbook
+    workbook_dict = workbook.model_dump()
+    workbook_dict["session"] = session
+    try:
+        db_workbook = Activity.model_validate(workbook_dict)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    session.add(db_workbook)
     session.commit()
-    # refresh the object to get the id
-    session.refresh(new_workbook)
-    return {"id": new_workbook.id}
+    session.refresh(db_workbook)
+    return db_workbook
