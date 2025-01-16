@@ -70,12 +70,11 @@ class Workbook(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     start_date: datetime.date = Field(nullable=False)
     end_date: datetime.date = Field(nullable=False)
+    course_name: str = Field(index=True)
     course_lead_id: uuid.UUID = Field(foreign_key="user.id")
-    course_id: uuid.UUID = Field(foreign_key="course.id")
     learning_platform_id: uuid.UUID = Field(foreign_key="learningplatform.id")
 
     course_lead: Optional["User"] = Relationship(back_populates="workbooks_leading")
-    course: Optional["Course"] = Relationship(back_populates="workbooks")
     learning_platform: Optional["LearningPlatform"] = Relationship(back_populates="workbooks")
 
     weeks: list["Week"] = Relationship(back_populates="workbook")
@@ -84,14 +83,6 @@ class Workbook(SQLModel, table=True):
     contributors: list["User"] = Relationship(
         back_populates="workbooks_contributing_to", link_model=WorkbookContributors
     )
-
-
-class Course(SQLModel, table=True):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    course_code: str = Field(nullable=False)
-    name: str = Field(nullable=False)
-
-    workbooks: list["Workbook"] = Relationship(back_populates="course")
 
 
 class LearningPlatform(SQLModel, table=True):
