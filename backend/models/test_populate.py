@@ -5,7 +5,6 @@ from backend.models.populate import main
 from backend.models.models import (
     User,
     PermissionsGroup,
-    Course,
     LearningPlatform,
     LearningActivity,
     TaskStatus,
