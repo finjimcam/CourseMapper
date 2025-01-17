@@ -135,14 +135,11 @@ def read_activities(
     if not workbook_id:
         return list(session.exec(select(Activity)).all())
     if not week_number:
-        return list(
-            session.exec(select(Activity).where(Activity.workbook_id == workbook_id))
-        )
+        return list(session.exec(select(Activity).where(Activity.workbook_id == workbook_id)))
     return list(
         session.exec(
             select(Activity).where(
-                (Activity.workbook_id == workbook_id)
-                & (Activity.week_number == week_number)
+                (Activity.workbook_id == workbook_id) & (Activity.week_number == week_number)
             )
         )
     )
@@ -161,17 +158,11 @@ def get_workbook_details(
 
     # Fetch related data
     course = session.exec(select(Course).where(Course.id == workbook.course_id)).first()
-    course_lead = session.exec(
-        select(User).where(User.id == workbook.course_lead_id)
-    ).first()
+    course_lead = session.exec(select(User).where(User.id == workbook.course_lead_id)).first()
     learning_platform = session.exec(
-        select(LearningPlatform).where(
-            LearningPlatform.id == workbook.learning_platform_id
-        )
+        select(LearningPlatform).where(LearningPlatform.id == workbook.learning_platform_id)
     ).first()
-    activities = list(
-        session.exec(select(Activity).where(Activity.workbook_id == workbook_id))
-    )
+    activities = list(session.exec(select(Activity).where(Activity.workbook_id == workbook_id)))
 
     # Build response
     response: Dict[str, Any] = {
@@ -219,9 +210,7 @@ def get_workbook_details(
             select(Location).where(Location.id == activity.location_id)
         ).first()
         learning_activity = session.exec(
-            select(LearningActivity).where(
-                LearningActivity.id == activity.learning_activity_id
-            )
+            select(LearningActivity).where(LearningActivity.id == activity.learning_activity_id)
         ).first()
         learning_type = session.exec(
             select(LearningType).where(LearningType.id == activity.learning_type_id)
@@ -233,9 +222,7 @@ def get_workbook_details(
         # Get staff using the link model
         staff = list(
             session.exec(
-                select(User)
-                .join(ActivityStaff)
-                .where(ActivityStaff.activity_id == activity.id)
+                select(User).join(ActivityStaff).where(ActivityStaff.activity_id == activity.id)
             )
         )
 
@@ -264,14 +251,12 @@ def get_workbook_details(
 
 # POST: create a new workbook
 @app.post("/workbooks/", response_model=Workbook)
-def create_workbook(
-    workbook: WorkbookCreate, session: Session = Depends(get_session)
-) -> Workbook:
+def create_workbook(workbook: WorkbookCreate, session: Session = Depends(get_session)) -> Workbook:
     # Validate and create new workbook
     workbook_dict = workbook.model_dump()
     workbook_dict["session"] = session
     try:
-        db_workbook = Activity.model_validate(workbook_dict)
+        db_workbook = Workbook.model_validate(workbook_dict)
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
     session.add(db_workbook)
