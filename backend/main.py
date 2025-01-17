@@ -12,7 +12,6 @@ from backend.models.database import (
 from backend.models.models import (
     User,
     PermissionsGroup,
-    Course,
     Week,
     Workbook,
     WorkbookCreate,
@@ -57,11 +56,6 @@ def read_permissions_groups(
     session: Session = Depends(get_session),
 ) -> List[PermissionsGroup]:
     return list(session.exec(select(PermissionsGroup)).all())
-
-
-@app.get("/courses/")
-def read_courses(session: Session = Depends(get_session)) -> List[Course]:
-    return list(session.exec(select(Course)).all())
 
 
 @app.get("/learning-platforms/")
@@ -157,7 +151,6 @@ def get_workbook_details(
         raise HTTPException(status_code=404, detail="Workbook not found")
 
     # Fetch related data
-    course = session.exec(select(Course).where(Course.id == workbook.course_id)).first()
     course_lead = session.exec(select(User).where(User.id == workbook.course_lead_id)).first()
     learning_platform = session.exec(
         select(LearningPlatform).where(LearningPlatform.id == workbook.learning_platform_id)
@@ -170,19 +163,10 @@ def get_workbook_details(
             "id": str(workbook.id),
             "start_date": workbook.start_date.isoformat(),
             "end_date": workbook.end_date.isoformat(),
-            "course_id": str(workbook.course_id),
+            "course_name": workbook.course_name,
             "course_lead_id": str(workbook.course_lead_id),
             "learning_platform_id": str(workbook.learning_platform_id),
         },
-        "course": (
-            {
-                "id": str(course.id),
-                "course_code": course.course_code,
-                "name": course.name,
-            }
-            if course
-            else None
-        ),
         "course_lead": (
             {
                 "id": str(course_lead.id),
