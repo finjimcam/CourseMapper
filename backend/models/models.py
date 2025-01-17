@@ -1,7 +1,9 @@
 import datetime
 from sqlmodel import Field, Relationship, SQLModel
 from sqlalchemy import ForeignKeyConstraint
-from typing import Optional
+from sqlalchemy.orm import Session
+from pydantic import model_validator
+from typing import Optional, Any, cast
 import uuid
 
 
@@ -64,13 +66,16 @@ class PermissionsGroup(SQLModel, table=True):
     users: list["User"] = Relationship(back_populates="permissions_group")
 
 
-class Workbook(SQLModel, table=True):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+class WorkbookBase(SQLModel):
     start_date: datetime.date = Field(nullable=False)
     end_date: datetime.date = Field(nullable=False)
     course_lead_id: uuid.UUID = Field(foreign_key="user.id")
     course_id: uuid.UUID = Field(foreign_key="course.id")
     learning_platform_id: uuid.UUID = Field(foreign_key="learningplatform.id")
+
+
+class Workbook(WorkbookBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
 
     course_lead: Optional["User"] = Relationship(back_populates="workbooks_leading")
     course: Optional["Course"] = Relationship(back_populates="workbooks")
@@ -82,6 +87,50 @@ class Workbook(SQLModel, table=True):
     contributors: list["User"] = Relationship(
         back_populates="workbooks_contributing_to", link_model=WorkbookContributors
     )
+
+    @model_validator(mode="before")
+    def check_foreign_keys(cls: "WorkbookBase", values: dict[str, Any]) -> dict[str, Any]:
+        session: Session = cast(Session, values.get("session"))
+
+        if session is None:
+            raise ValueError("Session is required for foreign key validation")
+
+        start_date = values.get("start_date")
+        end_date = values.get("end_date")
+        if not start_date:
+            raise ValueError(f"start_date with {start_date} does not exist.")
+        if not end_date:
+            raise ValueError(f"end_date with {end_date} does not exist.")
+        if start_date >= end_date:
+            raise ValueError("start_date must be earlier than end_date.")
+
+        # Validate the course lead ID
+        course_lead_id = values.get("course_lead_id")
+        if course_lead_id and not session.query(User).filter(User.id == course_lead_id).first():
+            raise ValueError(f"course_lead_id with id {course_lead_id} does not exist.")
+
+        # Validate the course ID
+        course_id = values.get("course_id")
+        if course_id and not session.query(Course).filter(Course.id == course_id).first():
+            raise ValueError(f"course_id with id {course_id} does not exist.")
+
+        # Validate the learning platform ID
+        learning_platform_id = values.get("learning_platform_id")
+        if (
+            learning_platform_id
+            and not session.query(LearningPlatform)
+            .filter(LearningPlatform.id == learning_platform_id)
+            .first()
+        ):
+            raise ValueError(
+                f"learning_platform_id with id {learning_platform_id} does not exist."
+            )
+
+        return values
+
+
+class WorkbookCreate(WorkbookBase):
+    pass
 
 
 class Course(SQLModel, table=True):

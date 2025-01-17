@@ -1,4 +1,4 @@
-from typing import Union, Annotated, AsyncGenerator, List, Dict, Any
+from typing import Annotated, AsyncGenerator, List, Dict, Any
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException
 from sqlmodel import Session, select
@@ -15,6 +15,7 @@ from .models.models import (
     Course,
     Week,
     Workbook,
+    WorkbookCreate,
     Activity,
     LearningPlatform,
     LearningActivity,
@@ -246,3 +247,19 @@ def get_workbook_details(
     response["activities"] = activities_list
 
     return response
+
+
+# POST: create a new workbook
+@app.post("/workbooks/", response_model=Workbook)
+def create_workbook(workbook: WorkbookCreate, session: Session = Depends(get_session)) -> Workbook:
+    # Validate and create new workbook
+    workbook_dict = workbook.model_dump()
+    workbook_dict["session"] = session
+    try:
+        db_workbook = Workbook.model_validate(workbook_dict)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    session.add(db_workbook)
+    session.commit()
+    session.refresh(db_workbook)
+    return db_workbook
