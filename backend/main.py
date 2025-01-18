@@ -16,6 +16,7 @@ from backend.models.models import (
     Workbook,
     WorkbookCreate,
     Activity,
+    ActivityCreate,
     LearningPlatform,
     LearningActivity,
     TaskStatus,
@@ -45,7 +46,22 @@ app.add_middleware(
 )
 
 
-# Views for individual models for testing purposes
+# Post requests for creating new entries
+@app.post("/activities/", response_model=Activity)
+def create_activity(activity: ActivityCreate, session: Session = Depends(get_session)) -> Activity:
+    activity_dict = activity.model_dump()
+    activity_dict["session"] = session
+    try:
+        db_activity = Activity.model_validate(activity_dict)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    session.add(db_activity)
+    session.commit()
+    session.refresh(db_activity)
+    return db_activity
+
+
+# Views for individual models
 @app.get("/users/")
 def read_users(session: Session = Depends(get_session)) -> List[User]:
     return list(session.exec(select(User)).all())
