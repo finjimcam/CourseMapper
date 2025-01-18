@@ -23,6 +23,7 @@ Linting with black:
   only:
     changes:
       - backend/**/*
+      - .gitlab-ci.yml
 
 Type checking with mypy:
   stage: Static Analysis
@@ -31,6 +32,7 @@ Type checking with mypy:
   only:
     changes:
       - backend/**/*
+      - .gitlab-ci.yml
 
 Unit tests on backend:
   stage: Dynamic Analysis
@@ -39,3 +41,4 @@ Unit tests on backend:
   only:
     changes:
       - backend/**/*
+      - .gitlab-ci.yml
