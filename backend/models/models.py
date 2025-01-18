@@ -108,11 +108,6 @@ class Workbook(WorkbookBase, table=True):
         if course_lead_id and not session.query(User).filter(User.id == course_lead_id).first():
             raise ValueError(f"course_lead_id with id {course_lead_id} does not exist.")
 
-        # Validate the course ID
-        course_id = values.get("course_id")
-        if course_id and not session.query(Course).filter(Course.id == course_id).first():
-            raise ValueError(f"course_id with id {course_id} does not exist.")
-
         # Validate the learning platform ID
         learning_platform_id = values.get("learning_platform_id")
         if (
