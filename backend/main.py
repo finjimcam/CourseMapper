@@ -71,6 +71,38 @@ def delete_workbook_contributor(
     return {"ok": True}
 
 
+@app.delete("/weeks/")
+def delete_week(week: WeekDelete, session: Session = Depends(get_session)) -> dict[str, bool]:
+    try:
+        week.check_primary_keys(session)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    db_week = cast(
+        Week,
+        session.exec(
+            select(Week).where(
+                (Week.workbook_id == week.workbook_id) & (Week.number == week.number)
+            )
+        ).first(),
+    )  # Week has been validated to exist by model validation earlier in this function.
+    linked_workbook = cast(
+        Workbook, session.exec(select(Workbook).where(Workbook.id == db_week.workbook_id)).first()
+    )  # Workbook is guaranteed to exist by model validation.
+    linked_workbook.number_of_weeks -= 1
+    session.add(linked_workbook)
+    session.delete(db_week)
+    session.commit()
+    # loop through weeks of linked_workbook and update their numbers to maintain continuity
+    for other_week in linked_workbook.weeks:
+        if other_week.number is None:
+            continue
+        if other_week.number > week.number:
+            other_week.number -= 1
+            session.add(other_week)
+    session.commit()
+    return {"ok": True}
+
+
 # Post requests for creating new entries
 @app.post("/activities/", response_model=Activity)
 def create_activity(activity: ActivityCreate, session: Session = Depends(get_session)) -> Activity:

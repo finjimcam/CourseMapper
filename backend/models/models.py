@@ -42,11 +42,11 @@ class WorkbookContributorCreate(WorkbookContributorBase):
 
 class WorkbookContributorDelete(WorkbookContributorBase):
     def check_primary_keys(
-        cls: "WorkbookContributorBase", session: Session
-    ) -> WorkbookContributorBase:
+        cls: "WorkbookContributorDelete", session: Session
+    ) -> "WorkbookContributorDelete":
         values = cls.model_dump()
 
-        # Validate contributor id
+        # Validate WorkbookContributor row exists
         contributor_id = values.get("contributor_id")
         workbook_id = values.get("workbook_id")
         if (
@@ -253,6 +253,23 @@ class WeekCreate(WeekBase):
 class WeekDelete(SQLModel):
     workbook_id: uuid.UUID
     number: int
+
+    def check_primary_keys(cls: "WeekDelete", session: Session) -> "WeekDelete":
+        values = cls.model_dump()
+
+        # Validate Week row exists
+        workbook_id = values.get("workbook_id")
+        number = values.get("number")
+        if (
+            workbook_id is not None
+            and number is not None
+            and not session.query(Week)
+            .filter(Week.workbook_id == workbook_id, Week.number == number)
+            .first()
+        ):
+            raise ValueError(f"Week number {number} of Workbook {workbook_id} does not exist.")
+
+        return cls
 
 
 class GraduateAttribute(SQLModel, table=True):
