@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import { Tabs, Table, Badge, Spinner } from 'flowbite-react';
+import { Tabs, Table, Spinner } from 'flowbite-react';
 import ReactApexChart from 'react-apexcharts';
 import { ApexOptions } from 'apexcharts';
 import { statusColors, learningTypeColors, CustomBadge } from '../components/CustomBadge';

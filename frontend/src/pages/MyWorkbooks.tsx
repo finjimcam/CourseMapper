@@ -1,10 +1,8 @@
 // MyWorkbooks.tsx
-
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import SearchBar from '../components/Searchbar.tsx';
 import Carousel from '../components/Carousel.tsx';
-import { Link } from 'react-router-dom';
 
 function MyWorkbooks() {
   const [workbooks, setWorkbooks] = useState([]);
@@ -18,7 +16,7 @@ function MyWorkbooks() {
         const response = await axios.get('http://127.0.0.1:8000/workbooks/');
         setWorkbooks(response.data);
         setLoading(false);
-      } catch (err) {
+      } catch (err: any) {
         setError(err.message || 'An error occurred');
         setLoading(false);
       }
