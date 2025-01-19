@@ -130,6 +130,7 @@ class WorkbookBase(SQLModel):
 
 class Workbook(WorkbookBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    number_of_weeks: int = Field(default=0)
 
     course_lead: Optional["User"] = Relationship(back_populates="workbooks_leading")
     learning_platform: Optional["LearningPlatform"] = Relationship(back_populates="workbooks")
@@ -205,12 +206,13 @@ class LearningActivity(SQLModel, table=True):
 
 class WeekBase(SQLModel):
     workbook_id: uuid.UUID = Field(foreign_key="workbook.id", primary_key=True)
-    number: Optional[int] = Field(primary_key=True)
     start_date: datetime.date = Field(nullable=False)
     end_date: datetime.date = Field(nullable=False)
 
 
 class Week(WeekBase, table=True):
+    number: Optional[int] = Field(primary_key=True, default=0)
+
     workbook: Optional["Workbook"] = Relationship(back_populates="weeks")
 
     activities: list["Activity"] = Relationship(back_populates="week")
@@ -218,6 +220,30 @@ class Week(WeekBase, table=True):
     graduate_attributes: list["GraduateAttribute"] = Relationship(
         back_populates="weeks", link_model=WeekGraduateAttribute
     )
+
+    @model_validator(mode="before")
+    def check_foreign_keys(cls: "WeekBase", values: dict[str, Any]) -> dict[str, Any]:
+        session: Session = cast(Session, values.get("session"))
+
+        if session is None:
+            raise ValueError("Session is required for foreign key validation")
+
+        # Validate Workbook ID
+        workbook_id = values.get("workbook_id")
+        if workbook_id and not session.query(Workbook).filter(Workbook.id == workbook_id).first():
+            raise ValueError(f"Workbook with id {workbook_id} does not exist.")
+
+        # Validate dates
+        start_date = values.get("start_date")
+        end_date = values.get("end_date")
+        if not start_date:
+            raise ValueError(f"start_date with {start_date} does not exist.")
+        if not end_date:
+            raise ValueError(f"end_date with {end_date} does not exist.")
+        if start_date >= end_date:
+            raise ValueError("start_date must be earlier than end_date.")
+
+        return values
 
 
 class WeekCreate(WeekBase):

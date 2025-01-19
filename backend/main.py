@@ -1,4 +1,4 @@
-from typing import Annotated, AsyncGenerator, List, Dict, Any
+from typing import Annotated, AsyncGenerator, List, Dict, Any, cast
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException
 from sqlmodel import Session, select
@@ -13,6 +13,8 @@ from backend.models.models import (
     User,
     PermissionsGroup,
     Week,
+    WeekCreate,
+    WeekDelete,
     Workbook,
     WorkbookCreate,
     Activity,
@@ -98,7 +100,27 @@ def create_workbook(workbook: WorkbookCreate, session: Session = Depends(get_ses
     return db_workbook
 
 
-@app.post("/workbook-contributors/")
+@app.post("/weeks/", response_model=Week)
+def create_week(week: WeekCreate, session: Session = Depends(get_session)) -> Week:
+    week_dict = week.model_dump()
+    week_dict["session"] = session
+    try:
+        db_week = Week.model_validate(week_dict)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    linked_workbook = cast(
+        Workbook, session.exec(select(Workbook).where(Workbook.id == db_week.workbook_id)).first()
+    )  # exec is guaranteed by Week model validation as workbook_id is a primary foreign key.
+    db_week.number = linked_workbook.number_of_weeks + 1
+    linked_workbook.number_of_weeks += 1
+    session.add(db_week)
+    session.add(linked_workbook)
+    session.commit()
+    session.refresh(db_week)
+    return db_week
+
+
+@app.post("/workbook-contributors/", response_model=WorkbookContributor)
 def create_workbook_contributor(
     workbook_contributor: WorkbookContributorCreate, session: Session = Depends(get_session)
 ) -> WorkbookContributor:
@@ -203,8 +225,20 @@ def read_workbooks(
 
 
 @app.get("/weeks/")
-def read_weeks(session: Session = Depends(get_session)) -> List[Week]:
-    return list(session.exec(select(Week)).all())
+def read_weeks(
+    workbook_id: uuid.UUID | None = None,
+    week_number: int | None = None,
+    session: Session = Depends(get_session),
+) -> List[Week]:
+    if not workbook_id:
+        return list(session.exec(select(Week)).all())
+    if not week_number:
+        return list(session.exec(select(Week).where(Week.workbook_id == workbook_id)))
+    return list(
+        session.exec(
+            select(Week).where(Week.workbook_id == workbook_id, Week.number == week_number)
+        )
+    )
 
 
 @app.get("/graduate_attributes/")
