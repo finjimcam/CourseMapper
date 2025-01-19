@@ -5,11 +5,11 @@ from sqlmodel import Session, select
 import uuid
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.models.database import (
+from models.database import (
     create_db_and_tables,
     get_session,
 )
-from backend.models.models import (
+from models.models import (
     User,
     PermissionsGroup,
     Week,

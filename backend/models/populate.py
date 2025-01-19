@@ -1,14 +1,14 @@
 import sys
 import os
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 
 import datetime
 import pandas as pd
 from typing import Iterator
 from sqlmodel import Session, SQLModel, select, create_engine
 from contextlib import contextmanager
-from backend.models.models import (
+from models.models import (
     User,
     PermissionsGroup,
     Week,
