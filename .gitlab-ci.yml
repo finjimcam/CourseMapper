@@ -19,7 +19,6 @@ stages:
 Linting with black:
   stage: Static Analysis
   script:
-    - cd backend
     - black --check --diff --line-length 99 .
   only:
     changes:
@@ -29,7 +28,6 @@ Linting with black:
 Type checking with mypy:
   stage: Static Analysis
   script:
-    - cd backend
     - mypy --strict .
   only:
     changes:
@@ -39,7 +37,6 @@ Type checking with mypy:
 Unit tests on backend:
   stage: Dynamic Analysis
   script:
-    - cd backend
     - python -m unittest discover -s . -p "test_*.py"
   only:
     changes:

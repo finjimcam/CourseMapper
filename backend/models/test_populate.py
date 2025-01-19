@@ -1,8 +1,8 @@
 import unittest
 from unittest.mock import patch
 from sqlmodel import create_engine, Session, select
-from backend.models.populate import main
-from backend.models.models import (
+from models.populate import main
+from models.models import (
     User,
     PermissionsGroup,
     Course,
@@ -30,7 +30,7 @@ test_engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thre
 
 class TestPopulation(unittest.TestCase):
 
-    @patch("backend.models.populate.engine", new=test_engine)
+    @patch("models.populate.engine", new=test_engine)
     def test_populates_db(self) -> None:
         main()
 
