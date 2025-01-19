@@ -40,6 +40,10 @@ class WorkbookContributorCreate(WorkbookContributorBase):
     pass
 
 
+class WorkbookContributorDelete(WorkbookContributorBase):
+    pass
+
+
 class ActivityStaff(SQLModel, table=True):
     staff_id: uuid.UUID = Field(foreign_key="user.id", primary_key=True)
     activity_id: uuid.UUID = Field(foreign_key="activity.id", primary_key=True)

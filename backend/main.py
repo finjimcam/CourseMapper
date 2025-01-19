@@ -26,6 +26,7 @@ from backend.models.models import (
     GraduateAttribute,
     WorkbookContributor,
     WorkbookContributorCreate,
+    WorkbookContributorDelete,
 )
 
 SessionDep = Annotated[Session, Depends(get_session)]
@@ -46,6 +47,23 @@ app.add_middleware(
     allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
     allow_headers=["*"],  # Allow all headers
 )
+
+
+# Delete requests for removing entries
+@app.delete("/workbook-contributors/")
+def delete_workbook_contributor(
+    workbook_contributor: WorkbookContributorDelete, session: Session = Depends(get_session)
+) -> dict[str, bool]:
+    print(workbook_contributor.workbook_id, workbook_contributor.contributor_id)
+    db_workbook_contributor = session.exec(
+        select(WorkbookContributor).where(
+            (WorkbookContributor.workbook_id == workbook_contributor.workbook_id)
+            & (WorkbookContributor.contributor_id == workbook_contributor.contributor_id)
+        )
+    ).first()
+    session.delete(db_workbook_contributor)
+    session.commit()
+    return {"ok": True}
 
 
 # Post requests for creating new entries
