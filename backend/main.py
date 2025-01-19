@@ -24,6 +24,8 @@ from backend.models.models import (
     LearningType,
     ActivityStaff,
     GraduateAttribute,
+    WorkbookContributor,
+    WorkbookContributorCreate,
 )
 
 SessionDep = Annotated[Session, Depends(get_session)]
@@ -61,7 +63,69 @@ def create_activity(activity: ActivityCreate, session: Session = Depends(get_ses
     return db_activity
 
 
+@app.post("/workbooks/", response_model=Workbook)
+def create_workbook(workbook: WorkbookCreate, session: Session = Depends(get_session)) -> Workbook:
+    workbook_dict = workbook.model_dump()
+    workbook_dict["session"] = session
+    try:
+        db_workbook = Workbook.model_validate(workbook_dict)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    session.add(db_workbook)
+    session.commit()
+    session.refresh(db_workbook)
+    return db_workbook
+
+
+@app.post("/workbook-contributors/")
+def create_workbook_contributor(
+    workbook_contributor: WorkbookContributorCreate, session: Session = Depends(get_session)
+) -> WorkbookContributor:
+    workbook_contributor_dict = workbook_contributor.model_dump()
+    workbook_contributor_dict["session"] = session
+    try:
+        db_workbook_contributor = WorkbookContributor.model_validate(workbook_contributor_dict)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    session.add(db_workbook_contributor)
+    session.commit()
+    session.refresh(db_workbook_contributor)
+    return db_workbook_contributor
+
+
 # Views for individual models
+@app.get("/workbook-contributors/")
+def read_workbook_contributors(
+    session: Session = Depends(get_session),
+    contributor_id: uuid.UUID | None = None,
+    workbook_id: uuid.UUID | None = None,
+) -> List[WorkbookContributor]:
+    if not contributor_id and not workbook_id:
+        return list(session.exec(select(WorkbookContributor)).all())
+    if not contributor_id:
+        return list(
+            session.exec(
+                select(WorkbookContributor).where(WorkbookContributor.workbook_id == workbook_id)
+            )
+        )
+    if not workbook_id:
+        return list(
+            session.exec(
+                select(WorkbookContributor).where(
+                    WorkbookContributor.contributor_id == contributor_id
+                )
+            )
+        )
+    return list(
+        session.exec(
+            select(WorkbookContributor).where(
+                (WorkbookContributor.workbook_id == workbook_id)
+                & (WorkbookContributor.contributor_id == contributor_id)
+            )
+        )
+    )
+
+
 @app.get("/users/")
 def read_users(session: Session = Depends(get_session)) -> List[User]:
     return list(session.exec(select(User)).all())
@@ -247,19 +311,3 @@ def get_workbook_details(
     response["activities"] = activities_list
 
     return response
-
-
-# POST: create a new workbook
-@app.post("/workbooks/", response_model=Workbook)
-def create_workbook(workbook: WorkbookCreate, session: Session = Depends(get_session)) -> Workbook:
-    # Validate and create new workbook
-    workbook_dict = workbook.model_dump()
-    workbook_dict["session"] = session
-    try:
-        db_workbook = Workbook.model_validate(workbook_dict)
-    except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e))
-    session.add(db_workbook)
-    session.commit()
-    session.refresh(db_workbook)
-    return db_workbook

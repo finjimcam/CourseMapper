@@ -8,9 +8,36 @@ import uuid
 
 
 # link models
-class WorkbookContributors(SQLModel, table=True):
+class WorkbookContributorBase(SQLModel):
     contributor_id: uuid.UUID = Field(foreign_key="user.id", primary_key=True)
     workbook_id: uuid.UUID = Field(foreign_key="workbook.id", primary_key=True)
+
+
+class WorkbookContributor(WorkbookContributorBase, table=True):
+    @model_validator(mode="before")
+    def check_foreign_keys(
+        cls: "WorkbookContributorsBase", values: dict[str, Any]
+    ) -> dict[str, Any]:
+        session: Session = cast(Session, values.get("session"))
+
+        if session is None:
+            raise ValueError("Session is required for foreign key validation")
+
+        # Validate contributor id
+        contributor_id = values.get("contributor_id")
+        if contributor_id and not session.query(User).filter(User.id == contributor_id).first():
+            raise ValueError(f"Contributor (User) with id {contributor_id} does not exist.")
+
+        # Validate workbook id
+        workbook_id = values.get("workbook_id")
+        if workbook_id and not session.query(Workbook).filter(Workbook.id == workbook_id).first():
+            raise ValueError(f"Workbook with id {workbook_id} does not exist.")
+
+        return values
+
+
+class WorkbookContributorCreate(WorkbookContributorBase):
+    pass
 
 
 class ActivityStaff(SQLModel, table=True):
@@ -18,7 +45,7 @@ class ActivityStaff(SQLModel, table=True):
     activity_id: uuid.UUID = Field(foreign_key="activity.id", primary_key=True)
 
 
-class WeekGraduateAttributes(SQLModel, table=True):
+class WeekGraduateAttribute(SQLModel, table=True):
     week_workbook_id: uuid.UUID = Field(primary_key=True)
     week_number: int = Field(primary_key=True)
     graduate_attribute_id: uuid.UUID = Field(foreign_key="graduateattribute.id", primary_key=True)
@@ -52,7 +79,7 @@ class User(SQLModel, table=True):
     workbooks_leading: list["Workbook"] = Relationship(back_populates="course_lead")
 
     workbooks_contributing_to: list["Workbook"] = Relationship(
-        back_populates="contributors", link_model=WorkbookContributors
+        back_populates="contributors", link_model=WorkbookContributor
     )
     responsible_activity: list["Activity"] = Relationship(
         back_populates="staff_responsible", link_model=ActivityStaff
@@ -84,7 +111,7 @@ class Workbook(WorkbookBase, table=True):
     activities: list["Activity"] = Relationship(back_populates="workbook")
 
     contributors: list["User"] = Relationship(
-        back_populates="workbooks_contributing_to", link_model=WorkbookContributors
+        back_populates="workbooks_contributing_to", link_model=WorkbookContributor
     )
 
     @model_validator(mode="before")
@@ -160,7 +187,7 @@ class Week(SQLModel, table=True):
     activities: list["Activity"] = Relationship(back_populates="week")
 
     graduate_attributes: list["GraduateAttribute"] = Relationship(
-        back_populates="weeks", link_model=WeekGraduateAttributes
+        back_populates="weeks", link_model=WeekGraduateAttribute
     )
 
 
@@ -169,7 +196,7 @@ class GraduateAttribute(SQLModel, table=True):
     name: str = Field(nullable=False)
 
     weeks: list["Week"] = Relationship(
-        back_populates="graduate_attributes", link_model=WeekGraduateAttributes
+        back_populates="graduate_attributes", link_model=WeekGraduateAttribute
     )
 
 
