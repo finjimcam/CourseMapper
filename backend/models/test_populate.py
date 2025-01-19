@@ -5,7 +5,6 @@ from models.populate import main
 from models.models import (
     User,
     PermissionsGroup,
-    Course,
     LearningPlatform,
     LearningActivity,
     TaskStatus,
@@ -16,7 +15,6 @@ from models.models import (
 _CLASSES = {
     "user": User,
     "permissions_group": PermissionsGroup,
-    "course": Course,
     "learning_platform": LearningPlatform,
     "learning_activity": LearningActivity,
     "task_status": TaskStatus,

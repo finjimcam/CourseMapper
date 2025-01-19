@@ -69,8 +69,8 @@ class PermissionsGroup(SQLModel, table=True):
 class WorkbookBase(SQLModel):
     start_date: datetime.date = Field(nullable=False)
     end_date: datetime.date = Field(nullable=False)
+    course_name: str = Field(index=True)
     course_lead_id: uuid.UUID = Field(foreign_key="user.id")
-    course_id: uuid.UUID = Field(foreign_key="course.id")
     learning_platform_id: uuid.UUID = Field(foreign_key="learningplatform.id")
 
 
@@ -78,7 +78,6 @@ class Workbook(WorkbookBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
 
     course_lead: Optional["User"] = Relationship(back_populates="workbooks_leading")
-    course: Optional["Course"] = Relationship(back_populates="workbooks")
     learning_platform: Optional["LearningPlatform"] = Relationship(back_populates="workbooks")
 
     weeks: list["Week"] = Relationship(back_populates="workbook")
@@ -131,14 +130,6 @@ class Workbook(WorkbookBase, table=True):
 
 class WorkbookCreate(WorkbookBase):
     pass
-
-
-class Course(SQLModel, table=True):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    course_code: str = Field(nullable=False)
-    name: str = Field(nullable=False)
-
-    workbooks: list["Workbook"] = Relationship(back_populates="course")
 
 
 class LearningPlatform(SQLModel, table=True):
@@ -194,8 +185,7 @@ class Location(SQLModel, table=True):
     activities: list["Activity"] = Relationship(back_populates="location")
 
 
-class Activity(SQLModel, table=True):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+class ActivityBase(SQLModel):
     workbook_id: uuid.UUID = Field(foreign_key="workbook.id")
     week_number: Optional[int] = Field(foreign_key="week.number")
     name: str = Field(nullable=False)
@@ -214,6 +204,10 @@ class Activity(SQLModel, table=True):
     )
     task_status_id: uuid.UUID = Field(nullable=False, foreign_key="taskstatus.id")
 
+
+class Activity(ActivityBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+
     location: Optional["Location"] = Relationship(back_populates="activities")
     workbook: Optional["Workbook"] = Relationship(back_populates="activities")
     week: Optional["Week"] = Relationship(back_populates="activities")
@@ -224,6 +218,55 @@ class Activity(SQLModel, table=True):
     staff_responsible: list["User"] = Relationship(
         back_populates="responsible_activity", link_model=ActivityStaff
     )
+
+    @model_validator(mode="before")
+    def check_foreign_keys(cls: "ActivityBase", values: dict[str, Any]) -> dict[str, Any]:
+        session: Session = cast(Session, values.get("session"))
+
+        if session is None:
+            raise ValueError("Session is required for foreign key validation")
+
+        # Validate the Workbook ID
+        workbook_id = values.get("workbook_id")
+        if workbook_id and not session.query(Workbook).filter(Workbook.id == workbook_id).first():
+            raise ValueError(f"Workbook with id {workbook_id} does not exist.")
+
+        # Validate the Location ID
+        location_id = values.get("location_id")
+        if location_id and not session.query(Location).filter(Location.id == location_id).first():
+            raise ValueError(f"Location with id {location_id} does not exist.")
+
+        # Validate the Learning Activity ID
+        learning_activity_id = values.get("learning_activity_id")
+        if (
+            learning_activity_id
+            and not session.query(LearningActivity)
+            .filter(LearningActivity.id == learning_activity_id)
+            .first()
+        ):
+            raise ValueError(f"Learning Activity with id {learning_activity_id} does not exist.")
+
+        # Validate the Learning Type ID
+        learning_type_id = values.get("learning_type_id")
+        if (
+            learning_type_id
+            and not session.query(LearningType).filter(LearningType.id == learning_type_id).first()
+        ):
+            raise ValueError(f"Learning Type with id {learning_type_id} does not exist.")
+
+        # Validate the Task Status ID
+        task_status_id = values.get("task_status_id")
+        if (
+            task_status_id
+            and not session.query(TaskStatus).filter(TaskStatus.id == task_status_id).first()
+        ):
+            raise ValueError(f"Task Status with id {task_status_id} does not exist.")
+
+        return values
+
+
+class ActivityCreate(ActivityBase):
+    pass
 
 
 class LearningType(SQLModel, table=True):

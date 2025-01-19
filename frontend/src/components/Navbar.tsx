@@ -4,25 +4,25 @@ import { Breadcrumb } from 'flowbite-react';
 import { HiHome } from 'react-icons/hi';
 import axios from 'axios';
 
-interface Course {
+interface WorkbookData {
     id: string;
-    name: string;
+    course_name: string;
 }
 
 function Navbar() {
     const location = useLocation();
     const pathSegments = location.pathname.split('/').filter(Boolean);
-    const [courseData, setCourseData] = useState<Course | null>(null);
+    const [workbookData, setWorkbookData] = useState<WorkbookData | null>(null);
 
     useEffect(() => {
         if (location.pathname.startsWith('/workbook/')) {
             const workbookId = location.pathname.split('/')[2];
             axios.get(`http://127.0.0.1:8000/workbooks/${workbookId}/details`)
                 .then(response => {
-                    setCourseData(response.data.course);
+                    setWorkbookData(response.data.workbook);
                 })
                 .catch(error => {
-                    console.error('Error fetching course data:', error);
+                    console.error('Error fetching workbook data:', error);
                 });
         }
     }, [location.pathname]);
@@ -154,7 +154,7 @@ function Navbar() {
                                         My Workbooks
                                     </Breadcrumb.Item>
                                     <Breadcrumb.Item className="text-gray-700">
-                                        {courseData?.name || 'Workbook'}
+                                        {workbookData?.course_name || 'Workbook'}
                                     </Breadcrumb.Item>
                                 </Breadcrumb>
                             )}
