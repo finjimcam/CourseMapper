@@ -117,7 +117,7 @@ def delete_week(week: WeekDelete, session: Session = Depends(get_session)) -> di
 
 @app.delete("/week-graduate-attributes/")
 def delete_week_graduate_attribute(
-    week_graduate_attribute: WeekGraduateAttributeDelete, session=Depends(get_session)
+    week_graduate_attribute: WeekGraduateAttributeDelete, session: Session = Depends(get_session)
 ) -> dict[str, bool]:
     try:
         week_graduate_attribute.check_primary_keys(session)
