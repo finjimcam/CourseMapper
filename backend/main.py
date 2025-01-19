@@ -118,9 +118,6 @@ def read_workbooks(
 
         for workbook in sqlmodel_workbooks:
             wb = dict(workbook)
-            wb["course_name"] = list(
-                session.exec(select(Course).where(Course.id == workbook.course_id))
-            )[0].name
             wb["course_lead"] = list(
                 session.exec(select(User).where(User.id == workbook.course_lead_id))
             )[0].name

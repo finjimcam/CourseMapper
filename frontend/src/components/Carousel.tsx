@@ -5,7 +5,6 @@ interface CarouselItem {
   id: number;
   start_date: string;
   end_date: string;
-  course_id: string;
   course_lead_id: string;
   learning_platform_id: string;
   course_name: string;
