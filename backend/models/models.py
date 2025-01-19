@@ -16,7 +16,7 @@ class WorkbookContributorBase(SQLModel):
 class WorkbookContributor(WorkbookContributorBase, table=True):
     @model_validator(mode="before")
     def check_foreign_keys(
-        cls: "WorkbookContributorsBase", values: dict[str, Any]
+        cls: "WorkbookContributorBase", values: dict[str, Any]
     ) -> dict[str, Any]:
         session: Session = cast(Session, values.get("session"))
 
@@ -41,7 +41,30 @@ class WorkbookContributorCreate(WorkbookContributorBase):
 
 
 class WorkbookContributorDelete(WorkbookContributorBase):
-    pass
+    def check_primary_keys(
+        cls: "WorkbookContributorBase", session: Session
+    ) -> WorkbookContributorBase:
+        values = cls.model_dump()
+
+        # Validate contributor id
+        contributor_id = values.get("contributor_id")
+        workbook_id = values.get("workbook_id")
+        if (
+            contributor_id
+            and workbook_id
+            and not session.query(WorkbookContributor)
+            .filter(
+                WorkbookContributor.workbook_id == workbook_id,
+                WorkbookContributor.contributor_id == contributor_id,
+            )
+            .first()
+        ):
+            raise ValueError(
+                f"Relationship between contributor (User) {contributor_id} and Workbook "
+                f"{workbook_id} does not exist."
+            )
+
+        return cls
 
 
 class ActivityStaff(SQLModel, table=True):
@@ -180,12 +203,14 @@ class LearningActivity(SQLModel, table=True):
     activities: list["Activity"] = Relationship(back_populates="learning_activity")
 
 
-class Week(SQLModel, table=True):
+class WeekBase(SQLModel):
     workbook_id: uuid.UUID = Field(foreign_key="workbook.id", primary_key=True)
     number: Optional[int] = Field(primary_key=True)
     start_date: datetime.date = Field(nullable=False)
     end_date: datetime.date = Field(nullable=False)
 
+
+class Week(WeekBase, table=True):
     workbook: Optional["Workbook"] = Relationship(back_populates="weeks")
 
     activities: list["Activity"] = Relationship(back_populates="week")
@@ -193,6 +218,15 @@ class Week(SQLModel, table=True):
     graduate_attributes: list["GraduateAttribute"] = Relationship(
         back_populates="weeks", link_model=WeekGraduateAttribute
     )
+
+
+class WeekCreate(WeekBase):
+    pass
+
+
+class WeekDelete(SQLModel):
+    workbook_id: uuid.UUID
+    number: int
 
 
 class GraduateAttribute(SQLModel, table=True):

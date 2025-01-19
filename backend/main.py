@@ -54,7 +54,10 @@ app.add_middleware(
 def delete_workbook_contributor(
     workbook_contributor: WorkbookContributorDelete, session: Session = Depends(get_session)
 ) -> dict[str, bool]:
-    print(workbook_contributor.workbook_id, workbook_contributor.contributor_id)
+    try:
+        workbook_contributor.check_primary_keys(session)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
     db_workbook_contributor = session.exec(
         select(WorkbookContributor).where(
             (WorkbookContributor.workbook_id == workbook_contributor.workbook_id)
