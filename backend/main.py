@@ -115,6 +115,29 @@ def delete_week(week: WeekDelete, session: Session = Depends(get_session)) -> di
     return {"ok": True}
 
 
+@app.delete("/week-graduate-attributes/")
+def delete_week_graduate_attribute(
+    week_graduate_attribute: WeekGraduateAttributeDelete, session=Depends(get_session)
+) -> dict[str, bool]:
+    try:
+        week_graduate_attribute.check_primary_keys(session)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    db_week_graduate_attribute = session.exec(
+        select(WeekGraduateAttribute).where(
+            (WeekGraduateAttribute.week_workbook_id == week_graduate_attribute.week_workbook_id)
+            & (WeekGraduateAttribute.week_number == week_graduate_attribute.week_number)
+            & (
+                WeekGraduateAttribute.graduate_attribute_id
+                == week_graduate_attribute.graduate_attribute_id
+            )
+        )
+    ).first()
+    session.delete(db_week_graduate_attribute)
+    session.commit()
+    return {"ok": True}
+
+
 # Post requests for creating new entries
 @app.post("/activities/", response_model=Activity)
 def create_activity(activity: ActivityCreate, session: Session = Depends(get_session)) -> Activity:
