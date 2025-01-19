@@ -15,6 +15,9 @@ from backend.models.models import (
     Week,
     WeekCreate,
     WeekDelete,
+    WeekGraduateAttribute,
+    WeekGraduateAttributeCreate,
+    WeekGraduateAttributeDelete,
     Workbook,
     WorkbookCreate,
     Activity,
@@ -169,6 +172,44 @@ def create_workbook_contributor(
 
 
 # Views for individual models
+@app.get("/week-graduate-attributes/")
+def read_week_graduate_attributes(
+    session: Session = Depends(get_session),
+    week_workbook_id: uuid.UUID | None = None,
+    week_number: int | None = None,
+    graduate_attribute_id: uuid.UUID | None = None,
+) -> List[WeekGraduateAttribute]:
+    week = week_workbook_id and week_number is not None
+    if not week and not graduate_attribute_id:
+        return list(session.exec(select(WeekGraduateAttribute)).all())
+    if not week:
+        return list(
+            session.exec(
+                select(WeekGraduateAttribute).where(
+                    WeekGraduateAttribute.graduate_attribute_id == graduate_attribute_id
+                )
+            )
+        )
+    if not graduate_attribute_id:
+        return list(
+            session.exec(
+                select(WeekGraduateAttribute).where(
+                    (WeekGraduateAttribute.week_workbook_id == week_workbook_id)
+                    & (WeekGraduateAttribute.week_number == week_number)
+                )
+            )
+        )
+    return list(
+        session.exec(
+            select(WeekGraduateAttribute).where(
+                (WeekGraduateAttribute.week_workbook_id == week_workbook_id)
+                & (WeekGraduateAttribute.week_number == week_number)
+                & (WeekGraduateAttribute.graduate_attribute_id == graduate_attribute_id)
+            )
+        )
+    )
+
+
 @app.get("/workbook-contributors/")
 def read_workbook_contributors(
     session: Session = Depends(get_session),

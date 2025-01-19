@@ -72,17 +72,53 @@ class ActivityStaff(SQLModel, table=True):
     activity_id: uuid.UUID = Field(foreign_key="activity.id", primary_key=True)
 
 
-class WeekGraduateAttribute(SQLModel, table=True):
+class WeekGraduateAttributeBase(SQLModel):
     week_workbook_id: uuid.UUID = Field(primary_key=True)
     week_number: int = Field(primary_key=True)
     graduate_attribute_id: uuid.UUID = Field(foreign_key="graduateattribute.id", primary_key=True)
 
+
+class WeekGraduateAttribute(WeekGraduateAttributeBase, table=True):
     __table_args__ = (
         ForeignKeyConstraint(
             ["week_workbook_id", "week_number"],
             ["week.workbook_id", "week.number"],
         ),
     )
+
+
+class WeekGraduateAttributeCreate(WeekGraduateAttributeBase):
+    pass
+
+
+class WeekGraduateAttributeDelete(WeekGraduateAttributeBase):
+    def check_primary_keys(
+        cls: "WeekGraduateAttributeDelete", session: Session
+    ) -> "WeekGraduateAttributeDelete":
+        values = cls.model_dump()
+
+        # Validate WeekGraduteAttribute row exists
+        week_workbook_id = values.get("week_workbook_id")
+        week_number = values.get("week_number")
+        graduate_attribute_id = values.get("graduate_attribute_id")
+        if (
+            week_workbook_id
+            and week_number is not None
+            and graduate_attribute_id
+            and not session.query(WeekGraduateAttribute)
+            .filter(
+                WeekGraduateAttribute.week_workbook_id == week_workbook_id,
+                WeekGraduateAttribute.week_number == week_number,
+                WeekGraduateAttribute.graduate_attribute_id == graduate_attribute_id,
+            )
+            .first()
+        ):
+            raise ValueError(
+                f"Relationship between Week number {week_number} of Workbook {week_workbook_id} "
+                f"and Graduate Attribute {graduate_attribute_id} does not exist."
+            )
+
+        return cls
 
 
 """
