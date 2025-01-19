@@ -15,12 +15,6 @@ interface User {
   name: string;
 }
 
-interface Course {
-  id: string;
-  course_code: string;
-  name: string;
-}
-
 interface LearningPlatform {
   id: string;
   name: string;
@@ -30,7 +24,7 @@ interface WorkbookData {
   id: string;
   start_date: string;
   end_date: string;
-  course_id: string;
+  course_name: string;
   course_lead_id: string;
   learning_platform_id: string;
 }
@@ -64,7 +58,6 @@ interface WeekInfo {
 
 interface WorkbookDetailsResponse {
   workbook: WorkbookData;
-  course: Course | null;
   course_lead: User | null;
   learning_platform: LearningPlatform | null;
   activities: ActivityData[];
@@ -76,7 +69,6 @@ function Workbook(): JSX.Element {
 
   // State variables
   const [workbookData, setWorkbookData] = useState<WorkbookData | null>(null);
-  const [courseData, setCourseData] = useState<Course | null>(null);
   const [courseLeadData, setCourseLeadData] = useState<User | null>(null);
   const [learningPlatformData, setLearningPlatformData] = useState<LearningPlatform | null>(null);
   const [weeksData, setWeeksData] = useState<WeekInfo[]>([]);
@@ -95,10 +87,9 @@ function Workbook(): JSX.Element {
         const response = await axios.get<WorkbookDetailsResponse>(
           `http://127.0.0.1:8000/workbooks/${workbook_id}/details`
         );
-        const { workbook, course, course_lead, learning_platform, activities } = response.data;
+        const { workbook, course_lead, learning_platform, activities } = response.data;
 
         setWorkbookData(workbook);
-        setCourseData(course);
         setCourseLeadData(course_lead);
         setLearningPlatformData(learning_platform);
 
@@ -309,7 +300,7 @@ function Workbook(): JSX.Element {
         {/* Course Header */}
         <div className="mb-6">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            {courseData?.name || 'Course Title'}
+            {workbookData?.course_name || 'Course Title'}
           </h1>
           <p className="text-lg text-gray-600">
             Course Lead:{' '}
@@ -332,13 +323,19 @@ function Workbook(): JSX.Element {
                   <div className="overflow-x-auto">
                     <Table striped>
                       <Table.Head>
-                        <Table.HeadCell>Week</Table.HeadCell>
+                        <Table.HeadCell>
+                          <CustomBadge label="Week" colorMapping={{ default: '#6c757d' }} />
+                        </Table.HeadCell>
                         {learningTypesList.map((type) => (
-                          <Table.HeadCell key={type}>{type}</Table.HeadCell>
+                          <Table.HeadCell key={type}>
+                            <CustomBadge label={type} colorMapping={learningTypeColors} />
+                          </Table.HeadCell>
                         ))}
-                        <Table.HeadCell>Total Hours</Table.HeadCell>
+                        <Table.HeadCell>
+                          <CustomBadge label="Total Hours" colorMapping={{ default: '#6c757d' }} />
+                        </Table.HeadCell>
                       </Table.Head>
-                      <Table.Body>
+                      <Table.Body style={{ textAlign: 'center' }}>
                         {summaryData.map((row, index) => (
                           <Table.Row key={index}>
                             <Table.Cell>{row.week}</Table.Cell>
@@ -376,9 +373,9 @@ function Workbook(): JSX.Element {
                       <Table.HeadCell>Title / Name</Table.HeadCell>
                       <Table.HeadCell>Learning Activity</Table.HeadCell>
                       <Table.HeadCell>Learning Type</Table.HeadCell>
-                      <Table.HeadCell>Time</Table.HeadCell>
-                      <Table.HeadCell>Task Status</Table.HeadCell>
                       <Table.HeadCell>Activity Location</Table.HeadCell>
+                      <Table.HeadCell>Task Status</Table.HeadCell>
+                      <Table.HeadCell>Time</Table.HeadCell>
                     </Table.Head>
                     <Table.Body>
                       {week.data.map((row: WeekData, index: number) => (

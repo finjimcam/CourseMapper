@@ -11,13 +11,13 @@ from contextlib import contextmanager
 from backend.models.models import (
     User,
     PermissionsGroup,
-    Course,
     Week,
     Workbook,
     Activity,
     LearningPlatform,
     LearningActivity,
     TaskStatus,
+    Location,
     LearningType,
     GraduateAttribute,
 )
@@ -55,12 +55,15 @@ def _populate_initial_data() -> None:
 
         dataframe = pd.read_csv(_LEGEND_CSV_PATH)
 
+        locations = {}
         task_statuses = {}
         learning_types = {}
         graduate_attributes = {}
         learning_platforms = {}
         learning_activities: dict[str, dict[str, LearningActivity]] = {}
 
+        for location in dataframe["Activity Location"].dropna():
+            locations[location] = Location(name=location)
         for task_status in dataframe["Task Status"].dropna():
             task_statuses[task_status] = TaskStatus(name=task_status)
         for learning_type in dataframe["Learning Type"].dropna():
@@ -100,16 +103,11 @@ def _populate_initial_data() -> None:
                 name="Jennifer Boyle", permissions_group=permissions_groups["User"]
             ),
         }
-        courses = {
-            "COMPSCI4015": Course(
-                course_code="COMPSCI4015", name="Professional Software Development"
-            ),
-        }
         workbook = Workbook(
             start_date=datetime.date(2024, 9, 23),
             end_date=datetime.date(2024, 9, 23) + datetime.timedelta(weeks=3),
             course_lead=users["Tim Storer"],
-            course=courses["COMPSCI4015"],
+            course_name="Professional Software Development",
             learning_platform=learning_platforms["Moodle"],
         )
         if workbook.learning_platform is None:
@@ -141,7 +139,7 @@ def _populate_initial_data() -> None:
                     week=weeks[week_no],
                     workbook=workbook,
                     name=name,
-                    location=location if not pd.isna(location) else "On Campus",
+                    location=locations[location],
                     learning_activity=learning_activities[workbook.learning_platform.name][
                         learning_activity
                     ],
@@ -160,6 +158,7 @@ def _populate_initial_data() -> None:
 
                 activities.append(activity)
 
+        session.add_all(locations.values())
         session.add_all(task_statuses.values())
         session.add_all(learning_types.values())
         session.add_all(graduate_attributes.values())
@@ -170,7 +169,6 @@ def _populate_initial_data() -> None:
         session.add_all(activities)
         session.add_all(permissions_groups.values())
         session.add_all(users.values())
-        session.add_all(courses.values())
         session.add(workbook)
 
         session.commit()

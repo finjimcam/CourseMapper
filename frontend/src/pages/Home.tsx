@@ -42,12 +42,20 @@ function Home() {
         {/* Align SearchBar and Button to the left */}
         <div className="flex flex-col items-start space-y-4">
           <SearchBar />
-          <button
-            type="button"
-            className="text-white bg-gradient-to-r from-cyan-500 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-cyan-300 font-medium rounded-lg text-sm px-5 py-2.5"
-          >
-            Create Workbook
-          </button>
+          <div className="flex gap-4">
+            <Link
+              to="/my-workbooks"
+              className="text-white bg-gradient-to-r from-cyan-500 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-cyan-300 font-medium rounded-lg text-sm px-5 py-2.5"
+            >
+              My Workbooks
+            </Link>
+            <button
+              type="button"
+              className="text-white bg-gradient-to-r from-cyan-500 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-cyan-300 font-medium rounded-lg text-sm px-5 py-2.5"
+            >
+              Create Workbook
+            </button>
+          </div>
         </div>
 
         <div className="space-y-4">

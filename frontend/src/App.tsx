@@ -20,7 +20,6 @@ const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<Layout />}>
       <Route index element={<Home />} />
-      <Route path="home" element={<Home />} />
       <Route path="my-workbooks" element={<MyWorkbooks />} />
       <Route path="about" element={<About />} />
       <Route path="workbook/:workbook_id" element={<Workbook />} /> {/* Add this route */}

@@ -1,4 +1,4 @@
-from typing import Union, Annotated, AsyncGenerator, List, Dict, Any
+from typing import Annotated, AsyncGenerator, List, Dict, Any
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException
 from sqlmodel import Session, select
@@ -12,13 +12,15 @@ from backend.models.database import (
 from backend.models.models import (
     User,
     PermissionsGroup,
-    Course,
     Week,
     Workbook,
+    WorkbookCreate,
     Activity,
+    ActivityCreate,
     LearningPlatform,
     LearningActivity,
     TaskStatus,
+    Location,
     LearningType,
     ActivityStaff,
     GraduateAttribute,
@@ -44,7 +46,22 @@ app.add_middleware(
 )
 
 
-# Views for individual models for testing purposes
+# Post requests for creating new entries
+@app.post("/activities/", response_model=Activity)
+def create_activity(activity: ActivityCreate, session: Session = Depends(get_session)) -> Activity:
+    activity_dict = activity.model_dump()
+    activity_dict["session"] = session
+    try:
+        db_activity = Activity.model_validate(activity_dict)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    session.add(db_activity)
+    session.commit()
+    session.refresh(db_activity)
+    return db_activity
+
+
+# Views for individual models
 @app.get("/users/")
 def read_users(session: Session = Depends(get_session)) -> List[User]:
     return list(session.exec(select(User)).all())
@@ -55,11 +72,6 @@ def read_permissions_groups(
     session: Session = Depends(get_session),
 ) -> List[PermissionsGroup]:
     return list(session.exec(select(PermissionsGroup)).all())
-
-
-@app.get("/courses/")
-def read_courses(session: Session = Depends(get_session)) -> List[Course]:
-    return list(session.exec(select(Course)).all())
 
 
 @app.get("/learning-platforms/")
@@ -142,6 +154,12 @@ def read_graduate_attributes(
     return graduate_attributes
 
 
+@app.get("/locations/")
+def read_locations(session: Session = Depends(get_session)) -> List[Location]:
+    locations = list(session.exec(select(Location)).all())
+    return locations
+
+
 @app.get("/activities/")
 def read_activities(
     workbook_id: uuid.UUID | None = None,
@@ -173,7 +191,6 @@ def get_workbook_details(
         raise HTTPException(status_code=404, detail="Workbook not found")
 
     # Fetch related data
-    course = session.exec(select(Course).where(Course.id == workbook.course_id)).first()
     course_lead = session.exec(select(User).where(User.id == workbook.course_lead_id)).first()
     learning_platform = session.exec(
         select(LearningPlatform).where(LearningPlatform.id == workbook.learning_platform_id)
@@ -186,19 +203,10 @@ def get_workbook_details(
             "id": str(workbook.id),
             "start_date": workbook.start_date.isoformat(),
             "end_date": workbook.end_date.isoformat(),
-            "course_id": str(workbook.course_id),
+            "course_name": workbook.course_name,
             "course_lead_id": str(workbook.course_lead_id),
             "learning_platform_id": str(workbook.learning_platform_id),
         },
-        "course": (
-            {
-                "id": str(course.id),
-                "course_code": course.course_code,
-                "name": course.name,
-            }
-            if course
-            else None
-        ),
         "course_lead": (
             {
                 "id": str(course_lead.id),
@@ -222,6 +230,9 @@ def get_workbook_details(
     activities_list: List[Dict[str, Any]] = []
     for activity in activities:
         # Fetch related data for each activity
+        location = session.exec(
+            select(Location).where(Location.id == activity.location_id)
+        ).first()
         learning_activity = session.exec(
             select(LearningActivity).where(LearningActivity.id == activity.learning_activity_id)
         ).first()
@@ -243,8 +254,8 @@ def get_workbook_details(
             "id": str(activity.id),
             "name": activity.name,
             "time_estimate_minutes": activity.time_estimate_minutes,
-            "location": activity.location,
             "week_number": activity.week_number,
+            "location": location.name if location else None,
             "learning_activity": learning_activity.name if learning_activity else None,
             "learning_type": learning_type.name if learning_type else None,
             "task_status": task_status.name if task_status else None,
@@ -260,3 +271,19 @@ def get_workbook_details(
     response["activities"] = activities_list
 
     return response
+
+
+# POST: create a new workbook
+@app.post("/workbooks/", response_model=Workbook)
+def create_workbook(workbook: WorkbookCreate, session: Session = Depends(get_session)) -> Workbook:
+    # Validate and create new workbook
+    workbook_dict = workbook.model_dump()
+    workbook_dict["session"] = session
+    try:
+        db_workbook = Workbook.model_validate(workbook_dict)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    session.add(db_workbook)
+    session.commit()
+    session.refresh(db_workbook)
+    return db_workbook
