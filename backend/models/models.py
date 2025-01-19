@@ -86,6 +86,39 @@ class WeekGraduateAttribute(WeekGraduateAttributeBase, table=True):
         ),
     )
 
+    @model_validator(mode="before")
+    def check_foreign_keys(
+        cls: "WeekGraduateAttributeBase", values: dict[str, Any]
+    ) -> dict[str, Any]:
+        session: Session = cast(Session, values.get("session"))
+
+        if session is None:
+            raise ValueError("Session is required for foreign key validation")
+
+        # Validate Week
+        workbook_id = values.get("week_workbook_id")
+        number = values.get("week_number")
+        if (
+            workbook_id
+            and number is not None
+            and not session.query(Week)
+            .filter(Week.workbook_id == workbook_id, Week.number == number)
+            .first()
+        ):
+            raise ValueError(f"Week number {number} of Workbook {workbook_id} does not exist.")
+
+        # Validate Graduate Attribute
+        graduate_attribute_id = values.get("graduate_attribute_id")
+        if (
+            graduate_attribute_id
+            and not session.query(GraduateAttribute)
+            .filter(GraduateAttribute.id == graduate_attribute_id)
+            .first()
+        ):
+            raise ValueError(f"Graduate attribute with id {graduate_attribute_id} does not exist.")
+
+        return values
+
 
 class WeekGraduateAttributeCreate(WeekGraduateAttributeBase):
     pass

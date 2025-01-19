@@ -102,6 +102,15 @@ def delete_week(week: WeekDelete, session: Session = Depends(get_session)) -> di
         if other_week.number > week.number:
             other_week.number -= 1
             session.add(other_week)
+            # Link model WeekGraduateAttributes must be manually updated
+            for week_graduate_attribute in session.exec(
+                select(WeekGraduateAttribute).where(
+                    (WeekGraduateAttribute.week_workbook_id == other_week.workbook_id)
+                    & (WeekGraduateAttribute.week_number == other_week.number + 1)
+                )
+            ):
+                week_graduate_attribute.week_number -= 1
+                session.add(week_graduate_attribute)
     session.commit()
     return {"ok": True}
 
@@ -169,6 +178,24 @@ def create_workbook_contributor(
     session.commit()
     session.refresh(db_workbook_contributor)
     return db_workbook_contributor
+
+
+@app.post("/week-graduate-attributes/", response_model=WeekGraduateAttribute)
+def create_week_graduate_attribute(
+    week_graduate_attribute: WeekGraduateAttributeCreate, session: Session = Depends(get_session)
+) -> WeekGraduateAttribute:
+    week_graduate_attribute_dict = week_graduate_attribute.model_dump()
+    week_graduate_attribute_dict["session"] = session
+    try:
+        db_week_graduate_attribute = WeekGraduateAttribute.model_validate(
+            week_graduate_attribute_dict
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    session.add(db_week_graduate_attribute)
+    session.commit()
+    session.refresh(db_week_graduate_attribute)
+    return db_week_graduate_attribute
 
 
 # Views for individual models
