@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch
 from sqlmodel import create_engine, Session, select
 from models.populate import main
-from models.models import (
+from models.models_base import (
     User,
     PermissionsGroup,
     LearningPlatform,

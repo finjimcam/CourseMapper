@@ -8,7 +8,7 @@ import pandas as pd
 from typing import Iterator
 from sqlmodel import Session, SQLModel, select, create_engine
 from contextlib import contextmanager
-from models.models import (
+from models.models_base import (
     User,
     PermissionsGroup,
     Week,
