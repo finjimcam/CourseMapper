@@ -17,7 +17,7 @@ function Home() {
         const response = await axios.get('http://127.0.0.1:8000/workbooks/');
         setWorkbooks(response.data);
         setLoading(false);
-      } catch (err: any) {
+      } catch (err) {
         setError(err.message || 'An error occurred');
         setLoading(false);
       }
@@ -28,6 +28,22 @@ function Home() {
 
   if (loading) return <div className="text-center mt-10">Loading...</div>;
   if (error) return <div className="text-center mt-10 text-red-500">Error: {error}</div>;
+
+  const items = workbooks.map((workbook) => ({
+    id: workbook.id,
+    content: (
+      <Link to={`/workbook/${workbook.id}`} key={workbook.id}>
+        <div className="text-center">
+          <img
+            src="https://via.placeholder.com/150"
+            alt="Workbook"
+            className="rounded-lg shadow-md"
+          />
+          <p className="mt-2 text-sm text-gray-700">{workbook.title || 'Untitled Workbook'}</p>
+        </div>
+      </Link>
+    ),
+  }));
 
   return (
     <>
@@ -60,7 +76,7 @@ function Home() {
 
         <div className="space-y-4">
           <h1 className="text-2xl font-semibold text-left">Recent Workbooks</h1>
-          <Carousel items={workbooks} />
+          <Carousel items={items} />
         </div>
       </div>
     </>
