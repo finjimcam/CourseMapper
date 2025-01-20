@@ -9,7 +9,7 @@ from models.database import (
     create_db_and_tables,
     get_session,
 )
-from models.models import (
+from models.models_base import (
     User,
     PermissionsGroup,
     Week,
