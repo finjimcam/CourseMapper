@@ -28,7 +28,7 @@ test_engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thre
 
 class TestPopulation(unittest.TestCase):
 
-    @patch("backend.models.populate.engine", new=test_engine)
+    @patch("models.populate.engine", new=test_engine)
     def test_populates_db(self) -> None:
         main()
 
