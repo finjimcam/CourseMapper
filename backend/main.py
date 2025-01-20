@@ -5,11 +5,11 @@ from sqlmodel import Session, select
 import uuid
 from fastapi.middleware.cors import CORSMiddleware
 
-from backend.models.database import (
+from models.database import (
     create_db_and_tables,
     get_session,
 )
-from backend.models.models import (
+from models.models import (
     User,
     PermissionsGroup,
     Week,
@@ -341,10 +341,31 @@ def read_learning_types(session: Session = Depends(get_session)) -> List[Learnin
 def read_workbooks(
     workbook_id: uuid.UUID | None = None,
     session: Session = Depends(get_session),
-) -> List[Workbook]:
+) -> List[Dict[str, Any]]:
     if not workbook_id:
-        return list(session.exec(select(Workbook)).all())
-    return list(session.exec(select(Workbook).where(Workbook.id == workbook_id)))
+        sqlmodel_workbooks: List[Workbook] = list(session.exec(select(Workbook)).all())
+        workbooks: List[Dict[str, Any]] = []
+
+        for workbook in sqlmodel_workbooks:
+            wb = dict(workbook)
+            wb["course_lead"] = list(
+                session.exec(select(User).where(User.id == workbook.course_lead_id))
+            )[0].name
+            wb["learning_platform"] = list(
+                session.exec(
+                    select(LearningPlatform).where(
+                        LearningPlatform.id == workbook.learning_platform_id
+                    )
+                )
+            )[0].name
+            workbooks.append(wb)
+
+        return workbooks
+
+    return [
+        dict(workbook)
+        for workbook in session.exec(select(Workbook).where(Workbook.id == workbook_id))
+    ]
 
 
 @app.get("/weeks/")
