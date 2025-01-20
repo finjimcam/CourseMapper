@@ -9,7 +9,7 @@ from backend.models.database import (
     create_db_and_tables,
     get_session,
 )
-from backend.models.models import (
+from models.models_base import (
     User,
     PermissionsGroup,
     Week,
