@@ -8,9 +8,63 @@ import uuid
 
 
 # link models
-class WorkbookContributors(SQLModel, table=True):
+class WorkbookContributorBase(SQLModel):
     contributor_id: uuid.UUID = Field(foreign_key="user.id", primary_key=True)
     workbook_id: uuid.UUID = Field(foreign_key="workbook.id", primary_key=True)
+
+
+class WorkbookContributor(WorkbookContributorBase, table=True):
+    @model_validator(mode="before")
+    def check_foreign_keys(
+        cls: "WorkbookContributorBase", values: dict[str, Any]
+    ) -> dict[str, Any]:
+        session: Session = cast(Session, values.get("session"))
+
+        if session is None:
+            raise ValueError("Session is required for foreign key validation")
+
+        # Validate contributor id
+        contributor_id = values.get("contributor_id")
+        if contributor_id and not session.query(User).filter(User.id == contributor_id).first():
+            raise ValueError(f"Contributor (User) with id {contributor_id} does not exist.")
+
+        # Validate workbook id
+        workbook_id = values.get("workbook_id")
+        if workbook_id and not session.query(Workbook).filter(Workbook.id == workbook_id).first():
+            raise ValueError(f"Workbook with id {workbook_id} does not exist.")
+
+        return values
+
+
+class WorkbookContributorCreate(WorkbookContributorBase):
+    pass
+
+
+class WorkbookContributorDelete(WorkbookContributorBase):
+    def check_primary_keys(
+        cls: "WorkbookContributorDelete", session: Session
+    ) -> "WorkbookContributorDelete":
+        values = cls.model_dump()
+
+        # Validate WorkbookContributor row exists
+        contributor_id = values.get("contributor_id")
+        workbook_id = values.get("workbook_id")
+        if (
+            contributor_id
+            and workbook_id
+            and not session.query(WorkbookContributor)
+            .filter(
+                WorkbookContributor.workbook_id == workbook_id,
+                WorkbookContributor.contributor_id == contributor_id,
+            )
+            .first()
+        ):
+            raise ValueError(
+                f"Relationship between contributor (User) {contributor_id} and Workbook "
+                f"{workbook_id} does not exist."
+            )
+
+        return cls
 
 
 class ActivityStaff(SQLModel, table=True):
@@ -18,17 +72,86 @@ class ActivityStaff(SQLModel, table=True):
     activity_id: uuid.UUID = Field(foreign_key="activity.id", primary_key=True)
 
 
-class WeekGraduateAttributes(SQLModel, table=True):
+class WeekGraduateAttributeBase(SQLModel):
     week_workbook_id: uuid.UUID = Field(primary_key=True)
     week_number: int = Field(primary_key=True)
     graduate_attribute_id: uuid.UUID = Field(foreign_key="graduateattribute.id", primary_key=True)
 
+
+class WeekGraduateAttribute(WeekGraduateAttributeBase, table=True):
     __table_args__ = (
         ForeignKeyConstraint(
             ["week_workbook_id", "week_number"],
             ["week.workbook_id", "week.number"],
         ),
     )
+
+    @model_validator(mode="before")
+    def check_foreign_keys(
+        cls: "WeekGraduateAttributeBase", values: dict[str, Any]
+    ) -> dict[str, Any]:
+        session: Session = cast(Session, values.get("session"))
+
+        if session is None:
+            raise ValueError("Session is required for foreign key validation")
+
+        # Validate Week
+        workbook_id = values.get("week_workbook_id")
+        number = values.get("week_number")
+        if (
+            workbook_id
+            and number is not None
+            and not session.query(Week)
+            .filter(Week.workbook_id == workbook_id, Week.number == number)
+            .first()
+        ):
+            raise ValueError(f"Week number {number} of Workbook {workbook_id} does not exist.")
+
+        # Validate Graduate Attribute
+        graduate_attribute_id = values.get("graduate_attribute_id")
+        if (
+            graduate_attribute_id
+            and not session.query(GraduateAttribute)
+            .filter(GraduateAttribute.id == graduate_attribute_id)
+            .first()
+        ):
+            raise ValueError(f"Graduate attribute with id {graduate_attribute_id} does not exist.")
+
+        return values
+
+
+class WeekGraduateAttributeCreate(WeekGraduateAttributeBase):
+    pass
+
+
+class WeekGraduateAttributeDelete(WeekGraduateAttributeBase):
+    def check_primary_keys(
+        cls: "WeekGraduateAttributeDelete", session: Session
+    ) -> "WeekGraduateAttributeDelete":
+        values = cls.model_dump()
+
+        # Validate WeekGraduteAttribute row exists
+        week_workbook_id = values.get("week_workbook_id")
+        week_number = values.get("week_number")
+        graduate_attribute_id = values.get("graduate_attribute_id")
+        if (
+            week_workbook_id
+            and week_number is not None
+            and graduate_attribute_id
+            and not session.query(WeekGraduateAttribute)
+            .filter(
+                WeekGraduateAttribute.week_workbook_id == week_workbook_id,
+                WeekGraduateAttribute.week_number == week_number,
+                WeekGraduateAttribute.graduate_attribute_id == graduate_attribute_id,
+            )
+            .first()
+        ):
+            raise ValueError(
+                f"Relationship between Week number {week_number} of Workbook {week_workbook_id} "
+                f"and Graduate Attribute {graduate_attribute_id} does not exist."
+            )
+
+        return cls
 
 
 """
@@ -52,7 +175,7 @@ class User(SQLModel, table=True):
     workbooks_leading: list["Workbook"] = Relationship(back_populates="course_lead")
 
     workbooks_contributing_to: list["Workbook"] = Relationship(
-        back_populates="contributors", link_model=WorkbookContributors
+        back_populates="contributors", link_model=WorkbookContributor
     )
     responsible_activity: list["Activity"] = Relationship(
         back_populates="staff_responsible", link_model=ActivityStaff
@@ -76,6 +199,7 @@ class WorkbookBase(SQLModel):
 
 class Workbook(WorkbookBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    number_of_weeks: int = Field(default=0)
 
     course_lead: Optional["User"] = Relationship(back_populates="workbooks_leading")
     learning_platform: Optional["LearningPlatform"] = Relationship(back_populates="workbooks")
@@ -84,7 +208,7 @@ class Workbook(WorkbookBase, table=True):
     activities: list["Activity"] = Relationship(back_populates="workbook")
 
     contributors: list["User"] = Relationship(
-        back_populates="workbooks_contributing_to", link_model=WorkbookContributors
+        back_populates="workbooks_contributing_to", link_model=WorkbookContributor
     )
 
     @model_validator(mode="before")
@@ -149,19 +273,72 @@ class LearningActivity(SQLModel, table=True):
     activities: list["Activity"] = Relationship(back_populates="learning_activity")
 
 
-class Week(SQLModel, table=True):
+class WeekBase(SQLModel):
     workbook_id: uuid.UUID = Field(foreign_key="workbook.id", primary_key=True)
-    number: Optional[int] = Field(primary_key=True)
     start_date: datetime.date = Field(nullable=False)
     end_date: datetime.date = Field(nullable=False)
+
+
+class Week(WeekBase, table=True):
+    number: Optional[int] = Field(primary_key=True, default=0)
 
     workbook: Optional["Workbook"] = Relationship(back_populates="weeks")
 
     activities: list["Activity"] = Relationship(back_populates="week")
 
     graduate_attributes: list["GraduateAttribute"] = Relationship(
-        back_populates="weeks", link_model=WeekGraduateAttributes
+        back_populates="weeks", link_model=WeekGraduateAttribute
     )
+
+    @model_validator(mode="before")
+    def check_foreign_keys(cls: "WeekBase", values: dict[str, Any]) -> dict[str, Any]:
+        session: Session = cast(Session, values.get("session"))
+
+        if session is None:
+            raise ValueError("Session is required for foreign key validation")
+
+        # Validate Workbook ID
+        workbook_id = values.get("workbook_id")
+        if workbook_id and not session.query(Workbook).filter(Workbook.id == workbook_id).first():
+            raise ValueError(f"Workbook with id {workbook_id} does not exist.")
+
+        # Validate dates
+        start_date = values.get("start_date")
+        end_date = values.get("end_date")
+        if not start_date:
+            raise ValueError(f"start_date with {start_date} does not exist.")
+        if not end_date:
+            raise ValueError(f"end_date with {end_date} does not exist.")
+        if start_date >= end_date:
+            raise ValueError("start_date must be earlier than end_date.")
+
+        return values
+
+
+class WeekCreate(WeekBase):
+    pass
+
+
+class WeekDelete(SQLModel):
+    workbook_id: uuid.UUID
+    number: int
+
+    def check_primary_keys(cls: "WeekDelete", session: Session) -> "WeekDelete":
+        values = cls.model_dump()
+
+        # Validate Week row exists
+        workbook_id = values.get("workbook_id")
+        number = values.get("number")
+        if (
+            workbook_id is not None
+            and number is not None
+            and not session.query(Week)
+            .filter(Week.workbook_id == workbook_id, Week.number == number)
+            .first()
+        ):
+            raise ValueError(f"Week number {number} of Workbook {workbook_id} does not exist.")
+
+        return cls
 
 
 class GraduateAttribute(SQLModel, table=True):
@@ -169,7 +346,7 @@ class GraduateAttribute(SQLModel, table=True):
     name: str = Field(nullable=False)
 
     weeks: list["Week"] = Relationship(
-        back_populates="graduate_attributes", link_model=WeekGraduateAttributes
+        back_populates="graduate_attributes", link_model=WeekGraduateAttribute
     )
 
 

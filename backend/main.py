@@ -1,4 +1,4 @@
-from typing import Annotated, AsyncGenerator, List, Dict, Any
+from typing import Annotated, AsyncGenerator, List, Dict, Any, cast
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException
 from sqlmodel import Session, select
@@ -13,6 +13,11 @@ from models.models_base import (
     User,
     PermissionsGroup,
     Week,
+    WeekCreate,
+    WeekDelete,
+    WeekGraduateAttribute,
+    WeekGraduateAttributeCreate,
+    WeekGraduateAttributeDelete,
     Workbook,
     WorkbookCreate,
     Activity,
@@ -24,6 +29,9 @@ from models.models_base import (
     LearningType,
     ActivityStaff,
     GraduateAttribute,
+    WorkbookContributor,
+    WorkbookContributorCreate,
+    WorkbookContributorDelete,
 )
 
 SessionDep = Annotated[Session, Depends(get_session)]
@@ -46,6 +54,90 @@ app.add_middleware(
 )
 
 
+# Delete requests for removing entries
+@app.delete("/workbook-contributors/")
+def delete_workbook_contributor(
+    workbook_contributor: WorkbookContributorDelete, session: Session = Depends(get_session)
+) -> dict[str, bool]:
+    try:
+        workbook_contributor.check_primary_keys(session)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    db_workbook_contributor = session.exec(
+        select(WorkbookContributor).where(
+            (WorkbookContributor.workbook_id == workbook_contributor.workbook_id)
+            & (WorkbookContributor.contributor_id == workbook_contributor.contributor_id)
+        )
+    ).first()
+    session.delete(db_workbook_contributor)
+    session.commit()
+    return {"ok": True}
+
+
+@app.delete("/weeks/")
+def delete_week(week: WeekDelete, session: Session = Depends(get_session)) -> dict[str, bool]:
+    try:
+        week.check_primary_keys(session)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    db_week = cast(
+        Week,
+        session.exec(
+            select(Week).where(
+                (Week.workbook_id == week.workbook_id) & (Week.number == week.number)
+            )
+        ).first(),
+    )  # Week has been validated to exist by model validation earlier in this function.
+    linked_workbook = cast(
+        Workbook, session.exec(select(Workbook).where(Workbook.id == db_week.workbook_id)).first()
+    )  # Workbook is guaranteed to exist by model validation.
+    linked_workbook.number_of_weeks -= 1
+    session.add(linked_workbook)
+    session.delete(db_week)
+    session.commit()
+    # loop through weeks of linked_workbook and update their numbers to maintain continuity
+    for other_week in linked_workbook.weeks:
+        if other_week.number is None:
+            continue
+        if other_week.number > week.number:
+            other_week.number -= 1
+            session.add(other_week)
+            # Link model WeekGraduateAttributes must be manually updated
+            for week_graduate_attribute in session.exec(
+                select(WeekGraduateAttribute).where(
+                    (WeekGraduateAttribute.week_workbook_id == other_week.workbook_id)
+                    & (WeekGraduateAttribute.week_number == other_week.number + 1)
+                )
+            ):
+                week_graduate_attribute.week_number -= 1
+                session.add(week_graduate_attribute)
+    session.commit()
+    return {"ok": True}
+
+
+@app.delete("/week-graduate-attributes/")
+def delete_week_graduate_attribute(
+    week_graduate_attribute: WeekGraduateAttributeDelete, session: Session = Depends(get_session)
+) -> dict[str, bool]:
+    try:
+        week_graduate_attribute.check_primary_keys(session)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    db_week_graduate_attribute = session.exec(
+        select(WeekGraduateAttribute).where(
+            (WeekGraduateAttribute.week_workbook_id == week_graduate_attribute.week_workbook_id)
+            & (WeekGraduateAttribute.week_number == week_graduate_attribute.week_number)
+            & (
+                WeekGraduateAttribute.graduate_attribute_id
+                == week_graduate_attribute.graduate_attribute_id
+            )
+        )
+    ).first()
+    session.delete(db_week_graduate_attribute)
+    session.commit()
+    return {"ok": True}
+
+
 # Post requests for creating new entries
 @app.post("/activities/", response_model=Activity)
 def create_activity(activity: ActivityCreate, session: Session = Depends(get_session)) -> Activity:
@@ -61,7 +153,145 @@ def create_activity(activity: ActivityCreate, session: Session = Depends(get_ses
     return db_activity
 
 
+@app.post("/workbooks/", response_model=Workbook)
+def create_workbook(workbook: WorkbookCreate, session: Session = Depends(get_session)) -> Workbook:
+    workbook_dict = workbook.model_dump()
+    workbook_dict["session"] = session
+    try:
+        db_workbook = Workbook.model_validate(workbook_dict)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    session.add(db_workbook)
+    session.commit()
+    session.refresh(db_workbook)
+    return db_workbook
+
+
+@app.post("/weeks/", response_model=Week)
+def create_week(week: WeekCreate, session: Session = Depends(get_session)) -> Week:
+    week_dict = week.model_dump()
+    week_dict["session"] = session
+    try:
+        db_week = Week.model_validate(week_dict)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    linked_workbook = cast(
+        Workbook, session.exec(select(Workbook).where(Workbook.id == db_week.workbook_id)).first()
+    )  # exec is guaranteed by Week model validation as workbook_id is a primary foreign key.
+    db_week.number = linked_workbook.number_of_weeks + 1
+    linked_workbook.number_of_weeks += 1
+    session.add(db_week)
+    session.add(linked_workbook)
+    session.commit()
+    session.refresh(db_week)
+    return db_week
+
+
+@app.post("/workbook-contributors/", response_model=WorkbookContributor)
+def create_workbook_contributor(
+    workbook_contributor: WorkbookContributorCreate, session: Session = Depends(get_session)
+) -> WorkbookContributor:
+    workbook_contributor_dict = workbook_contributor.model_dump()
+    workbook_contributor_dict["session"] = session
+    try:
+        db_workbook_contributor = WorkbookContributor.model_validate(workbook_contributor_dict)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    session.add(db_workbook_contributor)
+    session.commit()
+    session.refresh(db_workbook_contributor)
+    return db_workbook_contributor
+
+
+@app.post("/week-graduate-attributes/", response_model=WeekGraduateAttribute)
+def create_week_graduate_attribute(
+    week_graduate_attribute: WeekGraduateAttributeCreate, session: Session = Depends(get_session)
+) -> WeekGraduateAttribute:
+    week_graduate_attribute_dict = week_graduate_attribute.model_dump()
+    week_graduate_attribute_dict["session"] = session
+    try:
+        db_week_graduate_attribute = WeekGraduateAttribute.model_validate(
+            week_graduate_attribute_dict
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    session.add(db_week_graduate_attribute)
+    session.commit()
+    session.refresh(db_week_graduate_attribute)
+    return db_week_graduate_attribute
+
+
 # Views for individual models
+@app.get("/week-graduate-attributes/")
+def read_week_graduate_attributes(
+    session: Session = Depends(get_session),
+    week_workbook_id: uuid.UUID | None = None,
+    week_number: int | None = None,
+    graduate_attribute_id: uuid.UUID | None = None,
+) -> List[WeekGraduateAttribute]:
+    week = week_workbook_id and week_number is not None
+    if not week and not graduate_attribute_id:
+        return list(session.exec(select(WeekGraduateAttribute)).all())
+    if not week:
+        return list(
+            session.exec(
+                select(WeekGraduateAttribute).where(
+                    WeekGraduateAttribute.graduate_attribute_id == graduate_attribute_id
+                )
+            )
+        )
+    if not graduate_attribute_id:
+        return list(
+            session.exec(
+                select(WeekGraduateAttribute).where(
+                    (WeekGraduateAttribute.week_workbook_id == week_workbook_id)
+                    & (WeekGraduateAttribute.week_number == week_number)
+                )
+            )
+        )
+    return list(
+        session.exec(
+            select(WeekGraduateAttribute).where(
+                (WeekGraduateAttribute.week_workbook_id == week_workbook_id)
+                & (WeekGraduateAttribute.week_number == week_number)
+                & (WeekGraduateAttribute.graduate_attribute_id == graduate_attribute_id)
+            )
+        )
+    )
+
+
+@app.get("/workbook-contributors/")
+def read_workbook_contributors(
+    session: Session = Depends(get_session),
+    contributor_id: uuid.UUID | None = None,
+    workbook_id: uuid.UUID | None = None,
+) -> List[WorkbookContributor]:
+    if not contributor_id and not workbook_id:
+        return list(session.exec(select(WorkbookContributor)).all())
+    if not contributor_id:
+        return list(
+            session.exec(
+                select(WorkbookContributor).where(WorkbookContributor.workbook_id == workbook_id)
+            )
+        )
+    if not workbook_id:
+        return list(
+            session.exec(
+                select(WorkbookContributor).where(
+                    WorkbookContributor.contributor_id == contributor_id
+                )
+            )
+        )
+    return list(
+        session.exec(
+            select(WorkbookContributor).where(
+                (WorkbookContributor.workbook_id == workbook_id)
+                & (WorkbookContributor.contributor_id == contributor_id)
+            )
+        )
+    )
+
+
 @app.get("/users/")
 def read_users(session: Session = Depends(get_session)) -> List[User]:
     return list(session.exec(select(User)).all())
@@ -111,36 +341,27 @@ def read_learning_types(session: Session = Depends(get_session)) -> List[Learnin
 def read_workbooks(
     workbook_id: uuid.UUID | None = None,
     session: Session = Depends(get_session),
-) -> List[Dict[str, Any]]:
+) -> List[Workbook]:
     if not workbook_id:
-        sqlmodel_workbooks: List[Workbook] = list(session.exec(select(Workbook)).all())
-        workbooks: List[Dict[str, Any]] = []
-
-        for workbook in sqlmodel_workbooks:
-            wb = dict(workbook)
-            wb["course_lead"] = list(
-                session.exec(select(User).where(User.id == workbook.course_lead_id))
-            )[0].name
-            wb["learning_platform"] = list(
-                session.exec(
-                    select(LearningPlatform).where(
-                        LearningPlatform.id == workbook.learning_platform_id
-                    )
-                )
-            )[0].name
-            workbooks.append(wb)
-
-        return workbooks
-
-    return [
-        dict(workbook)
-        for workbook in session.exec(select(Workbook).where(Workbook.id == workbook_id))
-    ]
+        return list(session.exec(select(Workbook)).all())
+    return list(session.exec(select(Workbook).where(Workbook.id == workbook_id)))
 
 
 @app.get("/weeks/")
-def read_weeks(session: Session = Depends(get_session)) -> List[Week]:
-    return list(session.exec(select(Week)).all())
+def read_weeks(
+    workbook_id: uuid.UUID | None = None,
+    week_number: int | None = None,
+    session: Session = Depends(get_session),
+) -> List[Week]:
+    if not workbook_id:
+        return list(session.exec(select(Week)).all())
+    if not week_number:
+        return list(session.exec(select(Week).where(Week.workbook_id == workbook_id)))
+    return list(
+        session.exec(
+            select(Week).where(Week.workbook_id == workbook_id, Week.number == week_number)
+        )
+    )
 
 
 @app.get("/graduate_attributes/")
@@ -268,19 +489,3 @@ def get_workbook_details(
     response["activities"] = activities_list
 
     return response
-
-
-# POST: create a new workbook
-@app.post("/workbooks/", response_model=Workbook)
-def create_workbook(workbook: WorkbookCreate, session: Session = Depends(get_session)) -> Workbook:
-    # Validate and create new workbook
-    workbook_dict = workbook.model_dump()
-    workbook_dict["session"] = session
-    try:
-        db_workbook = Workbook.model_validate(workbook_dict)
-    except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e))
-    session.add(db_workbook)
-    session.commit()
-    session.refresh(db_workbook)
-    return db_workbook

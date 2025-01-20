@@ -1,7 +1,7 @@
 import sys
 import os
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 from typing import Annotated, Iterator
 from fastapi import Depends
 from sqlmodel import Session, SQLModel, create_engine
