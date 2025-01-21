@@ -235,7 +235,7 @@ function Workbook(): JSX.Element {
     plotOptions: {
       bar: {
         horizontal: false,
-        columnWidth: '60%',
+        columnWidth: '15%',
         borderRadius: 5,
       },
     },
@@ -270,7 +270,7 @@ function Workbook(): JSX.Element {
       position: 'bottom',
       horizontalAlign: 'left',
     },
-    colors: ['#a1f5ed', '#ffd21a',  '#7aaeea', '#f8807f', '#bb98dc', '#bdea75', '#44546a'],
+    colors: ['#a1f5ed', '#7aaeea',  '#ffd21a', '#bb98dc', '#bdea75', '#f8807f', '#44546a'],
     fill: {
       opacity: 1,
     },
