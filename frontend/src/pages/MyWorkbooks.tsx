@@ -1,15 +1,19 @@
 // MyWorkbooks.tsx
 
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import SearchBar from '../components/Searchbar.tsx';
 import Carousel from '../components/Carousel.tsx';
+import { CreateWorkbookModal } from '../components/CreateWorkbookModal';
 import { Link } from 'react-router-dom';
 
 function MyWorkbooks() {
+  const navigate = useNavigate();
   const [workbooks, setWorkbooks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
     const fetchWorkbooks = async () => {
@@ -18,13 +22,28 @@ function MyWorkbooks() {
         setWorkbooks(response.data);
         setLoading(false);
       } catch (err) {
-        setError(err.message || 'An error occurred');
+        const error = err as Error;
+        setError(error.message || 'An error occurred');
         setLoading(false);
       }
     };
 
     fetchWorkbooks();
   }, []);
+
+  const handleCreateWorkbook = (workbookData: {
+    courseName: string;
+    learningPlatformId: string;
+    startDate: Date;
+    endDate: Date;
+    coordinatorIds: string[];
+  }) => {
+    // Store the workbook data in sessionStorage
+    sessionStorage.setItem('newWorkbookData', JSON.stringify(workbookData));
+    
+    // Navigate to the edit page
+    navigate('/workbooks/edit');
+  };
 
   if (loading) return <div className="text-center mt-10">Loading...</div>;
   if (error) return <div className="text-center mt-10 text-red-500">Error: {error}</div>;
@@ -59,6 +78,7 @@ function MyWorkbooks() {
             <button
               type="button"
               className="text-white bg-gradient-to-r from-cyan-500 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-cyan-300 font-medium rounded-lg text-sm px-5 py-2.5"
+              onClick={() => setShowCreateModal(true)}
             >
               Create Workbook
             </button>
@@ -70,6 +90,12 @@ function MyWorkbooks() {
           <Carousel items={items} />
         </div>
       </div>
+
+      <CreateWorkbookModal
+        show={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSubmit={handleCreateWorkbook}
+      />
     </>
   );
 }

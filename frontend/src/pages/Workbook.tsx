@@ -100,9 +100,10 @@ function Workbook(): JSX.Element {
         }
 
         setLoading(false);
-      } catch (err: any) {
-        console.error('Error fetching workbook data:', err);
-        setError(err.message || 'An error occurred while fetching workbook data');
+      } catch (err) {
+        const error = err as Error;
+        console.error('Error fetching workbook data:', error);
+        setError(error.message || 'An error occurred while fetching workbook data');
         setLoading(false);
       }
     };
@@ -309,6 +310,14 @@ function Workbook(): JSX.Element {
           <p className="text-lg text-gray-600">
             Learning Platform:{' '}
             {learningPlatformData?.name || <span className="text-gray-500">N/A</span>}
+          </p>
+          <p className="text-lg text-gray-600">
+            Start Date:{' '}
+            {workbookData?.start_date ? new Date(workbookData.start_date).toLocaleDateString() : <span className="text-gray-500">N/A</span>}
+          </p>
+          <p className="text-lg text-gray-600">
+            End Date:{' '}
+            {workbookData?.end_date ? new Date(workbookData.end_date).toLocaleDateString() : <span className="text-gray-500">N/A</span>}
           </p>
         </div>
 
