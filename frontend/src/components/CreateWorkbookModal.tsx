@@ -3,6 +3,7 @@ import { Button, Modal, Label, TextInput, Select } from 'flowbite-react';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 interface LearningPlatform {
   id: string;
@@ -26,12 +27,12 @@ interface CreateWorkbookModalProps {
   }) => void;
 }
 
-export function CreateWorkbookModal({ show, onClose, onSubmit }: CreateWorkbookModalProps) {
+export function CreateWorkbookModal({ show, onClose }: CreateWorkbookModalProps) {
+  const navigate = useNavigate();
   const [courseName, setCourseName] = useState('');
   const [learningPlatform, setLearningPlatform] = useState('');
   const [startDate, setStartDate] = useState<Date>(new Date());
-  const [endDate, setEndDate] = useState<Date>(new Date());
-  const [coordinators, setCoordinators] = useState<string[]>([]);
+  const [courseLeadId, setCourseLeadId] = useState<string | null>(null);
   const [learningPlatforms, setLearningPlatforms] = useState<LearningPlatform[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,12 +41,73 @@ export function CreateWorkbookModal({ show, onClose, onSubmit }: CreateWorkbookM
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [platformsResponse, usersResponse] = await Promise.all([
-          axios.get('http://127.0.0.1:8000/learning-platforms/'),
-          axios.get('http://127.0.0.1:8000/users/')
-        ]);
-        setLearningPlatforms(platformsResponse.data);
-        setUsers(usersResponse.data);
+        // Fetch and validate learning platforms
+        const platformsResponse = await axios.get('http://127.0.0.1:8000/learning-platforms/');
+        console.log('Raw platforms response:', platformsResponse.data);
+        
+        let platforms;
+        try {
+          // Ensure we have valid JSON data
+          if (typeof platformsResponse.data === 'string') {
+            platforms = JSON.parse(platformsResponse.data);
+          } else {
+            platforms = platformsResponse.data;
+          }
+          
+          // Validate platform structure
+          if (!Array.isArray(platforms)) {
+            throw new Error('Platforms data is not an array');
+          }
+          
+          // Validate each platform object
+          platforms = platforms.filter(p => p && typeof p === 'object' && p.id && p.name);
+          
+          if (platforms.length === 0) {
+            throw new Error('No valid learning platforms found');
+          }
+          
+          console.log('Processed platforms:', platforms);
+          setLearningPlatforms(platforms);
+        } catch (err) {
+          console.error('Platform processing error:', err);
+          setError('Failed to process learning platforms data');
+          setLoading(false);
+          return;
+        }
+        
+        // Fetch and validate users
+        const usersResponse = await axios.get('http://127.0.0.1:8000/users/');
+        console.log('Raw users response:', usersResponse.data);
+        
+        let users;
+        try {
+          // Ensure we have valid JSON data
+          if (typeof usersResponse.data === 'string') {
+            users = JSON.parse(usersResponse.data);
+          } else {
+            users = usersResponse.data;
+          }
+          
+          // Validate users structure
+          if (!Array.isArray(users)) {
+            throw new Error('Users data is not an array');
+          }
+          
+          // Validate each user object
+          users = users.filter(u => u && typeof u === 'object' && u.id && u.name);
+          
+          if (users.length === 0) {
+            throw new Error('No valid users found');
+          }
+          
+          console.log('Processed users:', users);
+          setUsers(users);
+        } catch (err) {
+          console.error('Users processing error:', err);
+          setError('Failed to process users data');
+          setLoading(false);
+          return;
+        }
       } catch (err) {
         const error = err as Error;
         setError(error.message || 'Failed to fetch data');
@@ -59,7 +121,7 @@ export function CreateWorkbookModal({ show, onClose, onSubmit }: CreateWorkbookM
     }
   }, [show]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!courseName.trim()) {
       setError('Course title is required');
       return;
@@ -68,31 +130,54 @@ export function CreateWorkbookModal({ show, onClose, onSubmit }: CreateWorkbookM
       setError('Learning platform is required');
       return;
     }
-    if (startDate >= endDate) {
-      setError('Start date must be before end date');
+    if (!courseLeadId) {
+      setError('Course lead is required');
       return;
     }
 
-    onSubmit({
-      courseName: courseName.trim(),
-      learningPlatformId: learningPlatform,
-      startDate,
-      endDate,
-      coordinatorIds: coordinators
-    });
-    onClose();
-  };
+    try {
+      // Validate selections against existing data
+      const selectedPlatform = learningPlatforms.find(p => p.id === learningPlatform);
+      const selectedUser = users.find(u => u.id === courseLeadId);
+      
+      if (!selectedPlatform) {
+        setError('Invalid learning platform selected');
+        return;
+      }
+      if (!selectedUser) {
+        setError('Invalid course lead selected');
+        return;
+      }
 
-  const handleCoordinatorChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    if (value && !coordinators.includes(value)) {
-      setCoordinators([...coordinators, value]);
+      // Store the validated data
+      const workbookData = {
+        platformName: selectedPlatform.name,
+        courseName: courseName.trim(),
+        learningPlatformId: learningPlatform,
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: startDate.toISOString().split('T')[0], // Initially same as start date, will be updated based on weeks
+        courseLeadId: courseLeadId
+      };
+      
+      console.log('Storing workbook data:', workbookData);
+    
+      // Store in sessionStorage and navigate to EditWorkbook
+      sessionStorage.setItem('newWorkbookData', JSON.stringify(workbookData));
+      onClose();
+      navigate('/workbooks/edit');
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.status === 404) {
+        if (err.config?.url?.includes('learning-platforms')) {
+          setError('Invalid learning platform selected');
+        } else if (err.config?.url?.includes('users')) {
+          setError('Invalid course lead selected');
+        } else {
+          setError('Resource not found');
+        }
+      } else {
+        setError('Failed to validate selection');
+      }
     }
-    setError(null);
-  };
-
-  const removeCoordinator = (id: string) => {
-    setCoordinators(coordinators.filter(c => c !== id));
   };
 
   return (
@@ -156,63 +241,31 @@ export function CreateWorkbookModal({ show, onClose, onSubmit }: CreateWorkbookM
                     setError(null);
                   }
                 }}
+                dateFormat="dd/MM/yyyy"
                 className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
               />
             </div>
 
             <div>
               <div className="mb-2 block">
-                <Label htmlFor="endDate" value="End Date" />
-              </div>
-              <DatePicker
-                selected={endDate}
-                onChange={(date: Date | null) => {
-                  if (date) {
-                    setEndDate(date);
-                    setError(null);
-                  }
-                }}
-                className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <div className="mb-2 block">
-                <Label htmlFor="coordinators" value="Course Coordinators" />
+                <Label htmlFor="courseLead" value="Course Lead" />
               </div>
               <Select
-                id="coordinators"
-                onChange={handleCoordinatorChange}
-                value=""
+                id="courseLead"
+                value={courseLeadId || ''}
+                onChange={(e) => {
+                  setCourseLeadId(e.target.value || null);
+                  setError(null);
+                }}
+                required
               >
-                <option value="">Add coordinator</option>
+                <option value="">Select course lead</option>
                 {users.map((user) => (
-                  !coordinators.includes(user.id) && (
-                    <option key={user.id} value={user.id}>
-                      {user.name}
-                    </option>
-                  )
+                  <option key={user.id} value={user.id}>
+                    {user.name}
+                  </option>
                 ))}
               </Select>
-              {coordinators.length > 0 && (
-                <div className="mt-2 space-y-2">
-                  {coordinators.map((id) => {
-                    const user = users.find(u => u.id === id);
-                    return user && (
-                      <div key={id} className="flex items-center justify-between bg-gray-100 p-2 rounded">
-                        <span>{user.name}</span>
-                        <Button
-                          size="xs"
-                          color="gray"
-                          onClick={() => removeCoordinator(id)}
-                        >
-                          Remove
-                        </Button>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
             </div>
           </div>
         )}
