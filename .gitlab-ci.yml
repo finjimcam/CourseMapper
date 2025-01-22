@@ -29,12 +29,15 @@ Checking Rebase:
         echo "Branch is not rebased onto main. Please rebase.";
         exit 1;
       fi
+  rules:
+    # Only run this job for merge requests
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
 
 Linting with black:
   stage: Static Analysis
   script:
     - black --check --diff --line-length 99 backend
-  only:
+  rules:
     changes:
       - backend/**/*
 
@@ -42,7 +45,7 @@ Type checking with mypy:
   stage: Static Analysis
   script:
     - mypy --strict backend
-  only:
+  rules:
     changes:
       - backend/**/*
 
@@ -50,6 +53,6 @@ Unit tests on backend:
   stage: Dynamic Analysis
   script:
     - python -m unittest discover -s backend -p "test_*.py"
-  only:
+  rules:
     changes:
       - backend/**/*
