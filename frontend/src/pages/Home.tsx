@@ -7,14 +7,9 @@ import Carousel from '../components/Carousel.tsx';
 import { Link, useNavigate } from 'react-router-dom';
 import { CreateWorkbookModal } from '../components/CreateWorkbookModal';
 
-interface Workbook {
-  id: string;
-  title?: string;
-}
-
 function Home() {
   const navigate = useNavigate();
-  const [workbooks, setWorkbooks] = useState<Workbook[]>([]);
+  const [workbooks, setWorkbooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -22,10 +17,9 @@ function Home() {
   useEffect(() => {
     const fetchWorkbooks = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:8000/workbooks/');
+        const response = await axios.get(`${import.meta.env.VITE_API}/workbooks/`);
         setWorkbooks(response.data);
         setLoading(false);
-        console.log(response);
       } catch (err: any) {
         setError(err.message || 'An error occurred');
         setLoading(false);
@@ -53,7 +47,7 @@ function Home() {
     <>
       <div className="p-8 space-y-8">
         <div className="space-y-2">
-          <h2 className="text-3xl font-bold text-left">Welcome back, Bob!</h2>
+          <h2 className="text-3xl font-bold text-left">Welcome back, Tim!</h2>
           <h3 className="text-lg text-left text-gray-600">
             Explore and manage your courses with ease
           </h3>

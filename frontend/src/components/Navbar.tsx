@@ -15,7 +15,7 @@ function Navbar() {
     useEffect(() => {
         if (location.pathname.startsWith('/workbook/')) {
             const workbookId = location.pathname.split('/')[2];
-            axios.get(`http://127.0.0.1:8000/workbooks/${workbookId}/details`)
+            axios.get(`${import.meta.env.VITE_API}/workbooks/${workbookId}/details`)
                 .then(response => {
                     setWorkbookData(response.data.workbook);
                 })
@@ -28,7 +28,7 @@ function Navbar() {
         <nav className="bg-white border-gray-200">
             <div className="flex flex-wrap items-center justify-between mx-auto p-4">
                 <NavLink to="/" className="flex items-center space-x-3 rtl:space-x-reverse">
-                    <img src="/src/assets/LISU.png" className="h-8" alt="LISU Logo" />
+                    <img src="/LISU.png" className="h-8" alt="LISU Logo" />
                 </NavLink>
                 <div className="flex items-center md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
                     <button
@@ -120,7 +120,7 @@ function Navbar() {
                             to="/"
                             className={({ isActive }) =>
                                 `block py-2 px-3 rounded md:p-0 ${
-                                    isActive ? 'text-white bg-blue-700 md:bg-transparent md:text-blue-700 underline' : 'text-gray-900 hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700'
+                                    isActive ? 'text-white bg-blue-700 md:bg-transparent' : 'text-gray-900 hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700'
                                 }`
                             }
                         >
@@ -135,7 +135,7 @@ function Navbar() {
                                         href="/"
                                             className={`flex items-center text-sm font-medium ${
                                                 location.pathname.startsWith('/') 
-                                                    ? 'text-blue-700 underline' 
+                                                    ? 'text-gray-700' 
                                                     : 'text-gray-900 hover:text-blue-700'
                                             }`}
                                     >
@@ -145,7 +145,7 @@ function Navbar() {
                                         href="/my-workbooks"
                                         className={`flex items-center text-sm font-medium ${
                                             location.pathname === '/my-workbooks' 
-                                                ? 'text-blue-700 underline' 
+                                                ? 'text-gray-700' 
                                                 : 'text-gray-900 hover:text-blue-700'
                                         }`}
                                     >
@@ -162,8 +162,8 @@ function Navbar() {
                                         href="/"
                                         className={`flex items-center text-sm font-medium ${
                                             location.pathname.startsWith('/') 
-                                                ? 'text-blue-700 underline' 
-                                                : 'text-gray-900 hover:text-blue-700'
+                                                ? 'text-gray-700' 
+                                                : 'text-gray-900'
                                         }`}
                                     >
                                         Home

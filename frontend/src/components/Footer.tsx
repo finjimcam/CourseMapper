@@ -9,7 +9,7 @@ export default function FooterComponent() {
         <div className="w-full justify-between sm:flex sm:items-center sm:justify-between">
           <a href="https://www.gla.ac.uk/">
             <img
-              src="/src/assets/UoG_keyline.png"
+              src="/UoG_keyline.png"
               alt="University of Glasgow Logo"
               style={{ width: "256px", height: "80px" }} 
             />

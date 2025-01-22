@@ -130,12 +130,12 @@ function EditWorkbook(): JSX.Element {
           taskStatusesRes,
           usersRes
         ] = await Promise.all([
-          axios.get('http://127.0.0.1:8000/locations/'),
-          axios.get('http://127.0.0.1:8000/learning-platforms/'),
-          axios.get(`http://127.0.0.1:8000/learning-activities/?platform_id=${data.learningPlatformId}`),
-          axios.get('http://127.0.0.1:8000/learning-types/'),
-          axios.get('http://127.0.0.1:8000/task-statuses/'),
-          axios.get('http://127.0.0.1:8000/users/')
+          axios.get(`${import.meta.env.VITE_API}/locations/`),
+          axios.get(`${import.meta.env.VITE_API}/learning-platforms/`),
+          axios.get(`${import.meta.env.VITE_API}/learning-activities/?platform_id=${data.learningPlatformId}`),
+          axios.get(`${import.meta.env.VITE_API}/learning-types/`),
+          axios.get(`${import.meta.env.VITE_API}/task-statuses/`),
+          axios.get(`${import.meta.env.VITE_API}/users/`)
         ]);
 
         setLocations(locationsRes.data);
@@ -414,7 +414,7 @@ function EditWorkbook(): JSX.Element {
       setPublishing(true);
       setError(null);
 
-      const workbookResponse = await axios.post('http://127.0.0.1:8000/workbooks/', {
+      const workbookResponse = await axios.post(`${import.meta.env.VITE_API}/workbooks/`, {
         course_name: workbookData.course_name,
         learning_platform_id: workbookData.learning_platform_id,
         course_lead_id: workbookData.course_lead_id,
@@ -425,7 +425,7 @@ function EditWorkbook(): JSX.Element {
       const workbookId = workbookResponse.data.id;
 
       for (const week of weeks) {
-        await axios.post('http://127.0.0.1:8000/weeks/', {
+        await axios.post('${import.meta.env.VITE_API}/weeks/', {
           workbook_id: workbookId,
           number: week.number,
           start_date: week.start_date,
@@ -433,7 +433,7 @@ function EditWorkbook(): JSX.Element {
         });
 
         await Promise.all(week.activities.map(activity =>
-          axios.post('http://127.0.0.1:8000/activities/', {
+          axios.post('${import.meta.env.VITE_API}/activities/', {
             ...activity,
             workbook_id: workbookId
           })

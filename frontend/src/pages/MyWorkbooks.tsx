@@ -6,7 +6,6 @@ import axios from 'axios';
 import SearchBar from '../components/Searchbar.tsx';
 import Carousel from '../components/Carousel.tsx';
 import { CreateWorkbookModal } from '../components/CreateWorkbookModal';
-import { Link } from 'react-router-dom';
 
 function MyWorkbooks() {
   const navigate = useNavigate();
@@ -19,7 +18,7 @@ function MyWorkbooks() {
     const fetchWorkbooks = async () => {
       try {
         // TODO: specify the user to get workbooks they are involved in 
-        const response = await axios.get('http://127.0.0.1:8000/workbooks/');
+        const response = await axios.get(`${import.meta.env.VITE_API}/workbooks/`);
         setWorkbooks(response.data);
         setLoading(false);
       } catch (err: any) {

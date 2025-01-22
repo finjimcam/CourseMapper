@@ -42,7 +42,7 @@ export function CreateWorkbookModal({ show, onClose }: CreateWorkbookModalProps)
     const fetchData = async () => {
       try {
         // Fetch and validate learning platforms
-        const platformsResponse = await axios.get('http://127.0.0.1:8000/learning-platforms/');
+        const platformsResponse = await axios.get(`${import.meta.env.VITE_API}/learning-platforms/`);
         console.log('Raw platforms response:', platformsResponse.data);
         
         let platforms;
@@ -76,7 +76,7 @@ export function CreateWorkbookModal({ show, onClose }: CreateWorkbookModalProps)
         }
         
         // Fetch and validate users
-        const usersResponse = await axios.get('http://127.0.0.1:8000/users/');
+        const usersResponse = await axios.get(`${import.meta.env.VITE_API}/users/`);
         console.log('Raw users response:', usersResponse.data);
         
         let users;

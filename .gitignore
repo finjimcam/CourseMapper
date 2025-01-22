@@ -173,3 +173,5 @@ cython_debug/
 # Salvo stuff
 frontend/flowbite-docs.md
 cline_docs/
+
+.env*
