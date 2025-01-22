@@ -1,4 +1,5 @@
 import { Badge } from 'flowbite-react';
+import fontColorContrast from 'font-color-contrast'
 
 interface CustomBadgeProps {
     label: string;
@@ -18,24 +19,25 @@ export const statusColors: { [key: string]: string } = {
 
 // Color mappings for learning types
 export const learningTypeColors: { [key: string]: string } = {
-    practice: '#a1f5ed',     // turqoise
-    acquisition: '#ffd21a',    // Yellow
-    discussion: '#7aaeea',   // Blue
-    collaboration: '#f8807f',  // Red
-    production: '#bb98dc', // Purple
-    investigation: '#bdea75', // Green
-    assessment: '#44546a', // Navy
+    practice: '#bb98dc',        // Purple
+    acquisition: '#a1f5ed',     // turqoise
+    discussion: '#7aaeea',      // Blue
+    collaboration: '#ffd21a',   // Yellow
+    production: '#bdea75',      // Green
+    investigation: '#f8807f',   // Red
+    assessment: '#44546a',      // Navy
   };  
 
 export const CustomBadge: React.FC<CustomBadgeProps> = ({ label, colorMapping }) => {
   const normalizedKey = normaliseKey(label); // Normalize the label
   const hexColor = colorMapping[normalizedKey] || '#6c757d'; // Default to gray if unmatched
+  const textColour = fontColorContrast(hexColor, 0.7);
 
   return (
     <Badge
       style={{
         backgroundColor: hexColor,
-        color: '#fff',
+        color: textColour,
         borderRadius: '12px',
         textAlign: 'center',
         justifyContent: 'center', // Center horizontally

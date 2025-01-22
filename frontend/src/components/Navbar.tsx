@@ -15,7 +15,7 @@ function Navbar() {
     useEffect(() => {
         if (location.pathname.startsWith('/workbook/')) {
             const workbookId = location.pathname.split('/')[2];
-            axios.get(`http://127.0.0.1:8000/workbooks/${workbookId}/details`)
+            axios.get(`${import.meta.env.VITE_API}/workbooks/${workbookId}/details`)
                 .then(response => {
                     setWorkbookData(response.data.workbook);
                 })

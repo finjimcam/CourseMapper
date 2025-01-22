@@ -85,7 +85,7 @@ function Workbook(): JSX.Element {
 
         // Fetch all workbook-related data in one call
         const response = await axios.get<WorkbookDetailsResponse>(
-          `http://127.0.0.1:8000/workbooks/${workbook_id}/details`
+          `${import.meta.env.VITE_API}/workbooks/${workbook_id}/details`
         );
         const { workbook, course_lead, learning_platform, activities } = response.data;
 
