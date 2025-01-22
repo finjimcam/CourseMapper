@@ -47,7 +47,8 @@ app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Frontend's origin
+    allow_origins=["http://localhost:5173",
+                   "https://sh01-frontend.netlify.app"],  # Frontend's origin
     allow_credentials=True,
     allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
     allow_headers=["*"],  # Allow all headers
