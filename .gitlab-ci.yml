@@ -1,5 +1,10 @@
 image: "python:3.10-slim"
 
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
 cache:
   paths:
     - deps_cache
@@ -14,6 +19,16 @@ before_script:
 stages:
   - Static Analysis
   - Dynamic Analysis
+
+Checking Rebase:
+  stage: test
+  script:
+    # Fetch main and check if the branch is behind
+    - git fetch origin main
+    - if [ "$(git rev-parse HEAD)" != "$(git merge-base HEAD origin/main)" ]; then
+        echo "Branch is not rebased onto main. Please rebase.";
+        exit 1;
+      fi
 
 Linting with black:
   stage: Static Analysis
