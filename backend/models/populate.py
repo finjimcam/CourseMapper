@@ -157,6 +157,7 @@ def _populate_initial_data() -> None:
                     activity.staff_responsible.append(users[staff_responsible])
 
                 activities.append(activity)
+        workbook.number_of_weeks = len(weeks)
 
         session.add_all(locations.values())
         session.add_all(task_statuses.values())

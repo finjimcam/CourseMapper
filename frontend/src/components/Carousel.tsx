@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
+
 interface CarouselItem {
   id: number;
   start_date: string;
@@ -11,6 +12,7 @@ interface CarouselItem {
   course_lead: string;
   learning_platform: string;
 }
+
 
 function Carousel({ items }: { items: Array<CarouselItem> }) {
   const [currentPosition, setCurrentPosition] = useState(0);

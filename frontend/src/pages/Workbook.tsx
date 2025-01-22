@@ -100,9 +100,10 @@ function Workbook(): JSX.Element {
         }
 
         setLoading(false);
-      } catch (err: any) {
-        console.error('Error fetching workbook data:', err);
-        setError(err.message || 'An error occurred while fetching workbook data');
+      } catch (err) {
+        const error = err as Error;
+        console.error('Error fetching workbook data:', error);
+        setError(error.message || 'An error occurred while fetching workbook data');
         setLoading(false);
       }
     };
@@ -235,7 +236,7 @@ function Workbook(): JSX.Element {
     plotOptions: {
       bar: {
         horizontal: false,
-        columnWidth: '60%',
+        columnWidth: '15%',
         borderRadius: 5,
       },
     },
@@ -270,7 +271,7 @@ function Workbook(): JSX.Element {
       position: 'bottom',
       horizontalAlign: 'left',
     },
-    colors: ['#a1f5ed', '#ffd21a',  '#7aaeea', '#f8807f', '#bb98dc', '#bdea75', '#44546a'],
+    colors: ['#a1f5ed', '#7aaeea',  '#ffd21a', '#bb98dc', '#bdea75', '#f8807f', '#44546a'],
     fill: {
       opacity: 1,
     },
@@ -309,6 +310,14 @@ function Workbook(): JSX.Element {
           <p className="text-lg text-gray-600">
             Learning Platform:{' '}
             {learningPlatformData?.name || <span className="text-gray-500">N/A</span>}
+          </p>
+          <p className="text-lg text-gray-600">
+            Start Date:{' '}
+            {workbookData?.start_date ? new Date(workbookData.start_date).toLocaleDateString('en-UK') : <span className="text-gray-500">N/A</span>}
+          </p>
+          <p className="text-lg text-gray-600">
+            End Date:{' '}
+            {workbookData?.end_date ? new Date(workbookData.end_date).toLocaleDateString('en-UK') : <span className="text-gray-500">N/A</span>}
           </p>
         </div>
 
@@ -387,10 +396,10 @@ function Workbook(): JSX.Element {
                           <Table.Cell>{row.activity}</Table.Cell>
                           <Table.Cell>
                             <CustomBadge label={row.type} colorMapping={learningTypeColors} />                          </Table.Cell>
-                          <Table.Cell>{row.time}</Table.Cell>
+                          <Table.Cell>{row.location}</Table.Cell>
                           <Table.Cell>
                             <CustomBadge label={row.status} colorMapping={statusColors} />                          </Table.Cell>
-                          <Table.Cell>{row.location}</Table.Cell>
+                          <Table.Cell>{row.time}</Table.Cell>
                         </Table.Row>
                       ))}
                     </Table.Body>

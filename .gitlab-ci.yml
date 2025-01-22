@@ -3,14 +3,13 @@ image: "python:3.10-slim"
 cache:
   paths:
     - deps_cache
-    - backend/venv/
+    - venv/
 
 before_script:
-  - cd backend
   - python3.10 -m venv venv
   - source venv/bin/activate
   - pip install --upgrade pip
-  - pip install -r requirements.txt --cache-dir deps_cache
+  - pip install -r backend/requirements.txt --cache-dir deps_cache
 
 stages:
   - Static Analysis
@@ -19,26 +18,23 @@ stages:
 Linting with black:
   stage: Static Analysis
   script:
-    - black --check --diff --line-length 99 .
+    - black --check --diff --line-length 99 backend
   only:
     changes:
       - backend/**/*
-      - .gitlab-ci.yml
 
 Type checking with mypy:
   stage: Static Analysis
   script:
-    - mypy --strict .
+    - mypy --strict backend
   only:
     changes:
       - backend/**/*
-      - .gitlab-ci.yml
 
 Unit tests on backend:
   stage: Dynamic Analysis
   script:
-    - python -m unittest discover -s . -p "test_*.py"
+    - python -m unittest discover -s backend -p "test_*.py"
   only:
     changes:
       - backend/**/*
-      - .gitlab-ci.yml
