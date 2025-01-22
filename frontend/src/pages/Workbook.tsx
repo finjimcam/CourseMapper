@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-import { Tabs, Table, Badge, Spinner } from 'flowbite-react';
+import { Tabs, Table, Spinner } from 'flowbite-react';
 import ReactApexChart from 'react-apexcharts';
 import { ApexOptions } from 'apexcharts';
 import { statusColors, learningTypeColors, CustomBadge } from '../components/CustomBadge';
@@ -313,11 +313,11 @@ function Workbook(): JSX.Element {
           </p>
           <p className="text-lg text-gray-600">
             Start Date:{' '}
-            {workbookData?.start_date ? new Date(workbookData.start_date).toLocaleDateString() : <span className="text-gray-500">N/A</span>}
+            {workbookData?.start_date ? new Date(workbookData.start_date).toLocaleDateString('en-UK') : <span className="text-gray-500">N/A</span>}
           </p>
           <p className="text-lg text-gray-600">
             End Date:{' '}
-            {workbookData?.end_date ? new Date(workbookData.end_date).toLocaleDateString() : <span className="text-gray-500">N/A</span>}
+            {workbookData?.end_date ? new Date(workbookData.end_date).toLocaleDateString('en-UK') : <span className="text-gray-500">N/A</span>}
           </p>
         </div>
 
