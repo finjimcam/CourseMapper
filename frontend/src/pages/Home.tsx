@@ -20,7 +20,6 @@ function Home() {
         const response = await axios.get(`${import.meta.env.VITE_API}/workbooks/`);
         setWorkbooks(response.data);
         setLoading(false);
-        console.log(response);
       } catch (err: any) {
         setError(err.message || 'An error occurred');
         setLoading(false);
