@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Breadcrumb } from 'flowbite-react';
-import { HiHome } from 'react-icons/hi';
 import axios from 'axios';
 
 interface WorkbookData {
@@ -11,7 +10,6 @@ interface WorkbookData {
 
 function Navbar() {
     const location = useLocation();
-    const pathSegments = location.pathname.split('/').filter(Boolean);
     const [workbookData, setWorkbookData] = useState<WorkbookData | null>(null);
 
     useEffect(() => {
