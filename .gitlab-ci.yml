@@ -26,7 +26,7 @@ Checking Rebase:
   script:
     # Fetch main and check if the branch is behind
     - git fetch origin main
-    - if [ "$(git rev-parse HEAD)" != "$(git merge-base HEAD origin/main)" ]; then
+    - if [ "$(git rev-parse main)" != "$(git merge-base HEAD main)" ]; then
         echo "Branch is not rebased onto main. Please rebase.";
         exit 1;
       fi
