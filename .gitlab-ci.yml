@@ -21,7 +21,7 @@ stages:
   - Dynamic Analysis
 
 Checking Rebase:
-  stage: test
+  stage: Static Analysis
   script:
     # Fetch main and check if the branch is behind
     - git fetch origin main
