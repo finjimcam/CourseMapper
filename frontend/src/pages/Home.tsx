@@ -14,7 +14,7 @@ function Home() {
   useEffect(() => {
     const fetchWorkbooks = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:8000/workbooks/');
+        const response = await axios.get(`${import.meta.env.VITE_API}/workbooks/`);
         setWorkbooks(response.data);
         setLoading(false);
       } catch (err: any) {
@@ -33,7 +33,7 @@ function Home() {
     <>
       <div className="p-8 space-y-8">
         <div className="space-y-2">
-          <h2 className="text-3xl font-bold text-left">Welcome back, Bob!</h2>
+          <h2 className="text-3xl font-bold text-left">Welcome back, Tim!</h2>
           <h3 className="text-lg text-left text-gray-600">
             Explore and manage your courses with ease
           </h3>

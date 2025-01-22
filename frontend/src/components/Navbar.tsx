@@ -120,7 +120,7 @@ function Navbar() {
                             to="/"
                             className={({ isActive }) =>
                                 `block py-2 px-3 rounded md:p-0 ${
-                                    isActive ? 'text-white bg-blue-700 md:bg-transparent md:text-blue-700 underline' : 'text-gray-900 hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700'
+                                    isActive ? 'text-white bg-blue-700 md:bg-transparent' : 'text-gray-900 hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700'
                                 }`
                             }
                         >
@@ -135,7 +135,7 @@ function Navbar() {
                                         href="/"
                                             className={`flex items-center text-sm font-medium ${
                                                 location.pathname.startsWith('/') 
-                                                    ? 'text-blue-700 underline' 
+                                                    ? 'text-gray-700' 
                                                     : 'text-gray-900 hover:text-blue-700'
                                             }`}
                                     >
@@ -145,7 +145,7 @@ function Navbar() {
                                         href="/my-workbooks"
                                         className={`flex items-center text-sm font-medium ${
                                             location.pathname === '/my-workbooks' 
-                                                ? 'text-blue-700 underline' 
+                                                ? 'text-gray-700' 
                                                 : 'text-gray-900 hover:text-blue-700'
                                         }`}
                                     >
@@ -162,8 +162,8 @@ function Navbar() {
                                         href="/"
                                         className={`flex items-center text-sm font-medium ${
                                             location.pathname.startsWith('/') 
-                                                ? 'text-blue-700 underline' 
-                                                : 'text-gray-900 hover:text-blue-700'
+                                                ? 'text-gray-700' 
+                                                : 'text-gray-900'
                                         }`}
                                     >
                                         Home
