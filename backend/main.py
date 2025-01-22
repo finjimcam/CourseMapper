@@ -342,7 +342,7 @@ def read_workbooks(
     workbook_id: uuid.UUID | None = None,
     session: Session = Depends(get_session),
 ) -> List[Dict[str, Any]]:
-    if not workbook_id:    
+    if not workbook_id:
         sqlmodel_workbooks: List[Workbook] = list(session.exec(select(Workbook)).all())
         workbooks: List[Dict[str, Any]] = []
 
