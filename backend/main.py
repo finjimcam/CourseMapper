@@ -47,8 +47,10 @@ app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173",
-                   "https://sh01-frontend.netlify.app"],  # Frontend's origin
+    allow_origins=[
+        "http://localhost:5173",
+        "https://sh01-frontend.netlify.app",
+    ],  # Frontend's origin
     allow_credentials=True,
     allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
     allow_headers=["*"],  # Allow all headers
@@ -58,7 +60,8 @@ app.add_middleware(
 # Delete requests for removing entries
 @app.delete("/workbook-contributors/")
 def delete_workbook_contributor(
-    workbook_contributor: WorkbookContributorDelete, session: Session = Depends(get_session)
+    workbook_contributor: WorkbookContributorDelete,
+    session: Session = Depends(get_session),
 ) -> dict[str, bool]:
     try:
         workbook_contributor.check_primary_keys(session)
@@ -90,7 +93,8 @@ def delete_week(week: WeekDelete, session: Session = Depends(get_session)) -> di
         ).first(),
     )  # Week has been validated to exist by model validation earlier in this function.
     linked_workbook = cast(
-        Workbook, session.exec(select(Workbook).where(Workbook.id == db_week.workbook_id)).first()
+        Workbook,
+        session.exec(select(Workbook).where(Workbook.id == db_week.workbook_id)).first(),
     )  # Workbook is guaranteed to exist by model validation.
     linked_workbook.number_of_weeks -= 1
     session.add(linked_workbook)
@@ -118,7 +122,8 @@ def delete_week(week: WeekDelete, session: Session = Depends(get_session)) -> di
 
 @app.delete("/week-graduate-attributes/")
 def delete_week_graduate_attribute(
-    week_graduate_attribute: WeekGraduateAttributeDelete, session: Session = Depends(get_session)
+    week_graduate_attribute: WeekGraduateAttributeDelete,
+    session: Session = Depends(get_session),
 ) -> dict[str, bool]:
     try:
         week_graduate_attribute.check_primary_keys(session)
@@ -177,7 +182,8 @@ def create_week(week: WeekCreate, session: Session = Depends(get_session)) -> We
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
     linked_workbook = cast(
-        Workbook, session.exec(select(Workbook).where(Workbook.id == db_week.workbook_id)).first()
+        Workbook,
+        session.exec(select(Workbook).where(Workbook.id == db_week.workbook_id)).first(),
     )  # exec is guaranteed by Week model validation as workbook_id is a primary foreign key.
     db_week.number = linked_workbook.number_of_weeks + 1
     linked_workbook.number_of_weeks += 1
@@ -190,7 +196,8 @@ def create_week(week: WeekCreate, session: Session = Depends(get_session)) -> We
 
 @app.post("/workbook-contributors/", response_model=WorkbookContributor)
 def create_workbook_contributor(
-    workbook_contributor: WorkbookContributorCreate, session: Session = Depends(get_session)
+    workbook_contributor: WorkbookContributorCreate,
+    session: Session = Depends(get_session),
 ) -> WorkbookContributor:
     workbook_contributor_dict = workbook_contributor.model_dump()
     workbook_contributor_dict["session"] = session
@@ -206,7 +213,8 @@ def create_workbook_contributor(
 
 @app.post("/week-graduate-attributes/", response_model=WeekGraduateAttribute)
 def create_week_graduate_attribute(
-    week_graduate_attribute: WeekGraduateAttributeCreate, session: Session = Depends(get_session)
+    week_graduate_attribute: WeekGraduateAttributeCreate,
+    session: Session = Depends(get_session),
 ) -> WeekGraduateAttribute:
     week_graduate_attribute_dict = week_graduate_attribute.model_dump()
     week_graduate_attribute_dict["session"] = session
