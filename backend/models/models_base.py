@@ -275,8 +275,6 @@ class LearningActivity(SQLModel, table=True):
 
 class WeekBase(SQLModel):
     workbook_id: uuid.UUID = Field(foreign_key="workbook.id", primary_key=True)
-    start_date: datetime.date = Field(nullable=False)
-    end_date: datetime.date = Field(nullable=False)
 
 
 class Week(WeekBase, table=True):
@@ -301,16 +299,6 @@ class Week(WeekBase, table=True):
         workbook_id = values.get("workbook_id")
         if workbook_id and not session.query(Workbook).filter(Workbook.id == workbook_id).first():
             raise ValueError(f"Workbook with id {workbook_id} does not exist.")
-
-        # Validate dates
-        start_date = values.get("start_date")
-        end_date = values.get("end_date")
-        if not start_date:
-            raise ValueError(f"start_date with {start_date} does not exist.")
-        if not end_date:
-            raise ValueError(f"end_date with {end_date} does not exist.")
-        if start_date >= end_date:
-            raise ValueError("start_date must be earlier than end_date.")
 
         return values
 
