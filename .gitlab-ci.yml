@@ -24,7 +24,9 @@ stages:
 Checking Rebase:
   stage: Static Analysis
   script:
-    # Fetch main and check if the branch is behind
+    # If the head of main != the merge-base of this and main (last common ancestor
+    # commit), then this branch is not rebased onto main and the merge onto main
+    # may have unintended effects.
     - git fetch origin main
     - if [ "$(git rev-parse origin/main)" != "$(git merge-base HEAD origin/main)" ]; then
         echo "Branch is not rebased onto main. Please rebase.";
