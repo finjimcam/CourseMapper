@@ -154,9 +154,20 @@ def delete_workbook(
     if not db_workbook:
         raise HTTPException(status_code=404, detail=f"Workbook with id {workbook_id} not found.")
 
-    # delete all related entries
-    session.delete(session.exec(select(Week).where(Week.workbook_id == workbook_id)).all())
-    session.delete(session.exec(select(Activity).where(Activity.workbook_id == workbook_id)).all())
+    weeks = session.exec(select(Week).where(Week.workbook_id == workbook_id)).all()
+    for week in weeks:
+        activities = session.exec(
+            select(Activity).where(Activity.week_number == week.number)
+        ).all()
+        for activity in activities:
+            session.delete(activity)
+        session.delete(week)
+
+    contributors = session.exec(
+        select(WorkbookContributor).where(WorkbookContributor.workbook_id == workbook_id)
+    ).all()
+    for contributor in contributors:
+        session.delete(contributor)
 
     # delete workbook
     session.delete(db_workbook)
