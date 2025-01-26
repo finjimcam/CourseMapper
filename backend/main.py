@@ -148,11 +148,11 @@ def delete_week_graduate_attribute(
 def delete_workbook(
     workbook_id: uuid.UUID, session: Session = Depends(get_session)
 ) -> dict[str, bool]:
-    # check if workbook exists
-    db_workbook = session.exec(select(Workbook).where(Workbook.id == workbook_id)).first()
 
+    db_workbook = session.exec(select(Workbook).where(Workbook.id == workbook_id)).first()
+    # check if workbook exists
     if not db_workbook:
-        raise HTTPException(status_code=404, detail=f"Workbook with id {workbook_id} not found.")
+        raise HTTPException(status_code=422, detail=f"Workbook with id {workbook_id} not found.")
 
     weeks = session.exec(select(Week).where(Week.workbook_id == workbook_id)).all()
     for week in weeks:

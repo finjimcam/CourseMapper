@@ -10,9 +10,7 @@ import uuid
 # link models
 class WorkbookContributorBase(SQLModel):
     contributor_id: uuid.UUID = Field(foreign_key="user.id", primary_key=True)
-    workbook_id: uuid.UUID = Field(
-        foreign_key="workbook.id", primary_key=True, ondelete="CASCADE"
-    )  # delete cascade
+    workbook_id: uuid.UUID = Field(foreign_key="workbook.id", primary_key=True)
 
 
 class WorkbookContributor(WorkbookContributorBase, table=True):
@@ -85,7 +83,6 @@ class WeekGraduateAttribute(WeekGraduateAttributeBase, table=True):
         ForeignKeyConstraint(
             ["week_workbook_id", "week_number"],
             ["week.workbook_id", "week.number"],
-            ondelete="CASCADE",  # delete cascade
         ),
     )
 
@@ -277,9 +274,7 @@ class LearningActivity(SQLModel, table=True):
 
 
 class WeekBase(SQLModel):
-    workbook_id: uuid.UUID = Field(
-        foreign_key="workbook.id", primary_key=True, ondelete="CASCADE"
-    )  # delete cascade
+    workbook_id: uuid.UUID = Field(foreign_key="workbook.id", primary_key=True)
     start_date: datetime.date = Field(nullable=False)
     end_date: datetime.date = Field(nullable=False)
 
@@ -363,10 +358,8 @@ class Location(SQLModel, table=True):
 
 
 class ActivityBase(SQLModel):
-    workbook_id: uuid.UUID = Field(foreign_key="workbook.id", ondelete="CASCADE")  # delete cascade
-    week_number: Optional[int] = Field(
-        foreign_key="week.number", ondelete="CASCADE"
-    )  # delete cascade
+    workbook_id: uuid.UUID = Field(foreign_key="workbook.id")
+    week_number: Optional[int] = Field(foreign_key="week.number")
     name: str = Field(nullable=False)
     time_estimate_minutes: Optional[int] = Field(nullable=False)
     location_id: uuid.UUID = Field(
