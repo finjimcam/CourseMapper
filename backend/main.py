@@ -198,11 +198,15 @@ def patch_activity(
     activity_id: uuid.UUID,
     activity_update: ActivityUpdate,
     session: Session = Depends(get_session),
-) -> dict[str, Any]:
+) -> Activity:
+    activity_dict = activity_update.model_dump()
+    activity_dict["session"] = session
+    try:
+        Activity.check_foreign_keys(activity_dict)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
 
     db_activity = session.exec(select(Activity).where(Activity.id == activity_id)).first()
-
-    # Check the activity exist
     if not db_activity:
         raise HTTPException(status_code=422, detail="Activity not found")
 
@@ -214,8 +218,7 @@ def patch_activity(
     session.add(db_activity)
     session.commit()
     session.refresh(db_activity)  # Refresh data
-
-    return {"message": "Activity updated successfully", "activity": db_activity}
+    return db_activity
 
 
 # Post requests for creating new entries
