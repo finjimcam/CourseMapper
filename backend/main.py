@@ -20,6 +20,7 @@ from models.models_base import (
     WeekGraduateAttributeDelete,
     Workbook,
     WorkbookCreate,
+    WorkbookUpdate,
     Activity,
     ActivityCreate,
     LearningPlatform,
@@ -189,6 +190,31 @@ def delete_activity(
     session.delete(db_activity)
     session.commit()
     return {"ok": True}
+
+
+@app.patch("/workbooks/{workbook_id}")
+def patch_workbook(
+    workbook_id: uuid.UUID,
+    workbook_update: WorkbookUpdate,
+    session: Session = Depends(get_session),
+) -> dict[str, Any]:
+
+    db_workbook = session.exec(select(Workbook).where(Workbook.id == workbook_id)).first()
+
+    # Check the workbook exist
+    if not db_workbook:
+        raise HTTPException(status_code=422, detail="Workbook not found")
+
+    # Update data of the workbook
+    update_data = workbook_update.model_dump(exclude_unset=True)  # Only pick the exist key
+    for key, value in update_data.items():
+        setattr(db_workbook, key, value)
+
+    session.add(db_workbook)
+    session.commit()
+    session.refresh(db_workbook)  # Refresh data
+
+    return {"message": "Workbook updated successfully", "workbook": db_workbook}
 
 
 # Post requests for creating new entries
