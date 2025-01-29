@@ -127,6 +127,8 @@ def delete_week(week: WeekDelete, session: Session = Depends(get_session)) -> di
                     & (Activity.week_number == other_week.number + 1)
                 )
             ):
+                if activity.week_number is None:
+                    continue
                 activity.week_number -= 1
                 session.add(activity)
     session.commit()
