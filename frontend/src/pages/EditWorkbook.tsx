@@ -425,7 +425,7 @@ function EditWorkbook(): JSX.Element {
       const workbookId = workbookResponse.data.id;
 
       for (const week of weeks) {
-        await axios.post('${import.meta.env.VITE_API}/weeks/', {
+        await axios.post(`${import.meta.env.VITE_API}/weeks/`, {
           workbook_id: workbookId,
           number: week.number,
           start_date: week.start_date,
@@ -433,7 +433,7 @@ function EditWorkbook(): JSX.Element {
         });
 
         await Promise.all(week.activities.map(activity =>
-          axios.post('${import.meta.env.VITE_API}/activities/', {
+          axios.post(`${import.meta.env.VITE_API}/activities/`, {
             ...activity,
             workbook_id: workbookId
           })
