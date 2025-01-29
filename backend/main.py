@@ -204,7 +204,7 @@ def patch_activity(
 
     # Check the activity exist
     if not db_activity:
-        raise HTTPException(status_code=404, detail="Activity not found")
+        raise HTTPException(status_code=442, detail="Activity not found")
 
     # Update data of the activity
     update_data = activity_update.model_dump(exclude_unset=True)  # Only pick the exist key
