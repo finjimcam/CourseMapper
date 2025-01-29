@@ -175,6 +175,22 @@ def delete_workbook(
     return {"ok": True}
 
 
+@app.delete("/activities/")
+def delete_activitie(
+    activity_id: uuid.UUID, session: Session = Depends(get_session)
+) -> dict[str, bool]:
+
+    db_activity = session.exec(select(Activity).where(Activity.id == activity_id)).first()
+    # check if workbook exists
+    if not db_activity:
+        raise HTTPException(status_code=422, detail=f"Activity with id {db_activity} not found.")
+
+    # delete activity
+    session.delete(db_activity)
+    session.commit()
+    return {"ok": True}
+
+
 # Post requests for creating new entries
 @app.post("/activities/", response_model=Activity)
 def create_activity(activity: ActivityCreate, session: Session = Depends(get_session)) -> Activity:
