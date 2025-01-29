@@ -210,9 +210,29 @@ function Workbook(): JSX.Element {
   const yAxisMax = Math.ceil(maxMinutes / 60) * 60 + 60; // Add an extra hour as buffer
 
   // Get all learning types from the color mapping
-  const allLearningTypes = Object.keys(learningTypeColors).map((type) =>
+  const learningTypesCapitalized = Object.keys(learningTypeColors).map((type) =>
     type.charAt(0).toUpperCase() + type.slice(1) // Capitalize first letter for display
   );
+
+  // Determine which learning types are used
+  const learningTypeUsage: { [key: string]: boolean } = {};
+  Object.keys(learningTypeColors).forEach((type) => {
+    const isUsed = weekTotals.some(
+      (week) => week.totals[type] !== undefined && week.totals[type] > 0
+    );
+    learningTypeUsage[type] = isUsed;
+  });
+
+  // Separate used and unused learning types
+  const usedLearningTypes = learningTypesCapitalized.filter((type) =>
+    learningTypeUsage[type.toLowerCase()]
+  );
+  const unusedLearningTypes = learningTypesCapitalized.filter(
+    (type) => !learningTypeUsage[type.toLowerCase()]
+  );
+
+  // Combine them so that used types come first
+  const allLearningTypes = [...usedLearningTypes, ...unusedLearningTypes];
 
   // Prepare series data for the chart, including all types
   const series = allLearningTypes.map((type) => {
@@ -272,11 +292,7 @@ function Workbook(): JSX.Element {
       horizontalAlign: 'left',
       formatter: (seriesName: string) => {
         const lowercaseSeriesName = seriesName.toLowerCase();
-        const isUsed = weekTotals.some(
-          (week) =>
-            week.totals[lowercaseSeriesName] !== undefined &&
-            week.totals[lowercaseSeriesName] > 0
-        );
+        const isUsed = learningTypeUsage[lowercaseSeriesName];
         return isUsed
           ? seriesName
           : `<span style="color: #999">${seriesName}</span>`;
@@ -287,16 +303,17 @@ function Workbook(): JSX.Element {
         strokeWidth: 0,
         fillColors: allLearningTypes.map((type) => {
           const lowercaseType = type.toLowerCase();
-          const isUsed = weekTotals.some(
-            (week) =>
-              week.totals[lowercaseType] !== undefined &&
-              week.totals[lowercaseType] > 0
-          );
+          const isUsed = learningTypeUsage[lowercaseType];
           return isUsed ? learningTypeColors[lowercaseType] : '#d4d4d4';
         }),
       },
     },
-    colors: ['#a1f5ed', '#7aaeea', '#ffd21a', '#bb98dc', '#bdea75', '#f8807f', '#44546a'],
+    colors: allLearningTypes.map((type) => {
+      const lowercaseType = type.toLowerCase();
+      return learningTypeUsage[lowercaseType]
+        ? learningTypeColors[lowercaseType]
+        : '#999';
+    }),
     fill: {
       opacity: 1,
     },
