@@ -133,8 +133,6 @@ function EditWorkbook(): JSX.Element {
           axios.get(`${import.meta.env.VITE_API}/locations/`),
           axios.get(`${import.meta.env.VITE_API}/learning-platforms/`),
           axios.get(`${import.meta.env.VITE_API}/learning-activities/?learning_platform_id=${data.learningPlatformId}`).then(res => {
-            console.log('Learning Platform ID:', data.learningPlatformId);
-            console.log('Learning Activities Response:', res.data);
             return res;
           }),
           axios.get(`${import.meta.env.VITE_API}/learning-types/`),
@@ -277,28 +275,10 @@ function EditWorkbook(): JSX.Element {
     setEditingWorkbook(false);
   };
 
-  // Update learning activities when platform changes
-  useEffect(() => {
-    if (workbookData?.learning_platform_id) {
-      console.log('Fetching learning activities for platform:', workbookData.learning_platform_id);
-      axios.get(`${import.meta.env.VITE_API}/learning-activities/?learning_platform_id=${workbookData.learning_platform_id}`)
-        .then(response => {
-          console.log('Updated learning activities:', response.data);
-          setLearningActivities(response.data);
-        })
-        .catch(error => {
-          console.error('Failed to fetch learning activities:', error);
-        });
-    }
-  }, [workbookData?.learning_platform_id]);
-
+ 
   const handleEditActivity = (weekNumber: number, activity: Activity, activityIndex: number) => {
     setEditingActivity({weekNumber, activity: {...activity}, activityIndex});
-    // Reset learning activity selection since available options might have changed
-    setNewActivity({
-      ...activity,
-      learning_activity_id: ''
-    });
+    setNewActivity(activity);
     setShowAddActivityModal(true);
   };
 
