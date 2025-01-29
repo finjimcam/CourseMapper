@@ -204,7 +204,8 @@ def patch_activity(
         raise HTTPException(status_code=422, detail="Activity not found")
     activity_dict = db_activity.model_dump()
     for k, v in activity_update.model_dump().items():
-        if v is not None: activity_dict[k] = v
+        if v is not None:
+            activity_dict[k] = v
     activity_dict["session"] = session
     try:
         Activity.model_validate(activity_dict)
