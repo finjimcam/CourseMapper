@@ -278,11 +278,7 @@ function EditWorkbook(): JSX.Element {
  
   const handleEditActivity = (weekNumber: number, activity: Activity, activityIndex: number) => {
     setEditingActivity({weekNumber, activity: {...activity}, activityIndex});
-    // Reset learning activity selection since available options might have changed
-    setNewActivity({
-      ...activity,
-      learning_activity_id: ''
-    });
+    setNewActivity(activity);
     setShowAddActivityModal(true);
   };
 
