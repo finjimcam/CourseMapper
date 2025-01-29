@@ -199,16 +199,17 @@ def patch_activity(
     activity_update: ActivityUpdate,
     session: Session = Depends(get_session),
 ) -> Activity:
-    activity_dict = activity_update.model_dump()
-    activity_dict["session"] = session
-    try:
-        Activity.check_foreign_keys(activity_dict)
-    except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e))
-
     db_activity = session.exec(select(Activity).where(Activity.id == activity_id)).first()
     if not db_activity:
         raise HTTPException(status_code=422, detail="Activity not found")
+    activity_dict = db_activity.model_dump()
+    for k, v in activity_update.model_dump().items():
+        if v is not None: activity_dict[k] = v
+    activity_dict["session"] = session
+    try:
+        Activity.model_validate(activity_dict)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
 
     # Update data of the activity
     update_data = activity_update.model_dump(exclude_unset=True)  # Only pick the exist key
