@@ -132,7 +132,11 @@ function EditWorkbook(): JSX.Element {
         ] = await Promise.all([
           axios.get(`${import.meta.env.VITE_API}/locations/`),
           axios.get(`${import.meta.env.VITE_API}/learning-platforms/`),
-          axios.get(`${import.meta.env.VITE_API}/learning-activities/?platform_id=${data.learningPlatformId}`),
+          axios.get(`${import.meta.env.VITE_API}/learning-activities/?learning_platform_id=${data.learningPlatformId}`).then(res => {
+            console.log('Learning Platform ID:', data.learningPlatformId);
+            console.log('Learning Activities Response:', res.data);
+            return res;
+          }),
           axios.get(`${import.meta.env.VITE_API}/learning-types/`),
           axios.get(`${import.meta.env.VITE_API}/task-statuses/`),
           axios.get(`${import.meta.env.VITE_API}/users/`)
@@ -273,9 +277,28 @@ function EditWorkbook(): JSX.Element {
     setEditingWorkbook(false);
   };
 
+  // Update learning activities when platform changes
+  useEffect(() => {
+    if (workbookData?.learning_platform_id) {
+      console.log('Fetching learning activities for platform:', workbookData.learning_platform_id);
+      axios.get(`${import.meta.env.VITE_API}/learning-activities/?learning_platform_id=${workbookData.learning_platform_id}`)
+        .then(response => {
+          console.log('Updated learning activities:', response.data);
+          setLearningActivities(response.data);
+        })
+        .catch(error => {
+          console.error('Failed to fetch learning activities:', error);
+        });
+    }
+  }, [workbookData?.learning_platform_id]);
+
   const handleEditActivity = (weekNumber: number, activity: Activity, activityIndex: number) => {
     setEditingActivity({weekNumber, activity: {...activity}, activityIndex});
-    setNewActivity(activity);
+    // Reset learning activity selection since available options might have changed
+    setNewActivity({
+      ...activity,
+      learning_activity_id: ''
+    });
     setShowAddActivityModal(true);
   };
 
@@ -512,16 +535,9 @@ function EditWorkbook(): JSX.Element {
             </div>
             <div>
               <Label htmlFor="learningPlatform" value="Learning Platform" />
-              <Select
-                id="learningPlatform"
-                value={editedWorkbook?.learning_platform_id || ''}
-                onChange={(e) => setEditedWorkbook(prev => prev ? {...prev, learning_platform_id: e.target.value} : null)}
-              >
-                <option value="">Select platform</option>
-                {learningPlatforms.map((platform) => (
-                  <option key={platform.id} value={platform.id}>{platform.name}</option>
-                ))}
-              </Select>
+              <div className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-gray-900">
+                {learningPlatforms.find(p => p.id === editedWorkbook?.learning_platform_id)?.name || 'Not selected'}
+              </div>
             </div>
             <div>
               <Label htmlFor="startDate" value="Start Date" />
