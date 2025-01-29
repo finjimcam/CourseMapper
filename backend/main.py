@@ -204,9 +204,9 @@ def patch_workbook(
     # Check the workbook exist
     if not db_workbook:
         raise HTTPException(status_code=422, detail="Workbook not found")
-    
+
     update_data = workbook_update.model_dump(exclude_unset=True)
-    
+
     # Compare start date and end date
     new_start_date = update_data.get("start_date", db_workbook.start_date)
     new_end_date = update_data.get("end_date", db_workbook.end_date)
@@ -216,25 +216,25 @@ def patch_workbook(
             status_code=422,
             detail="start date must be earlier than end date.",
         )
-    
+
     # Validate the course lead ID
     new_course_lead_id = update_data.get("course_lead_id")
     course_lead = session.exec(select(User).where(User.id == new_course_lead_id)).first()
     if not course_lead:
-            raise HTTPException(
-                status_code=422,
-                detail=f"User with id {new_course_lead_id} does not exist."
-            )
-    
+        raise HTTPException(
+            status_code=422, detail=f"User with id {new_course_lead_id} does not exist."
+        )
+
     # Validate the learning platform ID
     new_learning_platform_id = update_data.get("learning_platform_id")
-    learning_platform = session.exec(select(LearningPlatform).where(LearningPlatform.id == new_learning_platform_id)).first()
+    learning_platform = session.exec(
+        select(LearningPlatform).where(LearningPlatform.id == new_learning_platform_id)
+    ).first()
     if not learning_platform:
-            raise HTTPException(
-                status_code=422,
-                detail=f"Learning Platform with id {new_learning_platform_id} does not exist."
-            )
-
+        raise HTTPException(
+            status_code=422,
+            detail=f"Learning Platform with id {new_learning_platform_id} does not exist.",
+        )
 
     # Update data of the workbook
     update_data = workbook_update.model_dump(exclude_unset=True)  # Only pick the exist key
