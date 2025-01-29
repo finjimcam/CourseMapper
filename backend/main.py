@@ -181,7 +181,7 @@ def delete_activitie(
 ) -> dict[str, bool]:
 
     db_activity = session.exec(select(Activity).where(Activity.id == activity_id)).first()
-    # check if workbook exists
+    # check if activity exists
     if not db_activity:
         raise HTTPException(status_code=422, detail=f"Activity with id {db_activity} not found.")
 
