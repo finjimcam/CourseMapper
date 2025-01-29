@@ -176,7 +176,7 @@ def delete_workbook(
 
 
 @app.delete("/activities/")
-def delete_activitie(
+def delete_activity(
     activity_id: uuid.UUID, session: Session = Depends(get_session)
 ) -> dict[str, bool]:
 
