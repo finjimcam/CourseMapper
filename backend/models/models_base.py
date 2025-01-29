@@ -2,7 +2,7 @@ import datetime
 from sqlmodel import Field, Relationship, SQLModel
 from sqlalchemy import ForeignKeyConstraint
 from sqlalchemy.orm import Session
-from pydantic import model_validator
+from pydantic import model_validator, BaseModel
 from typing import Optional, Any, cast
 import uuid
 
@@ -427,6 +427,15 @@ class Activity(ActivityBase, table=True):
 
 class ActivityCreate(ActivityBase):
     pass
+
+
+class ActivityUpdate(BaseModel):
+    name: Optional[str] = None
+    time_estimate_minutes: Optional[int] = None
+    location_id: Optional[uuid.UUID] = None
+    learning_activity_id: Optional[uuid.UUID] = None
+    learning_type_id: Optional[uuid.UUID] = None
+    task_status_id: Optional[uuid.UUID] = None
 
 
 class LearningType(SQLModel, table=True):

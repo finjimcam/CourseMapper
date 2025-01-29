@@ -22,6 +22,7 @@ from models.models_base import (
     WorkbookCreate,
     Activity,
     ActivityCreate,
+    ActivityUpdate,
     LearningPlatform,
     LearningActivity,
     TaskStatus,
@@ -189,6 +190,32 @@ def delete_activitie(
     session.delete(db_activity)
     session.commit()
     return {"ok": True}
+
+
+# Patch requests for editing entries
+@app.patch("/activities/{activity_id}")
+def patch_activity(
+    activity_id: uuid.UUID,
+    activity_update: ActivityUpdate,
+    session: Session = Depends(get_session),
+) -> dict[str, Any]:
+
+    db_activity = session.exec(select(Activity).where(Activity.id == activity_id)).first()
+
+    # Check the activity exist
+    if not db_activity:
+        raise HTTPException(status_code=404, detail="Activity not found")
+
+    # Update data of the activity
+    update_data = activity_update.model_dump(exclude_unset=True)  # Only pick the exist key
+    for key, value in update_data.items():
+        setattr(db_activity, key, value)
+
+    session.add(db_activity)
+    session.commit()
+    session.refresh(db_activity)  # Refresh data
+
+    return {"message": "Activity updated successfully", "activity": db_activity}
 
 
 # Post requests for creating new entries
