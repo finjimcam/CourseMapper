@@ -9,7 +9,7 @@ import WeeksTabs from '../components/WeekActivityTabEdit';
 import ErrorModal from '../components/modals/ErrorModal';
 import WorkbookEditModal from '../components/modals/CourseDetailsEditModal';
 import ActivityModal from '../components/modals/ActivityModal';
-import { formatMinutes, WeekInfo } from '../utils/workbookUtils';
+import { formatMinutes, WeekInfo, WorkbookData } from '../utils/workbookUtils';
 
 // --- Type definitions ---
 interface LearningPlatform {
@@ -41,8 +41,6 @@ export interface Week {
   activities: Activity[];
 }
 
-import { WorkbookData } from '../utils/workbookUtils';
-
 interface Location {
   id: string;
   name: string;
@@ -64,6 +62,21 @@ interface TaskStatus {
   name: string;
 }
 
+// --- Helpers & Defaults ---
+const api = axios.create({ baseURL: import.meta.env.VITE_API });
+const defaultActivityForm: Partial<Activity> = {
+  name: '',
+  time_estimate_minutes: 0,
+  location_id: '',
+  learning_activity_id: '',
+  learning_type_id: '',
+  task_status_id: '',
+  staff_id: ''
+};
+const formatISODate = (date: Date) => date.toISOString().split('T')[0];
+const getErrorMessage = (err: unknown) =>
+  err instanceof Error ? err.message : 'An error occurred';
+
 function EditWorkbook(): JSX.Element {
   const navigate = useNavigate();
   const { workbook_id } = useParams<{ workbook_id: string }>();
@@ -75,30 +88,22 @@ function EditWorkbook(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<boolean>(false);
 
-  // Modal states for validation errors and workbook edit
+  // Modal states
   const [showValidationModal, setShowValidationModal] = useState<boolean>(false);
   const [validationErrors] = useState<string[]>([]);
   const [showWorkbookModal, setShowWorkbookModal] = useState<boolean>(false);
-
-  // Modal states for activity add/edit
   const [showActivityModal, setShowActivityModal] = useState<boolean>(false);
-  const [editingActivity, setEditingActivity] = useState<{ weekNumber: number; activity: Activity; activityIndex: number } | null>(null);
+  const [editingActivity, setEditingActivity] = useState<{
+    weekNumber: number;
+    activity: Activity;
+    activityIndex: number;
+  } | null>(null);
   const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
-
-  // State for activity error modal
   const [activityValidationErrors, setActivityValidationErrors] = useState<string[]>([]);
   const [showActivityErrorModal, setShowActivityErrorModal] = useState<boolean>(false);
 
   // Form state for activity
-  const [activityForm, setActivityForm] = useState<Partial<Activity>>({
-    name: '',
-    time_estimate_minutes: 0,
-    location_id: '',
-    learning_activity_id: '',
-    learning_type_id: '',
-    task_status_id: '',
-    staff_id: ''
-  });
+  const [activityForm, setActivityForm] = useState<Partial<Activity>>({ ...defaultActivityForm });
 
   // Reference data states
   const [learningPlatforms, setLearningPlatforms] = useState<LearningPlatform[]>([]);
@@ -109,16 +114,13 @@ function EditWorkbook(): JSX.Element {
   const [users, setUsers] = useState<User[]>([]);
 
   useEffect(() => {
-    const fetchWorkbookData = async () => {
-      if (!workbook_id) return;
+    if (!workbook_id) return;
+    const fetchData = async () => {
       try {
         setLoading(true);
         setError(null);
-        
         // Fetch workbook details
-        const workbookResponse = await axios.get(`${import.meta.env.VITE_API}/workbooks/${workbook_id}/details`);
-        const workbookDetails = workbookResponse.data;
-        
+        const { data: workbookDetails } = await api.get(`/workbooks/${workbook_id}/details`);
         setWorkbookData({
           id: workbookDetails.workbook.id,
           course_name: workbookDetails.workbook.course_name,
@@ -128,20 +130,27 @@ function EditWorkbook(): JSX.Element {
           course_lead_id: workbookDetails.workbook.course_lead_id
         });
 
-        // Fetch weeks and activities
-        const weeksResponse = await axios.get(`${import.meta.env.VITE_API}/weeks/?workbook_id=${workbook_id}`);
-        const weeksData = weeksResponse.data;
-        const activitiesResponse = await axios.get(`${import.meta.env.VITE_API}/activities/?workbook_id=${workbook_id}`);
-        const activitiesData = activitiesResponse.data;
+        // Fetch weeks, activities and staff-activity relationships
+        const [weeksRes, activitiesRes, staffActivitiesRes] = await Promise.all([
+          api.get(`/weeks/?workbook_id=${workbook_id}`),
+          api.get(`/activities/?workbook_id=${workbook_id}`),
+          api.get(`/activity-staff/`)
+        ]);
+        const weeksData = weeksRes.data;
+        const activitiesData = activitiesRes.data;
+        const staffActivitiesData = staffActivitiesRes.data;
 
-        // Organize activities by week
+        // Merge staff info into activities
+        const activitiesWithStaff = activitiesData.map((activity: Activity) => {
+          const staffActivity = staffActivitiesData.find((sa: any) => sa.activity_id === activity.id);
+          return { ...activity, staff_id: staffActivity?.staff_id || '' };
+        });
         const organizedWeeks = weeksData.map((week: { number: number; start_date: string; end_date: string }) => ({
           number: week.number,
           start_date: week.start_date,
           end_date: week.end_date,
-          activities: activitiesData.filter((activity: { week_number: number }) => activity.week_number === week.number)
+          activities: activitiesWithStaff.filter((a: Activity) => a.week_number === week.number)
         }));
-
         setWeeks(organizedWeeks);
 
         // Fetch reference data
@@ -153,120 +162,108 @@ function EditWorkbook(): JSX.Element {
           taskStatusesRes,
           usersRes
         ] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API}/locations/`),
-          axios.get(`${import.meta.env.VITE_API}/learning-platforms/`),
-          axios.get(`${import.meta.env.VITE_API}/learning-activities/?learning_platform_id=${workbookDetails.workbook.learning_platform_id}`),
-          axios.get(`${import.meta.env.VITE_API}/learning-types/`),
-          axios.get(`${import.meta.env.VITE_API}/task-statuses/`),
-          axios.get(`${import.meta.env.VITE_API}/users/`)
+          api.get(`/locations/`),
+          api.get(`/learning-platforms/`),
+          api.get(`/learning-activities/?learning_platform_id=${workbookDetails.workbook.learning_platform_id}`),
+          api.get(`/learning-types/`),
+          api.get(`/task-statuses/`),
+          api.get(`/users/`)
         ]);
-
         setLocations(locationsRes.data);
         setLearningPlatforms(learningPlatformsRes.data);
         setLearningActivities(learningActivitiesRes.data);
         setLearningTypes(learningTypesRes.data);
         setTaskStatuses(taskStatusesRes.data);
         setUsers(usersRes.data);
-        
-        setLoading(false);
       } catch (err) {
-        setError((err as Error).message || 'Failed to load workbook data');
+        setError(getErrorMessage(err));
+      } finally {
         setLoading(false);
       }
     };
-    fetchWorkbookData();
+    fetchData();
   }, [workbook_id]);
 
-  // --- Helpers ---
-  const recalculateWeekDates = (startDate: string, weeksToUpdate: Week[]): Week[] =>
-    weeksToUpdate.map((week, index) => {
+  // Recalculate week dates based on a new start date
+  const recalcWeeks = (startDate: string, weeksList: Week[]): Week[] =>
+    weeksList.map((week, idx) => {
       const weekStart = new Date(startDate);
-      weekStart.setDate(weekStart.getDate() + index * 7);
+      weekStart.setDate(weekStart.getDate() + idx * 7);
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekEnd.getDate() + 6);
-      return { ...week, start_date: weekStart.toISOString().split('T')[0], end_date: weekEnd.toISOString().split('T')[0] };
+      return { ...week, start_date: formatISODate(weekStart), end_date: formatISODate(weekEnd) };
     });
 
   const handleAddWeek = async () => {
     if (!workbookData || !workbook_id) return;
     const lastWeek = weeks[weeks.length - 1];
     const newWeekNumber = weeks.length + 1;
-      const startDate = lastWeek ? new Date(lastWeek.end_date) : new Date(workbookData.start_date);
+    const startDate = lastWeek ? new Date(lastWeek.end_date) : new Date(workbookData.start_date);
     if (lastWeek) startDate.setDate(startDate.getDate() + 1);
     const endDate = new Date(startDate);
     endDate.setDate(endDate.getDate() + 6);
-
     try {
-      await axios.post(`${import.meta.env.VITE_API}/weeks/`, {
-        workbook_id: workbook_id,
-        start_date: startDate.toISOString().split('T')[0],
-        end_date: endDate.toISOString().split('T')[0]
+      await api.post(`/weeks/`, {
+        workbook_id,
+        start_date: formatISODate(startDate),
+        end_date: formatISODate(endDate)
       });
-
       const newWeek: Week = {
         number: newWeekNumber,
-        start_date: startDate.toISOString().split('T')[0],
-        end_date: endDate.toISOString().split('T')[0],
+        start_date: formatISODate(startDate),
+        end_date: formatISODate(endDate),
         activities: []
       };
-
       setWeeks(prev => [...prev, newWeek]);
-      setWorkbookData(prev => prev ? { ...prev, end_date: endDate.toISOString().split('T')[0] } : prev);
+      setWorkbookData(prev => prev ? { ...prev, end_date: formatISODate(endDate) } : prev);
     } catch (err) {
-      setError((err as Error).message || 'Failed to add week');
+      setError(getErrorMessage(err));
     }
   };
 
   const handleDeleteWeek = async (weekNumber: number) => {
     if (!workbookData || !workbook_id) return;
     try {
-      await axios.delete(`${import.meta.env.VITE_API}/weeks/`, {
-        data: {
-          workbook_id: workbook_id,
-          number: weekNumber
-        }
-      });
-
-      const updatedWeeks = weeks.filter(w => w.number !== weekNumber).map((w, idx) => ({ ...w, number: idx + 1 }));
-      const recalculated = recalculateWeekDates(workbookData.start_date, updatedWeeks);
-      
-      if (recalculated.length > 0) {
-        setWorkbookData(prev => prev ? { ...prev, end_date: recalculated[recalculated.length - 1].end_date } : prev);
-      } else {
-        setWorkbookData(prev => prev ? { ...prev, end_date: prev.start_date } : prev);
-      }
-      
+      await api.delete(`/weeks/`, { data: { workbook_id, number: weekNumber } });
+      const updatedWeeks = weeks
+        .filter(w => w.number !== weekNumber)
+        .map((w, idx) => ({ ...w, number: idx + 1 }));
+      const recalculated = recalcWeeks(workbookData.start_date, updatedWeeks);
       setWeeks(recalculated);
+      setWorkbookData(prev =>
+        prev ? { ...prev, end_date: recalculated.length ? recalculated[recalculated.length - 1].end_date : prev.start_date } : prev
+      );
     } catch (err) {
-      setError((err as Error).message || 'Failed to delete week');
+      setError(getErrorMessage(err));
     }
   };
 
   const handleWorkbookFieldChange = (field: string, value: string) => {
-    setWorkbookData(prev => prev ? { ...prev, [field]: value } : prev);
+    setWorkbookData(prev => (prev ? { ...prev, [field]: value } : prev));
   };
 
   const handleSaveWorkbook = async () => {
     if (!workbookData || !workbook_id) return;
     try {
-      await axios.patch(`${import.meta.env.VITE_API}/workbooks/${workbook_id}`, {
+      await api.patch(`/workbooks/${workbook_id}`, {
         course_name: workbookData.course_name,
         start_date: workbookData.start_date,
         end_date: workbookData.end_date,
         course_lead_id: workbookData.course_lead_id,
         learning_platform_id: workbookData.learning_platform_id
       });
-
-      const updatedWeeks = recalculateWeekDates(workbookData.start_date, weeks);
+      const updatedWeeks = recalcWeeks(workbookData.start_date, weeks);
       setWeeks(updatedWeeks);
-      if (updatedWeeks.length > 0) {
-        setWorkbookData(prev => prev ? { ...prev, end_date: updatedWeeks[updatedWeeks.length - 1].end_date } : prev);
-      }
+      setWorkbookData(prev =>
+        prev ? { ...prev, end_date: updatedWeeks.length ? updatedWeeks[updatedWeeks.length - 1].end_date : prev.start_date } : prev
+      );
       setShowWorkbookModal(false);
     } catch (err) {
-      setError((err as Error).message || 'Failed to save workbook');
+      setError(getErrorMessage(err));
     }
   };
+
+  const resetActivityForm = () => setActivityForm({ ...defaultActivityForm });
 
   const handleEditActivity = (activity: Activity, activityIndex: number, weekNumber: number) => {
     setEditingActivity({ weekNumber, activity: { ...activity }, activityIndex });
@@ -277,22 +274,20 @@ function EditWorkbook(): JSX.Element {
   const handleDeleteActivity = async (activityIndex: number, weekNumber: number) => {
     const activity = weeks.find(w => w.number === weekNumber)?.activities[activityIndex];
     if (!activity?.id) return;
-
     try {
-      await axios.delete(`${import.meta.env.VITE_API}/activities/`, {
-        params: { activity_id: activity.id }
-      });
-
-      setWeeks(prevWeeks =>
-        prevWeeks.map(week => {
-          if (week.number === weekNumber) {
-            return { ...week, activities: week.activities.filter((_, idx) => idx !== activityIndex) };
-          }
-          return week;
-        })
+      if (activity.staff_id) {
+        await api.delete(`/activity-staff/`, { data: { staff_id: activity.staff_id, activity_id: activity.id } });
+      }
+      await api.delete(`/activities/`, { params: { activity_id: activity.id } });
+      setWeeks(prev =>
+        prev.map(week =>
+          week.number === weekNumber
+            ? { ...week, activities: week.activities.filter((_, idx) => idx !== activityIndex) }
+            : week
+        )
       );
     } catch (err) {
-      setError((err as Error).message || 'Failed to delete activity');
+      setError(getErrorMessage(err));
     }
   };
 
@@ -309,70 +304,73 @@ function EditWorkbook(): JSX.Element {
   };
 
   const handleSaveActivity = async () => {
-    const activityErrors = validateActivity(activityForm);
-    if (activityErrors.length > 0) {
-      setActivityValidationErrors(activityErrors);
+    const errorsList = validateActivity(activityForm);
+    if (errorsList.length) {
+      setActivityValidationErrors(errorsList);
       setShowActivityErrorModal(true);
       return;
     }
-
-    if (selectedWeek === null && !editingActivity) return;
-
     try {
       if (editingActivity && editingActivity.activity.id) {
-        // Update existing activity
-        await axios.patch(`${import.meta.env.VITE_API}/activities/${editingActivity.activity.id}`, {
+        await api.patch(`/activities/${editingActivity.activity.id}`, {
           ...activityForm,
           week_number: editingActivity.weekNumber
         });
-
-        setWeeks(prevWeeks =>
-          prevWeeks.map(week => {
-            if (week.number === editingActivity.weekNumber) {
-              return {
-                ...week,
-                activities: week.activities.map((act, idx) =>
-                  idx === editingActivity.activityIndex ? { ...activityForm, id: act.id, week_number: week.number } as Activity : act
-                )
-              };
-            }
-            return week;
-          })
+        if (editingActivity.activity.staff_id !== activityForm.staff_id) {
+          if (editingActivity.activity.staff_id) {
+            await api.delete(`/activity-staff/`, {
+              data: { staff_id: editingActivity.activity.staff_id, activity_id: editingActivity.activity.id }
+            });
+          }
+          if (activityForm.staff_id) {
+            await api.post(`/activity-staff/`, {
+              staff_id: activityForm.staff_id,
+              activity_id: editingActivity.activity.id
+            });
+          }
+        }
+        setWeeks(prev =>
+          prev.map(week =>
+            week.number === editingActivity.weekNumber
+              ? {
+                  ...week,
+                  activities: week.activities.map((act, idx) =>
+                    idx === editingActivity.activityIndex
+                      ? ({ ...activityForm, id: act.id, week_number: week.number } as Activity)
+                      : act
+                  )
+                }
+              : week
+          )
         );
       } else if (selectedWeek !== null && workbookData?.id) {
-        // Create new activity
-        const response = await axios.post(`${import.meta.env.VITE_API}/activities/`, {
+        const { data: newActivity } = await api.post(`/activities/`, {
           ...activityForm,
           workbook_id: workbookData.id,
           week_number: selectedWeek
         });
-
-        setWeeks(prevWeeks =>
-          prevWeeks.map(week => {
-            if (week.number === selectedWeek) {
-              return {
-                ...week,
-                activities: [...week.activities, { ...activityForm, id: response.data.id, week_number: selectedWeek } as Activity]
-              };
-            }
-            return week;
-          })
+        if (activityForm.staff_id) {
+          await api.post(`/activity-staff/`, { staff_id: activityForm.staff_id, activity_id: newActivity.id });
+        }
+        setWeeks(prev =>
+          prev.map(week =>
+            week.number === selectedWeek
+              ? {
+                  ...week,
+                  activities: [
+                    ...week.activities,
+                    { ...activityForm, id: newActivity.id, week_number: selectedWeek } as Activity
+                  ]
+                }
+              : week
+          )
         );
       }
-
       setShowActivityModal(false);
       setEditingActivity(null);
-      setActivityForm({
-        name: '',
-        time_estimate_minutes: 0,
-        location_id: '',
-        learning_activity_id: '',
-        learning_type_id: '',
-        task_status_id: '',
-        staff_id: ''
-      });
+      resetActivityForm();
     } catch (err) {
-      setError((err as Error).message || 'Failed to save activity');
+      setError(getErrorMessage(err));
     }
   };
 
@@ -381,40 +379,44 @@ function EditWorkbook(): JSX.Element {
     try {
       setSaving(true);
       setError(null);
-
-      // Save workbook details
-      await axios.patch(`${import.meta.env.VITE_API}/workbooks/${workbook_id}`, {
+      await api.patch(`/workbooks/${workbook_id}`, {
         course_name: workbookData.course_name,
         start_date: workbookData.start_date,
         end_date: workbookData.end_date,
         course_lead_id: workbookData.course_lead_id,
         learning_platform_id: workbookData.learning_platform_id
       });
-
       setSaving(false);
       navigate(`/workbook/${workbook_id}`);
     } catch (err) {
-      setError((err as Error).message || 'Failed to save changes');
+      setError(getErrorMessage(err));
       setSaving(false);
     }
   };
 
   const convertWeekToWeekInfo = (week: Week): WeekInfo => ({
     weekNumber: week.number,
-    data: week.activities.map((activity) => ({
-      staff: activity.staff_id ? [users.find((u) => u.id === activity.staff_id)?.name || ''] : [],
+    data: week.activities.map(activity => ({
+      staff: activity.staff_id ? [users.find(u => u.id === activity.staff_id)?.name || ''] : [],
       title: activity.name,
-      activity: learningActivities.find((a) => a.id === activity.learning_activity_id)?.name || 'N/A',
-      type: learningTypes.find((t) => t.id === activity.learning_type_id)?.name || 'N/A',
+      activity: learningActivities.find(a => a.id === activity.learning_activity_id)?.name || 'N/A',
+      type: learningTypes.find(t => t.id === activity.learning_type_id)?.name || 'N/A',
       time: formatMinutes(activity.time_estimate_minutes),
-      status: taskStatuses.find((ts) => ts.id === activity.task_status_id)?.name || 'N/A',
-      location: locations.find((l) => l.id === activity.location_id)?.name || 'N/A',
-    })),
+      status: taskStatuses.find(ts => ts.id === activity.task_status_id)?.name || 'N/A',
+      location: locations.find(l => l.id === activity.location_id)?.name || 'N/A'
+    }))
   });
 
-  if (loading) return <div className="text-center mt-10"><Spinner aria-label="Loading" size="xl" /></div>;
-  if (error) return <div className="text-center mt-10 text-red-500">Error: {error}</div>;
-  if (!workbookData) return <div className="text-center mt-10">No workbook data available.</div>;
+  if (loading)
+    return (
+      <div className="text-center mt-10">
+        <Spinner aria-label="Loading" size="xl" />
+      </div>
+    );
+  if (error)
+    return <div className="text-center mt-10 text-red-500">Error: {error}</div>;
+  if (!workbookData)
+    return <div className="text-center mt-10">No workbook data available.</div>;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -457,26 +459,21 @@ function EditWorkbook(): JSX.Element {
         onCancel={() => {
           setShowActivityModal(false);
           setEditingActivity(null);
-          setActivityForm({
-            name: '',
-            time_estimate_minutes: 0,
-            location_id: '',
-            learning_activity_id: '',
-            learning_type_id: '',
-            task_status_id: '',
-            staff_id: ''
-          });
+          resetActivityForm();
         }}
-        onFieldChange={(field, value) => setActivityForm(prev => ({ ...prev, [field]: value }))}
+        onFieldChange={(field, value) =>
+          setActivityForm(prev => ({ ...prev, [field]: value }))
+        }
       />
-
       <div className="bg-white p-6 rounded-lg shadow">
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center gap-2">
             <CourseHeader
               workbook={workbookData}
-              courseLead={users.find((u) => u.id === workbookData.course_lead_id) || null}
-              learningPlatform={learningPlatforms.find((p) => p.id === workbookData.learning_platform_id) || null}
+              courseLead={users.find(u => u.id === workbookData.course_lead_id) || null}
+              learningPlatform={
+                learningPlatforms.find(p => p.id === workbookData.learning_platform_id) || null
+              }
             />
             <Button size="xs" color="light" onClick={() => setShowWorkbookModal(true)}>
               <HiPencil className="h-4 w-4" />
