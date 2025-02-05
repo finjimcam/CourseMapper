@@ -30,6 +30,8 @@ from models.models_base import (
     Location,
     LearningType,
     ActivityStaff,
+    ActivityStaffCreate,
+    ActivityStaffDelete,
     GraduateAttribute,
     WorkbookContributor,
     WorkbookContributorCreate,
@@ -60,6 +62,25 @@ app.add_middleware(
 
 
 # Delete requests for removing entries
+@app.delete("/activity-staff/")
+def delete_activity_staff(
+    activity_staff: ActivityStaffDelete,
+    session: Session = Depends(get_session),
+) -> dict[str, bool]:
+    try:
+        activity_staff.check_primary_keys(session)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    db_activity_staff = session.exec(
+        select(ActivityStaff).where(
+            (ActivityStaff.activity_id == activity_staff.activity_id)
+            & (ActivityStaff.staff_id == activity_staff.staff_id)
+        )
+    ).first()
+    session.delete(db_activity_staff)
+    session.commit()
+    return {"ok": True}
+
 @app.delete("/workbook-contributors/")
 def delete_workbook_contributor(
     workbook_contributor: WorkbookContributorDelete,
@@ -271,6 +292,22 @@ def patch_workbook(
 
 
 # Post requests for creating new entries
+@app.post("/activity-staff/", response_model=ActivityStaff)
+def create_activity_staff(
+    activity_staff: ActivityStaffCreate,
+    session: Session = Depends(get_session),
+) -> ActivityStaff:
+    activity_staff_dict = activity_staff.model_dump()
+    activity_staff_dict["session"] = session
+    try:
+        db_activity_staff = ActivityStaff.model_validate(activity_staff_dict)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    session.add(db_activity_staff)
+    session.commit()
+    session.refresh(db_activity_staff)
+    return db_activity_staff
+
 @app.post("/activities/", response_model=Activity)
 def create_activity(activity: ActivityCreate, session: Session = Depends(get_session)) -> Activity:
     activity_dict = activity.model_dump()
@@ -357,6 +394,19 @@ def create_week_graduate_attribute(
 
 
 # Views for individual models
+@app.get("/activity-staff/")
+def read_actvity_straff(
+    session: Session = Depends(get_session),
+    staff_id: uuid.UUID | None = None,
+    activity_id: uuid.UUID | None = None,
+) -> List[ActivityStaff]:
+    if staff_id is not None:
+        return list(session.exec(select(ActivityStaff).where(ActivityStaff.staff_id == staff_id)).all())
+    elif activity_id is not None:
+        return list(session.exec(select(ActivityStaff).where(ActivityStaff.activity_id == activity_id)).all())
+    return list(session.exec(select(ActivityStaff)).all())
+
+
 @app.get("/week-graduate-attributes/")
 def read_week_graduate_attributes(
     session: Session = Depends(get_session),
