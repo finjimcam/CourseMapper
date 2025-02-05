@@ -1,9 +1,9 @@
 // src/components/pages/workbook.tsx
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { Tabs, Spinner } from 'flowbite-react';
-import CourseHeader from '../components/CourseDetailsHeader';
+import CourseHeader from '../components/CourseHeader';
 import DashboardTab from '../components/DashboardTab';
 import WeekActivityTab from '../components/WeekActivityTab';
 import {
@@ -48,6 +48,9 @@ function Workbook(): JSX.Element {
         const errorObj = err as Error;
         console.error('Error fetching workbook data:', errorObj);
         setError(errorObj.message || 'An error occurred while fetching workbook data');
+        const errorObj = err as Error;
+        console.error('Error fetching workbook data:', errorObj);
+        setError(errorObj.message || 'An error occurred while fetching workbook data');
         setLoading(false);
       }
     };
@@ -74,6 +77,7 @@ function Workbook(): JSX.Element {
   }
 
   const dashboardData = prepareDashboardData(weeksData);
+  const dashboardData = prepareDashboardData(weeksData);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -83,16 +87,16 @@ function Workbook(): JSX.Element {
           courseLead={courseLeadData}
           learningPlatform={learningPlatformData}
         />
-        <div className="flex justify-end mb-4">
-          <Link
-            to={`/workbook/edit/${workbook_id}`}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-          >
-            Edit Workbook
-          </Link>
-        </div>
         <Tabs aria-label="Workbook Tabs">
           <Tabs.Item title="Dashboard">
+            <DashboardTab
+              series={dashboardData.series}
+              options={dashboardData.options}
+              summaryData={dashboardData.summaryData}
+              allLearningTypes={dashboardData.allLearningTypes}
+              showTable={showTable}
+              toggleShowTable={() => setShowTable(!showTable)}
+            />
             <DashboardTab
               series={dashboardData.series}
               options={dashboardData.options}
@@ -104,6 +108,7 @@ function Workbook(): JSX.Element {
           </Tabs.Item>
           {weeksData.map((week) => (
             <Tabs.Item key={week.weekNumber} title={`Week ${week.weekNumber}`}>
+              <WeekActivityTab week={week} />
               <WeekActivityTab week={week} />
             </Tabs.Item>
           ))}
