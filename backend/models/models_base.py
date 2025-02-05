@@ -425,6 +425,7 @@ class ActivityBase(SQLModel):
 
 class Activity(ActivityBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    number: Optional[int] = Field(default=0)
 
     location: Optional["Location"] = Relationship(back_populates="activities")
     workbook: Optional["Workbook"] = Relationship(back_populates="activities")
