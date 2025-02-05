@@ -101,6 +101,9 @@ def delete_week(week: WeekDelete, session: Session = Depends(get_session)) -> di
     session.add(linked_workbook)
     session.delete(db_week)
     session.commit()
+    # delete this week's activities
+    for activity in db_week.activities:
+        session.delete(activity)
     # loop through weeks of linked_workbook and update their numbers to maintain continuity
     for other_week in linked_workbook.weeks:
         if other_week.number is None:
@@ -117,6 +120,17 @@ def delete_week(week: WeekDelete, session: Session = Depends(get_session)) -> di
             ):
                 week_graduate_attribute.week_number -= 1
                 session.add(week_graduate_attribute)
+            # Activities must be manually updated
+            for activity in session.exec(
+                select(Activity).where(
+                    (Activity.workbook_id == other_week.workbook_id)
+                    & (Activity.week_number == other_week.number + 1)
+                )
+            ):
+                if activity.week_number is None:
+                    continue
+                activity.week_number -= 1
+                session.add(activity)
     session.commit()
     return {"ok": True}
 
