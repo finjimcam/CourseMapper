@@ -233,8 +233,10 @@ def delete_activity(
     )  # exec is guaranteed by Activity model validation as week_number and workbook_id are primary foreign keys.
     # Loop through other activities in week to ensure numbering remains valid
     for other_activity in linked_week.activities:
-        if other_activity.number > db_activity.number:
-            other_activity.number -= 1
+        other_number = cast(int, other_activity.number)
+        number = cast(int, db_activity.number)
+        if other_number > number:
+            other_number -= 1
             session.add(other_activity)
     # delete activity
     session.delete(db_activity)
@@ -284,19 +286,21 @@ def patch_activity(
                 )
             # Loop through other activities in week to ensure numbering remains valid
             for other_activity in linked_week.activities:
-                if value > db_activity.number:
+                other_number = cast(int, other_activity.number)
+                number = cast(int, db_activity.number)
+                if value > number:
                     if (
-                        other_activity.number > db_activity.number
-                        and other_activity.number <= value
+                        other_number > number
+                        and other_number <= value
                     ):
-                        other_activity.number -= 1
+                        other_activity.number =  other_number - 1
                         session.add(other_activity)
                 else:
                     if (
-                        other_activity.number < db_activity.number
-                        and other_activity.number >= value
+                        other_number < number
+                        and other_number >= value
                     ):
-                        other_activity.number += 1
+                        other_activity.number = other_number + 1
                         session.add(other_activity)
             session.commit()
         setattr(db_activity, key, value)
