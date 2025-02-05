@@ -490,6 +490,7 @@ class ActivityCreate(ActivityBase):
 
 class ActivityUpdate(BaseModel):
     name: Optional[str] = None
+    number: Optional[int] = None
     time_estimate_minutes: Optional[int] = None
     location_id: Optional[uuid.UUID] = None
     learning_activity_id: Optional[uuid.UUID] = None

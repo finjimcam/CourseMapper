@@ -137,7 +137,7 @@ def _populate_initial_data() -> None:
 
                 activity = Activity(
                     week=weeks[week_no],
-                    number=i+1,
+                    number=i + 1,
                     workbook=workbook,
                     name=name,
                     location=locations[location],

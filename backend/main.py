@@ -265,6 +265,40 @@ def patch_activity(
     # Update data of the activity
     update_data = activity_update.model_dump(exclude_unset=True)  # Only pick the exist key
     for key, value in update_data.items():
+        if key == "number":
+            linked_week = cast(
+                Week,
+                session.exec(
+                    select(Week).where(
+                        (Week.number == db_activity.week_number)
+                        & (Week.workbook_id == db_activity.workbook_id)
+                    )
+                ).first(),
+            )  # exec is guaranteed by Activity model validation as week_number and workbook_id are primary foreign keys.
+            # Validate new activity number. This cannot be done with base model validation, because of the
+            # default value of 0.
+            if value < 1 or value > len(linked_week.activities):
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"Invalid activity number: {value}. Activity number must be between 1 and {len(linked_week.activities)} inclusive.",
+                )
+            # Loop through other activities in week to ensure numbering remains valid
+            for other_activity in linked_week.activities:
+                if value > db_activity.number:
+                    if (
+                        other_activity.number > db_activity.number
+                        and other_activity.number <= value
+                    ):
+                        other_activity.number -= 1
+                        session.add(other_activity)
+                else:
+                    if (
+                        other_activity.number < db_activity.number
+                        and other_activity.number >= value
+                    ):
+                        other_activity.number += 1
+                        session.add(other_activity)
+            session.commit()
         setattr(db_activity, key, value)
 
     session.add(db_activity)
