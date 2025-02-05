@@ -1,6 +1,6 @@
 // src/components/pages/workbook.tsx
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { Tabs, Spinner } from 'flowbite-react';
 import CourseHeader from '../components/CourseDetailsHeader';
@@ -87,6 +87,14 @@ function Workbook(): JSX.Element {
           courseLead={courseLeadData}
           learningPlatform={learningPlatformData}
         />
+        <div className="flex justify-end mb-4">
+          <Link
+            to={`/workbook/edit/${workbook_id}`}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+          >
+            Edit Workbook
+          </Link>
+        </div>
         <Tabs aria-label="Workbook Tabs">
           <Tabs.Item title="Dashboard">
             <DashboardTab

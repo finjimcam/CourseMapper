@@ -14,6 +14,7 @@ import About from './pages/About';
 import MyWorkbooks from './pages/MyWorkbooks';
 import Workbook from './pages/Workbook';
 import CreateWorkbook from './pages/CreateWorkbook';
+import EditWorkbook from './pages/EditWorkbook';
 
 import './App.css';
 
