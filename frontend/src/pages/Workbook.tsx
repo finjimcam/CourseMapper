@@ -8,7 +8,6 @@ import ReactApexChart from 'react-apexcharts';
 import { ApexOptions } from 'apexcharts';
 import { statusColors, learningTypeColors, CustomBadge } from '../components/CustomBadge';
 
-
 // Backend data interfaces
 interface User {
   id: string;
@@ -161,7 +160,7 @@ function Workbook(): JSX.Element {
 
     weekData.forEach((activity) => {
       const minutes = timeToMinutes(activity.time);
-      const type = activity.type;
+      const type = activity.type.toLowerCase(); // Ensure lowercase for consistency
       if (totals[type]) {
         totals[type] += minutes;
       } else {
@@ -210,18 +209,39 @@ function Workbook(): JSX.Element {
   // Set the y-axis maximum dynamically, with a buffer
   const yAxisMax = Math.ceil(maxMinutes / 60) * 60 + 60; // Add an extra hour as buffer
 
-  // Get all unique learning types
-  const learningTypesSet = new Set<string>();
-  weekTotals.forEach((week) => {
-    Object.keys(week.totals).forEach((type) => learningTypesSet.add(type));
-  });
-  const learningTypesList = Array.from(learningTypesSet);
+  // Get all learning types from the color mapping
+  const learningTypesCapitalized = Object.keys(learningTypeColors).map((type) =>
+    type.charAt(0).toUpperCase() + type.slice(1) // Capitalize first letter for display
+  );
 
-  // Prepare series data for the chart
-  const series = learningTypesList.map((type) => ({
-    name: type,
-    data: weekTotals.map((week) => week.totals[type] || 0),
-  }));
+  // Determine which learning types are used
+  const learningTypeUsage: { [key: string]: boolean } = {};
+  Object.keys(learningTypeColors).forEach((type) => {
+    const isUsed = weekTotals.some(
+      (week) => week.totals[type] !== undefined && week.totals[type] > 0
+    );
+    learningTypeUsage[type] = isUsed;
+  });
+
+  // Separate used and unused learning types
+  const usedLearningTypes = learningTypesCapitalized.filter((type) =>
+    learningTypeUsage[type.toLowerCase()]
+  );
+  const unusedLearningTypes = learningTypesCapitalized.filter(
+    (type) => !learningTypeUsage[type.toLowerCase()]
+  );
+
+  // Combine them so that used types come first
+  const allLearningTypes = [...usedLearningTypes, ...unusedLearningTypes];
+
+  // Prepare series data for the chart, including all types
+  const series = allLearningTypes.map((type) => {
+    const lowerType = type.toLowerCase(); // Convert to lowercase for data access
+    return {
+      name: type, // Keep capitalized for display in legend
+      data: weekTotals.map((week) => week.totals[lowerType] || 0),
+    };
+  });
 
   // Chart configuration
   const options: ApexOptions = {
@@ -270,8 +290,30 @@ function Workbook(): JSX.Element {
     legend: {
       position: 'bottom',
       horizontalAlign: 'left',
+      formatter: (seriesName: string) => {
+        const lowercaseSeriesName = seriesName.toLowerCase();
+        const isUsed = learningTypeUsage[lowercaseSeriesName];
+        return isUsed
+          ? seriesName
+          : `<span style="color: #999">${seriesName}</span>`;
+      },
+      markers: {
+        width: 12,
+        height: 12,
+        strokeWidth: 0,
+        fillColors: allLearningTypes.map((type) => {
+          const lowercaseType = type.toLowerCase();
+          const isUsed = learningTypeUsage[lowercaseType];
+          return isUsed ? learningTypeColors[lowercaseType] : '#d4d4d4';
+        }),
+      },
     },
-    colors: ['#a1f5ed', '#7aaeea',  '#ffd21a', '#bb98dc', '#bdea75', '#f8807f', '#44546a'],
+    colors: allLearningTypes.map((type) => {
+      const lowercaseType = type.toLowerCase();
+      return learningTypeUsage[lowercaseType]
+        ? learningTypeColors[lowercaseType]
+        : '#999';
+    }),
     fill: {
       opacity: 1,
     },
@@ -283,14 +325,14 @@ function Workbook(): JSX.Element {
     },
   };
 
-  // Prepare data for the summary table
+  // Prepare data for the summary table, including all types
   const summaryData = weekTotals.map((week) => {
     const row: { [key: string]: string } = {
       week: `Week ${week.weekNumber}`,
       total: formatMinutes(week.totalMinutes),
     };
-    learningTypesList.forEach((type) => {
-      row[type.toLowerCase()] = formatMinutes(week.totals[type] || 0);
+    allLearningTypes.forEach((type) => {
+      row[type.toLowerCase()] = formatMinutes(week.totals[type.toLowerCase()] || 0);
     });
     return row;
   });
@@ -313,11 +355,15 @@ function Workbook(): JSX.Element {
           </p>
           <p className="text-lg text-gray-600">
             Start Date:{' '}
-            {workbookData?.start_date ? new Date(workbookData.start_date).toLocaleDateString('en-UK') : <span className="text-gray-500">N/A</span>}
+            {workbookData?.start_date
+              ? new Date(workbookData.start_date).toLocaleDateString('en-UK')
+              : <span className="text-gray-500">N/A</span>}
           </p>
           <p className="text-lg text-gray-600">
             End Date:{' '}
-            {workbookData?.end_date ? new Date(workbookData.end_date).toLocaleDateString('en-UK') : <span className="text-gray-500">N/A</span>}
+            {workbookData?.end_date
+              ? new Date(workbookData.end_date).toLocaleDateString('en-UK')
+              : <span className="text-gray-500">N/A</span>}
           </p>
         </div>
 
@@ -335,7 +381,7 @@ function Workbook(): JSX.Element {
                         <Table.HeadCell>
                           <CustomBadge label="Week" colorMapping={{ default: '#6c757d' }} />
                         </Table.HeadCell>
-                        {learningTypesList.map((type) => (
+                        {allLearningTypes.map((type) => (
                           <Table.HeadCell key={type}>
                             <CustomBadge label={type} colorMapping={learningTypeColors} />
                           </Table.HeadCell>
@@ -348,7 +394,7 @@ function Workbook(): JSX.Element {
                         {summaryData.map((row, index) => (
                           <Table.Row key={index}>
                             <Table.Cell>{row.week}</Table.Cell>
-                            {learningTypesList.map((type) => (
+                            {allLearningTypes.map((type) => (
                               <Table.Cell key={type}>{row[type.toLowerCase()]}</Table.Cell>
                             ))}
                             <Table.Cell className="font-bold">{row.total}</Table.Cell>
@@ -395,10 +441,12 @@ function Workbook(): JSX.Element {
                           <Table.Cell>{row.title}</Table.Cell>
                           <Table.Cell>{row.activity}</Table.Cell>
                           <Table.Cell>
-                            <CustomBadge label={row.type} colorMapping={learningTypeColors} />                          </Table.Cell>
+                            <CustomBadge label={row.type} colorMapping={learningTypeColors} />
+                          </Table.Cell>
                           <Table.Cell>{row.location}</Table.Cell>
                           <Table.Cell>
-                            <CustomBadge label={row.status} colorMapping={statusColors} />                          </Table.Cell>
+                            <CustomBadge label={row.status} colorMapping={statusColors} />
+                          </Table.Cell>
                           <Table.Cell>{row.time}</Table.Cell>
                         </Table.Row>
                       ))}
