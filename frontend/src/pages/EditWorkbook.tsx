@@ -5,11 +5,11 @@ import axios from 'axios';
 import { Spinner, Button } from 'flowbite-react';
 import { HiPencil } from 'react-icons/hi';
 
-import CourseHeader from '../components/CourseHeader';
-import WeeksTabs from '../components/WeeksTabs';
-import ErrorModal from '../components/ErrorModal';
-import WorkbookEditModal from '../components/WorkbookEditModal';
-import ActivityModal from '../components/ActivityModal';
+import CourseHeader from '../components/CourseDetailsHeader';
+import WeeksTabs from '../components/WeekActivityTabEdit';
+import ErrorModal from '../components/modals/ErrorModal';
+import WorkbookEditModal from '../components/modals/CourseDetailsEditModal';
+import ActivityModal from '../components/modals/ActivityModal';
 import { formatMinutes, WeekInfo } from '../utils/workbookUtils';
 
 // --- Type definitions ---

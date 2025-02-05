@@ -5,7 +5,7 @@ import axios from 'axios';
 import SearchBar from '../components/Searchbar.tsx';
 import Carousel from '../components/Carousel.tsx';
 import { Link, useNavigate } from 'react-router-dom';
-import { CreateWorkbookModal } from '../components/CreateWorkbookModal';
+import { CreateWorkbookModal } from '../components/modals/CreateWorkbookModal.tsx';
 
 function Home() {
   const navigate = useNavigate();
