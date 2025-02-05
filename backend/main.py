@@ -233,10 +233,8 @@ def delete_activity(
     )  # exec is guaranteed by Activity model validation as week_number and workbook_id are primary foreign keys.
     # Loop through other activities in week to ensure numbering remains valid
     for other_activity in linked_week.activities:
-        other_number = cast(int, other_activity.number)
-        number = cast(int, db_activity.number)
-        if other_number > number:
-            other_number -= 1
+        if other_activity.number > db_activity.number:
+            other_activity.number -= 1
             session.add(other_activity)
     # delete activity
     session.delete(db_activity)
@@ -286,15 +284,19 @@ def patch_activity(
                 )
             # Loop through other activities in week to ensure numbering remains valid
             for other_activity in linked_week.activities:
-                other_number = cast(int, other_activity.number)
-                number = cast(int, db_activity.number)
-                if value > number:
-                    if other_number > number and other_number <= value:
-                        other_activity.number = other_number - 1
+                if value > db_activity.number:
+                    if (
+                        other_activity.number > db_activity.number
+                        and other_activity.number <= value
+                    ):
+                        other_activity.number -= 1
                         session.add(other_activity)
                 else:
-                    if other_number < number and other_number >= value:
-                        other_activity.number = other_number + 1
+                    if (
+                        other_activity.number < db_activity.number
+                        and other_activity.number >= value
+                    ):
+                        other_activity.number += 1
                         session.add(other_activity)
             session.commit()
         setattr(db_activity, key, value)
@@ -363,6 +365,16 @@ def create_activity(activity: ActivityCreate, session: Session = Depends(get_ses
         db_activity = Activity.model_validate(activity_dict)
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
+    linked_week = cast(
+        Week,
+        session.exec(
+            select(Week).where(
+                (Week.number == db_activity.week_number)
+                & (Week.workbook_id == db_activity.workbook_id)
+            )
+        ).first(),
+    )  # exec is guaranteed by Activity model validation as week_number and workbook_id are primary foreign keys.
+    db_activity.number = len(linked_week.activities) + 1
     linked_week = cast(
         Week,
         session.exec(
@@ -497,6 +509,7 @@ def duplicate_workbook(
                 workbook_id=new_workbook.id,
                 week_number=week_mapping.get(original_activity.week_number, None),
                 name=original_activity.name,
+                number=original_activity.number,
                 time_estimate_minutes=original_activity.time_estimate_minutes,
                 location_id=original_activity.location_id,
                 learning_activity_id=original_activity.learning_activity_id,
