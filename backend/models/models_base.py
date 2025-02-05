@@ -71,11 +71,10 @@ class ActivityStaffBase(SQLModel):
     staff_id: uuid.UUID = Field(foreign_key="user.id", primary_key=True)
     activity_id: uuid.UUID = Field(foreign_key="activity.id", primary_key=True)
 
+
 class ActivityStaff(ActivityStaffBase, table=True):
     @model_validator(mode="before")
-    def check_foreign_keys(
-        cls: "ActivityStaffBase", values: dict[str, Any]
-    ) -> dict[str, Any]:
+    def check_foreign_keys(cls: "ActivityStaffBase", values: dict[str, Any]) -> dict[str, Any]:
         session: Session = cast(Session, values.get("session"))
 
         if session is None:
@@ -93,13 +92,13 @@ class ActivityStaff(ActivityStaffBase, table=True):
 
         return values
 
+
 class ActivityStaffCreate(ActivityStaffBase):
     pass
 
+
 class ActivityStaffDelete(ActivityStaffBase):
-    def check_primary_keys(
-        cls: "ActivityStaffDelete", session: Session
-    ) -> "ActivityStaffDelete":
+    def check_primary_keys(cls: "ActivityStaffDelete", session: Session) -> "ActivityStaffDelete":
         values = cls.model_dump()
 
         # Validate ActivityStaff row exists

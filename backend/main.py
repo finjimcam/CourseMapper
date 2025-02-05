@@ -81,6 +81,7 @@ def delete_activity_staff(
     session.commit()
     return {"ok": True}
 
+
 @app.delete("/workbook-contributors/")
 def delete_workbook_contributor(
     workbook_contributor: WorkbookContributorDelete,
@@ -308,6 +309,7 @@ def create_activity_staff(
     session.refresh(db_activity_staff)
     return db_activity_staff
 
+
 @app.post("/activities/", response_model=Activity)
 def create_activity(activity: ActivityCreate, session: Session = Depends(get_session)) -> Activity:
     activity_dict = activity.model_dump()
@@ -401,9 +403,15 @@ def read_actvity_straff(
     activity_id: uuid.UUID | None = None,
 ) -> List[ActivityStaff]:
     if staff_id is not None:
-        return list(session.exec(select(ActivityStaff).where(ActivityStaff.staff_id == staff_id)).all())
+        return list(
+            session.exec(select(ActivityStaff).where(ActivityStaff.staff_id == staff_id)).all()
+        )
     elif activity_id is not None:
-        return list(session.exec(select(ActivityStaff).where(ActivityStaff.activity_id == activity_id)).all())
+        return list(
+            session.exec(
+                select(ActivityStaff).where(ActivityStaff.activity_id == activity_id)
+            ).all()
+        )
     return list(session.exec(select(ActivityStaff)).all())
 
 
