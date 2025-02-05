@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { Tabs, Spinner } from 'flowbite-react';
-import CourseHeader from '../components/CourseHeader';
+import CourseHeader from '../components/CourseDetailsHeader';
 import DashboardTab from '../components/DashboardTab';
 import WeekActivityTab from '../components/WeekActivityTab';
 import {
