@@ -2,7 +2,7 @@ import datetime
 from sqlmodel import Field, Relationship, SQLModel
 from sqlalchemy import ForeignKeyConstraint
 from sqlalchemy.orm import Session
-from pydantic import model_validator
+from pydantic import model_validator, BaseModel
 from typing import Optional, Any, cast
 import uuid
 
@@ -251,6 +251,14 @@ class WorkbookCreate(WorkbookBase):
     pass
 
 
+class WorkbookUpdate(BaseModel):
+    start_date: Optional[datetime.date] = None
+    end_date: Optional[datetime.date] = None
+    course_name: Optional[str] = None
+    course_lead_id: Optional[uuid.UUID] = None
+    learning_platform_id: Optional[uuid.UUID] = None
+
+
 class LearningPlatform(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(nullable=False)
@@ -427,6 +435,15 @@ class Activity(ActivityBase, table=True):
 
 class ActivityCreate(ActivityBase):
     pass
+
+
+class ActivityUpdate(BaseModel):
+    name: Optional[str] = None
+    time_estimate_minutes: Optional[int] = None
+    location_id: Optional[uuid.UUID] = None
+    learning_activity_id: Optional[uuid.UUID] = None
+    learning_type_id: Optional[uuid.UUID] = None
+    task_status_id: Optional[uuid.UUID] = None
 
 
 class LearningType(SQLModel, table=True):

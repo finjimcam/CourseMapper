@@ -1,11 +1,17 @@
 image: "python:3.10-slim"
 
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
 cache:
   paths:
     - deps_cache
     - venv/
 
 before_script:
+  - apt-get update && apt-get install -y git
   - python3.10 -m venv venv
   - source venv/bin/activate
   - pip install --upgrade pip
@@ -15,26 +21,41 @@ stages:
   - Static Analysis
   - Dynamic Analysis
 
+Checking Rebase:
+  stage: Static Analysis
+  script:
+    # If the head of main != the merge-base of this and main (last common ancestor
+    # commit), then this branch is not rebased onto main and the merge onto main
+    # may have unintended effects.
+    - git fetch origin main
+    - if [ "$(git rev-parse origin/main)" != "$(git merge-base HEAD origin/main)" ]; then
+        echo "Branch is not rebased onto main. Please rebase.";
+        exit 1;
+      fi
+  rules:
+    # Only run this job for merge requests
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+
 Linting with black:
   stage: Static Analysis
   script:
     - black --check --diff --line-length 99 backend
-  only:
-    changes:
+  rules:
+    - changes:
       - backend/**/*
 
 Type checking with mypy:
   stage: Static Analysis
   script:
     - mypy --strict backend
-  only:
-    changes:
+  rules:
+    - changes:
       - backend/**/*
 
 Unit tests on backend:
   stage: Dynamic Analysis
   script:
     - python -m unittest discover -s backend -p "test_*.py"
-  only:
-    changes:
+  rules:
+    - changes:
       - backend/**/*
