@@ -1,6 +1,6 @@
 import {
-  createBrowserRouter, 
-  Route, 
+  createBrowserRouter,
+  Route,
   createRoutesFromElements,
   RouterProvider
 } from 'react-router-dom';
@@ -14,7 +14,6 @@ import About from './pages/About';
 import MyWorkbooks from './pages/MyWorkbooks';
 import Workbook from './pages/Workbook';
 import CreateWorkbook from './pages/CreateWorkbook';
-import EditWorkbook from './pages/EditWorkbook';
 
 import './App.css';
 
@@ -24,6 +23,7 @@ const router = createBrowserRouter(
       <Route index element={<Home />} />
       <Route path="my-workbooks" element={<MyWorkbooks />} />
       <Route path="about" element={<About />} />
+      <Route path="workbooks/create" element={<CreateWorkbook />} />
       <Route path="workbooks/create" element={<CreateWorkbook />} />
       <Route path="workbook/:workbook_id" element={<Workbook />} />
       <Route path="workbook/edit/:workbook_id" element={<EditWorkbook />} />
