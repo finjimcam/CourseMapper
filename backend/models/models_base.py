@@ -437,6 +437,15 @@ class ActivityCreate(ActivityBase):
     pass
 
 
+class ActivityUpdate(BaseModel):
+    name: Optional[str] = None
+    time_estimate_minutes: Optional[int] = None
+    location_id: Optional[uuid.UUID] = None
+    learning_activity_id: Optional[uuid.UUID] = None
+    learning_type_id: Optional[uuid.UUID] = None
+    task_status_id: Optional[uuid.UUID] = None
+
+
 class LearningType(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(nullable=False)

@@ -23,6 +23,7 @@ from models.models_base import (
     WorkbookUpdate,
     Activity,
     ActivityCreate,
+    ActivityUpdate,
     LearningPlatform,
     LearningActivity,
     TaskStatus,
@@ -101,6 +102,9 @@ def delete_week(week: WeekDelete, session: Session = Depends(get_session)) -> di
     session.add(linked_workbook)
     session.delete(db_week)
     session.commit()
+    # delete this week's activities
+    for activity in db_week.activities:
+        session.delete(activity)
     # loop through weeks of linked_workbook and update their numbers to maintain continuity
     for other_week in linked_workbook.weeks:
         if other_week.number is None:
@@ -117,6 +121,17 @@ def delete_week(week: WeekDelete, session: Session = Depends(get_session)) -> di
             ):
                 week_graduate_attribute.week_number -= 1
                 session.add(week_graduate_attribute)
+            # Activities must be manually updated
+            for activity in session.exec(
+                select(Activity).where(
+                    (Activity.workbook_id == other_week.workbook_id)
+                    & (Activity.week_number == other_week.number + 1)
+                )
+            ):
+                if activity.week_number is None:
+                    continue
+                activity.week_number -= 1
+                session.add(activity)
     session.commit()
     return {"ok": True}
 
@@ -177,12 +192,12 @@ def delete_workbook(
 
 
 @app.delete("/activities/")
-def delete_activity(
+def delete_activitie(
     activity_id: uuid.UUID, session: Session = Depends(get_session)
 ) -> dict[str, bool]:
 
     db_activity = session.exec(select(Activity).where(Activity.id == activity_id)).first()
-    # check if activity exists
+    # check if workbook exists
     if not db_activity:
         raise HTTPException(status_code=422, detail=f"Activity with id {db_activity} not found.")
 
@@ -190,6 +205,37 @@ def delete_activity(
     session.delete(db_activity)
     session.commit()
     return {"ok": True}
+
+
+# Patch requests for editing entries
+@app.patch("/activities/{activity_id}")
+def patch_activity(
+    activity_id: uuid.UUID,
+    activity_update: ActivityUpdate,
+    session: Session = Depends(get_session),
+) -> Activity:
+    db_activity = session.exec(select(Activity).where(Activity.id == activity_id)).first()
+    if not db_activity:
+        raise HTTPException(status_code=422, detail="Activity not found")
+    activity_dict = db_activity.model_dump()
+    for k, v in activity_update.model_dump().items():
+        if v is not None:
+            activity_dict[k] = v
+    activity_dict["session"] = session
+    try:
+        Activity.model_validate(activity_dict)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+    # Update data of the activity
+    update_data = activity_update.model_dump(exclude_unset=True)  # Only pick the exist key
+    for key, value in update_data.items():
+        setattr(db_activity, key, value)
+
+    session.add(db_activity)
+    session.commit()
+    session.refresh(db_activity)  # Refresh data
+    return db_activity
 
 
 @app.patch("/workbooks/{workbook_id}")
