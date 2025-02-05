@@ -1,9 +1,11 @@
 from typing import Annotated, AsyncGenerator, List, Dict, Any, cast
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException
-from sqlmodel import Session, select
-import uuid
 from fastapi.middleware.cors import CORSMiddleware
+from sqlmodel import Session, select
+import re
+import uuid
+
 
 from models.database import (
     create_db_and_tables,
@@ -550,3 +552,18 @@ def get_workbook_details(
     response["activities"] = activities_list
 
     return response
+
+
+@app.get("/search")
+def search(
+    text_input: str, 
+    session: Session = Depends(get_session)
+) -> List[Workbook]:
+    results = []
+    for workbook in session.exec(select(Workbook)):
+        if re.search(text_input, workbook.course_name, re.IGNORECASE):
+            results.append(workbook)
+        elif workbook.course_lead:
+            if re.search(text_input, workbook.course_lead.name, re.IGNORECASE): results.append(workbook)
+
+    return results
