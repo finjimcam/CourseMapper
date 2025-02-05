@@ -375,6 +375,7 @@ class ActivityBase(SQLModel):
 
 class Activity(ActivityBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    number: Optional[int] = Field(default=0)
 
     location: Optional["Location"] = Relationship(back_populates="activities")
     workbook: Optional["Workbook"] = Relationship(back_populates="activities")
@@ -439,6 +440,7 @@ class ActivityCreate(ActivityBase):
 
 class ActivityUpdate(BaseModel):
     name: Optional[str] = None
+    number: Optional[int] = None
     time_estimate_minutes: Optional[int] = None
     location_id: Optional[uuid.UUID] = None
     learning_activity_id: Optional[uuid.UUID] = None
