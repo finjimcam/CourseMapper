@@ -233,8 +233,10 @@ def delete_activity(
     )  # exec is guaranteed by Activity model validation as week_number and workbook_id are primary foreign keys.
     # Loop through other activities in week to ensure numbering remains valid
     for other_activity in linked_week.activities:
-        if other_activity.number > db_activity.number:
-            other_activity.number -= 1
+        other_number = cast(int, other_activity.number)
+        number = cast(int, db_activity.number)
+        if other_number > number:
+            other_number -= 1
             session.add(other_activity)
     # delete activity
     session.delete(db_activity)
@@ -284,19 +286,15 @@ def patch_activity(
                 )
             # Loop through other activities in week to ensure numbering remains valid
             for other_activity in linked_week.activities:
-                if value > db_activity.number:
-                    if (
-                        other_activity.number > db_activity.number
-                        and other_activity.number <= value
-                    ):
-                        other_activity.number -= 1
+                other_number = cast(int, other_activity.number)
+                number = cast(int, db_activity.number)
+                if value > number:
+                    if other_number > number and other_number <= value:
+                        other_activity.number = other_number - 1
                         session.add(other_activity)
                 else:
-                    if (
-                        other_activity.number < db_activity.number
-                        and other_activity.number >= value
-                    ):
-                        other_activity.number += 1
+                    if other_number < number and other_number >= value:
+                        other_activity.number = other_number + 1
                         session.add(other_activity)
             session.commit()
         setattr(db_activity, key, value)
@@ -426,42 +424,6 @@ def create_week(week: WeekCreate, session: Session = Depends(get_session)) -> We
     return db_week
 
 
-@app.post("/workbook-contributors/", response_model=WorkbookContributor)
-def create_workbook_contributor(
-    workbook_contributor: WorkbookContributorCreate,
-    session: Session = Depends(get_session),
-) -> WorkbookContributor:
-    workbook_contributor_dict = workbook_contributor.model_dump()
-    workbook_contributor_dict["session"] = session
-    try:
-        db_workbook_contributor = WorkbookContributor.model_validate(workbook_contributor_dict)
-    except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e))
-    session.add(db_workbook_contributor)
-    session.commit()
-    session.refresh(db_workbook_contributor)
-    return db_workbook_contributor
-
-
-@app.post("/week-graduate-attributes/", response_model=WeekGraduateAttribute)
-def create_week_graduate_attribute(
-    week_graduate_attribute: WeekGraduateAttributeCreate,
-    session: Session = Depends(get_session),
-) -> WeekGraduateAttribute:
-    week_graduate_attribute_dict = week_graduate_attribute.model_dump()
-    week_graduate_attribute_dict["session"] = session
-    try:
-        db_week_graduate_attribute = WeekGraduateAttribute.model_validate(
-            week_graduate_attribute_dict
-        )
-    except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e))
-    session.add(db_week_graduate_attribute)
-    session.commit()
-    session.refresh(db_week_graduate_attribute)
-    return db_week_graduate_attribute
-
-
 @app.post("/workbooks/{workbook_id}/duplicate", response_model=Workbook)
 def duplicate_workbook(
     workbook_id: uuid.UUID, session: Session = Depends(get_session)
@@ -532,6 +494,42 @@ def duplicate_workbook(
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
     return new_workbook
+
+
+@app.post("/workbook-contributors/", response_model=WorkbookContributor)
+def create_workbook_contributor(
+    workbook_contributor: WorkbookContributorCreate,
+    session: Session = Depends(get_session),
+) -> WorkbookContributor:
+    workbook_contributor_dict = workbook_contributor.model_dump()
+    workbook_contributor_dict["session"] = session
+    try:
+        db_workbook_contributor = WorkbookContributor.model_validate(workbook_contributor_dict)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    session.add(db_workbook_contributor)
+    session.commit()
+    session.refresh(db_workbook_contributor)
+    return db_workbook_contributor
+
+
+@app.post("/week-graduate-attributes/", response_model=WeekGraduateAttribute)
+def create_week_graduate_attribute(
+    week_graduate_attribute: WeekGraduateAttributeCreate,
+    session: Session = Depends(get_session),
+) -> WeekGraduateAttribute:
+    week_graduate_attribute_dict = week_graduate_attribute.model_dump()
+    week_graduate_attribute_dict["session"] = session
+    try:
+        db_week_graduate_attribute = WeekGraduateAttribute.model_validate(
+            week_graduate_attribute_dict
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    session.add(db_week_graduate_attribute)
+    session.commit()
+    session.refresh(db_week_graduate_attribute)
+    return db_week_graduate_attribute
 
 
 # Views for individual models
