@@ -214,7 +214,7 @@ def delete_workbook(
 
 
 @app.delete("/activities/")
-def delete_activitie(
+def delete_activity(
     activity_id: uuid.UUID, session: Session = Depends(get_session)
 ) -> dict[str, bool]:
 
@@ -222,7 +222,22 @@ def delete_activitie(
     # check if workbook exists
     if not db_activity:
         raise HTTPException(status_code=422, detail=f"Activity with id {db_activity} not found.")
-
+    linked_week = cast(
+        Week,
+        session.exec(
+            select(Week).where(
+                (Week.number == db_activity.week_number)
+                & (Week.workbook_id == db_activity.workbook_id)
+            )
+        ).first(),
+    )  # exec is guaranteed by Activity model validation as week_number and workbook_id are primary foreign keys.
+    # Loop through other activities in week to ensure numbering remains valid
+    for other_activity in linked_week.activities:
+        other_number = cast(int, other_activity.number)
+        number = cast(int, db_activity.number)
+        if other_number > number:
+            other_number -= 1
+            session.add(other_activity)
     # delete activity
     session.delete(db_activity)
     session.commit()
@@ -252,6 +267,36 @@ def patch_activity(
     # Update data of the activity
     update_data = activity_update.model_dump(exclude_unset=True)  # Only pick the exist key
     for key, value in update_data.items():
+        if key == "number":
+            linked_week = cast(
+                Week,
+                session.exec(
+                    select(Week).where(
+                        (Week.number == db_activity.week_number)
+                        & (Week.workbook_id == db_activity.workbook_id)
+                    )
+                ).first(),
+            )  # exec is guaranteed by Activity model validation as week_number and workbook_id are primary foreign keys.
+            # Validate new activity number. This cannot be done with base model validation, because of the
+            # default value of 0.
+            if value < 1 or value > len(linked_week.activities):
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"Invalid activity number: {value}. Activity number must be between 1 and {len(linked_week.activities)} inclusive.",
+                )
+            # Loop through other activities in week to ensure numbering remains valid
+            for other_activity in linked_week.activities:
+                other_number = cast(int, other_activity.number)
+                number = cast(int, db_activity.number)
+                if value > number:
+                    if other_number > number and other_number <= value:
+                        other_activity.number = other_number - 1
+                        session.add(other_activity)
+                else:
+                    if other_number < number and other_number >= value:
+                        other_activity.number = other_number + 1
+                        session.add(other_activity)
+            session.commit()
         setattr(db_activity, key, value)
 
     session.add(db_activity)
@@ -318,6 +363,16 @@ def create_activity(activity: ActivityCreate, session: Session = Depends(get_ses
         db_activity = Activity.model_validate(activity_dict)
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
+    linked_week = cast(
+        Week,
+        session.exec(
+            select(Week).where(
+                (Week.number == db_activity.week_number)
+                & (Week.workbook_id == db_activity.workbook_id)
+            )
+        ).first(),
+    )  # exec is guaranteed by Activity model validation as week_number and workbook_id are primary foreign keys.
+    db_activity.number = len(linked_week.activities) + 1
     session.add(db_activity)
     session.commit()
     session.refresh(db_activity)
