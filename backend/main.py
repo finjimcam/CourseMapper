@@ -84,26 +84,6 @@ def delete_activity_staff(
     return {"ok": True}
 
 
-@app.delete("/activity-staff/")
-def delete_activity_staff(
-    activity_staff: ActivityStaffDelete,
-    session: Session = Depends(get_session),
-) -> dict[str, bool]:
-    try:
-        activity_staff.check_primary_keys(session)
-    except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e))
-    db_activity_staff = session.exec(
-        select(ActivityStaff).where(
-            (ActivityStaff.activity_id == activity_staff.activity_id)
-            & (ActivityStaff.staff_id == activity_staff.staff_id)
-        )
-    ).first()
-    session.delete(db_activity_staff)
-    session.commit()
-    return {"ok": True}
-
-
 @app.delete("/workbook-contributors/")
 def delete_workbook_contributor(
     workbook_contributor: WorkbookContributorDelete,
@@ -423,23 +403,6 @@ def create_activity_staff(
     return db_activity_staff
 
 
-@app.post("/activity-staff/", response_model=ActivityStaff)
-def create_activity_staff(
-    activity_staff: ActivityStaffCreate,
-    session: Session = Depends(get_session),
-) -> ActivityStaff:
-    activity_staff_dict = activity_staff.model_dump()
-    activity_staff_dict["session"] = session
-    try:
-        db_activity_staff = ActivityStaff.model_validate(activity_staff_dict)
-    except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e))
-    session.add(db_activity_staff)
-    session.commit()
-    session.refresh(db_activity_staff)
-    return db_activity_staff
-
-
 @app.post("/activities/", response_model=Activity)
 def create_activity(activity: ActivityCreate, session: Session = Depends(get_session)) -> Activity:
     activity_dict = activity.model_dump()
@@ -581,78 +544,6 @@ def duplicate_workbook(
     return new_workbook
 
 
-@app.post("/workbooks/{workbook_id}/duplicate", response_model=Workbook)
-def duplicate_workbook(
-    workbook_id: uuid.UUID, session: Session = Depends(get_session)
-) -> Workbook:
-    try:
-        # get original workbook
-        original_workbook = session.exec(
-            select(Workbook).where(Workbook.id == workbook_id)
-        ).first()
-        if not original_workbook:
-            raise HTTPException(status_code=404, detail="Workbook not found")
-
-        # Copy workbook
-        new_workbook = Workbook(
-            id=uuid.uuid4(),
-            start_date=original_workbook.start_date,
-            end_date=original_workbook.end_date,
-            course_name=original_workbook.course_name,
-            course_lead_id=original_workbook.course_lead_id,
-            learning_platform_id=original_workbook.learning_platform_id,
-            number_of_weeks=original_workbook.number_of_weeks,
-        )
-        session.add(new_workbook)
-        session.commit()
-        session.refresh(new_workbook)
-
-        # Copy weeks
-        original_weeks = session.exec(select(Week).where(Week.workbook_id == workbook_id)).all()
-        week_mapping = {}  # store the map of old week and new week
-
-        for original_week in original_weeks:
-            new_week = Week(workbook_id=new_workbook.id, number=original_week.number)
-            session.add(new_week)
-            session.commit()
-            session.refresh(new_week)
-            week_mapping[original_week.number] = new_week.number
-
-        # Copy activities
-        original_activities = session.exec(
-            select(Activity).where(Activity.workbook_id == workbook_id)
-        ).all()
-        for original_activity in original_activities:
-            new_activity = Activity(
-                id=uuid.uuid4(),
-                workbook_id=new_workbook.id,
-                week_number=week_mapping.get(original_activity.week_number, None),
-                name=original_activity.name,
-                number=original_activity.number,
-                time_estimate_minutes=original_activity.time_estimate_minutes,
-                location_id=original_activity.location_id,
-                learning_activity_id=original_activity.learning_activity_id,
-                learning_type_id=original_activity.learning_type_id,
-                task_status_id=original_activity.task_status_id,
-            )
-            session.add(new_activity)
-
-        # Copy workbook contributors
-        original_contributors = session.exec(
-            select(WorkbookContributor).where(WorkbookContributor.workbook_id == workbook_id)
-        ).all()
-        for contributor in original_contributors:
-            new_contributor = WorkbookContributor(
-                contributor_id=contributor.contributor_id, workbook_id=new_workbook.id
-            )
-            session.add(new_contributor)
-
-        session.commit()
-    except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e))
-    return new_workbook
-
-
 @app.post("/workbook-contributors/", response_model=WorkbookContributor)
 def create_workbook_contributor(
     workbook_contributor: WorkbookContributorCreate,
@@ -687,26 +578,6 @@ def create_week_graduate_attribute(
     session.commit()
     session.refresh(db_week_graduate_attribute)
     return db_week_graduate_attribute
-
-
-# Views for individual models
-@app.get("/activity-staff/")
-def read_actvity_straff(
-    session: Session = Depends(get_session),
-    staff_id: uuid.UUID | None = None,
-    activity_id: uuid.UUID | None = None,
-) -> List[ActivityStaff]:
-    if staff_id is not None:
-        return list(
-            session.exec(select(ActivityStaff).where(ActivityStaff.staff_id == staff_id)).all()
-        )
-    elif activity_id is not None:
-        return list(
-            session.exec(
-                select(ActivityStaff).where(ActivityStaff.activity_id == activity_id)
-            ).all()
-        )
-    return list(session.exec(select(ActivityStaff)).all())
 
 
 @app.get("/activity-staff/")
