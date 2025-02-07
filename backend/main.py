@@ -289,17 +289,11 @@ def patch_activity(
                 other_number = cast(int, other_activity.number)
                 number = cast(int, db_activity.number)
                 if value > number:
-                    if (
-                        other_number > number
-                        and other_number <= value
-                    ):
-                        other_activity.number =  other_number - 1
+                    if other_number > number and other_number <= value:
+                        other_activity.number = other_number - 1
                         session.add(other_activity)
                 else:
-                    if (
-                        other_number < number
-                        and other_number >= value
-                    ):
+                    if other_number < number and other_number >= value:
                         other_activity.number = other_number + 1
                         session.add(other_activity)
             session.commit()
