@@ -90,7 +90,7 @@ function EditWorkbook(): JSX.Element {
 
   // Modal states
   const [showValidationModal, setShowValidationModal] = useState<boolean>(false);
-  const [validationErrors] = useState<string[]>([]);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [showWorkbookModal, setShowWorkbookModal] = useState<boolean>(false);
   const [showActivityModal, setShowActivityModal] = useState<boolean>(false);
   const [editingActivity, setEditingActivity] = useState<{
@@ -198,8 +198,16 @@ function EditWorkbook(): JSX.Element {
     if (!workbookData || !workbook_id) return;
     const lastWeek = weeks[weeks.length - 1];
     const newWeekNumber = weeks.length + 1;
-    const startDate = lastWeek ? new Date(lastWeek.end_date) : new Date(workbookData.start_date);
-    if (lastWeek) startDate.setDate(startDate.getDate() + 1);
+    let startDate: Date;
+    if (lastWeek && lastWeek.end_date) {
+      startDate = new Date(lastWeek.end_date);
+      startDate.setDate(startDate.getDate() + 1);
+    } else if (workbookData && workbookData.start_date) {
+      startDate = new Date(workbookData.start_date);
+    } else {
+      setError("Invalid workbook or week data.");
+      return;
+    }
     const endDate = new Date(startDate);
     endDate.setDate(endDate.getDate() + 6);
     try {
@@ -376,6 +384,15 @@ function EditWorkbook(): JSX.Element {
 
   const handleSaveChanges = async () => {
     if (!workbookData || !workbook_id) return;
+
+    // Check for empty weeks
+    const emptyWeeks = weeks.filter(week => week.activities.length === 0);
+    if (emptyWeeks.length > 0) {
+      setValidationErrors(['Please add activities to all weeks before saving.']);
+      setShowValidationModal(true);
+      return;
+    }
+
     try {
       setSaving(true);
       setError(null);
