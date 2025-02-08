@@ -48,9 +48,6 @@ function Workbook(): JSX.Element {
         const errorObj = err as Error;
         console.error('Error fetching workbook data:', errorObj);
         setError(errorObj.message || 'An error occurred while fetching workbook data');
-        const errorObj = err as Error;
-        console.error('Error fetching workbook data:', errorObj);
-        setError(errorObj.message || 'An error occurred while fetching workbook data');
         setLoading(false);
       }
     };
@@ -76,7 +73,6 @@ function Workbook(): JSX.Element {
     return <div className="text-center mt-10">No workbook data available.</div>;
   }
 
-  const dashboardData = prepareDashboardData(weeksData);
   const dashboardData = prepareDashboardData(weeksData);
 
   return (
@@ -105,18 +101,9 @@ function Workbook(): JSX.Element {
               showTable={showTable}
               toggleShowTable={() => setShowTable(!showTable)}
             />
-            <DashboardTab
-              series={dashboardData.series}
-              options={dashboardData.options}
-              summaryData={dashboardData.summaryData}
-              allLearningTypes={dashboardData.allLearningTypes}
-              showTable={showTable}
-              toggleShowTable={() => setShowTable(!showTable)}
-            />
           </Tabs.Item>
           {weeksData.map((week) => (
             <Tabs.Item key={week.weekNumber} title={`Week ${week.weekNumber}`}>
-              <WeekActivityTab week={week} />
               <WeekActivityTab week={week} />
             </Tabs.Item>
           ))}
