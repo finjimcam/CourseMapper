@@ -328,7 +328,7 @@ def delete_week_graduate_attribute(
         raise HTTPException(status_code=422, detail=str(e))
 
     """
-    Check user permissions: Workbook contributors, workbook owner, and site admins may delete week
+    Check user permissions: Workbook contributors, workbook owners, and site admins may delete week
     graduate attributes.
     """
     db_week_graduate_attribute = unwrap(
@@ -390,7 +390,7 @@ def delete_workbook(
         raise HTTPException(status_code=422, detail=f"Workbook with id {workbook_id} not found.")
 
     """
-    Check user permissions: Only a site admin may delet a workbook.
+    Check user permissions: Only a site admin may delete a workbook.
     """
     db_user = unwrap(session.exec(select(User).where(User.id == session_data.user_id)).first())
     db_user_permissions_group = unwrap(
@@ -495,7 +495,7 @@ def patch_activity(
     db_activity = session.exec(select(Activity).where(Activity.id == activity_id)).first()
     if not db_activity:
         raise HTTPException(status_code=422, detail="Activity not found")
-    
+
     """
     Check user permissions: Workbook contributors, workbook owners, and site admins may edit
     activities.
@@ -617,7 +617,7 @@ def patch_workbook(
     db_workbook = session.exec(select(Workbook).where(Workbook.id == workbook_id)).first()
     if not db_workbook:
         raise HTTPException(status_code=422, detail="Activity not found")
-    
+
     """
     Check user permissions: Workbook owners and site admins may edit workbooks.
     """
@@ -630,10 +630,7 @@ def patch_workbook(
             select(PermissionsGroup).where(PermissionsGroup.id == db_user.permissions_group_id)
         ).first()
     )
-    if (
-        db_workbook_owner.id != session_data.user_id
-        and db_user_permissions_group.name != "Admin"
-    ):
+    if db_workbook_owner.id != session_data.user_id and db_user_permissions_group.name != "Admin":
         raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
 
     workbook_dict = db_workbook.model_dump()
@@ -659,17 +656,42 @@ def patch_workbook(
 
 
 # Post requests for creating new entries
-@app.post("/activity-staff/", response_model=ActivityStaff)
+@app.post("/activity-staff/", response_model=ActivityStaff, dependencies=[Depends(cookie)])
 def create_activity_staff(
     activity_staff: ActivityStaffCreate,
+    session_data: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
 ) -> ActivityStaff:
+    # check ActivityStaff validity
     activity_staff_dict = activity_staff.model_dump()
     activity_staff_dict["session"] = session
     try:
         db_activity_staff = ActivityStaff.model_validate(activity_staff_dict)
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
+
+    """
+    Check user permissions: Workbook contributors, workbook owners, and site admins may add
+    activity staff to a workbook.
+    """
+    db_activity = unwrap(
+        session.exec(select(Activity).where(Activity.id == db_activity_staff.activity_id)).first()
+    )
+    db_workbook = unwrap(
+        session.exec(select(Workbook).where(Workbook.id == db_activity.workbook_id)).first()
+    )
+    db_workbook_owner = unwrap(
+        session.exec(select(User).where(User.id == db_workbook.course_lead_id)).first()
+    )
+    db_user = unwrap(session.exec(select(User).where(User.id == session_data.user_id)).first())
+    db_user_permissions_group = unwrap(
+        session.exec(
+            select(PermissionsGroup).where(PermissionsGroup.id == db_user.permissions_group_id)
+        ).first()
+    )
+    if session_data.user_id != db_workbook_owner.id and db_user_permissions_group.name != "Admin":
+        raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
+
     session.add(db_activity_staff)
     session.commit()
     session.refresh(db_activity_staff)
