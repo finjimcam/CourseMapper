@@ -775,9 +775,10 @@ def create_activity(
     return db_activity
 
 
-@app.post("/workbooks/", response_model=Workbook)
-def create_workbook(workbook: WorkbookCreate, session: Session = Depends(get_session)) -> Workbook:
+@app.post("/workbooks/", response_model=Workbook, dependencies=[Depends(cookie)])
+def create_workbook(workbook: WorkbookCreate, session_data: SessionData = Depends(verifier), session: Session = Depends(get_session)) -> Workbook:
     workbook_dict = workbook.model_dump()
+    workbook_dict["course_lead_id"] = session_data.user_id
     workbook_dict["session"] = session
     try:
         db_workbook = Workbook.model_validate(workbook_dict)

@@ -297,8 +297,11 @@ class Workbook(WorkbookBase, table=True):
         return values
 
 
-class WorkbookCreate(WorkbookBase):
-    pass
+class WorkbookCreate(BaseModel):
+    start_date: datetime.date = Field(nullable=False)
+    end_date: datetime.date = Field(nullable=False)
+    course_name: str = Field(index=True)
+    learning_platform_id: uuid.UUID = Field(foreign_key="learningplatform.id")
 
 
 class WorkbookUpdate(BaseModel):
