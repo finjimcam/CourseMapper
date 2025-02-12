@@ -26,9 +26,9 @@ function Navbar() {
     }, [location.pathname]);
     return (
         <nav className="bg-white border-gray-200">
-            <div className="flex flex-wrap items-center justify-between mx-auto p-4">
+            <div className="relative flex items-center justify-between mx-auto p-4 w-full">
                 <NavLink to="/" className="flex items-center space-x-3 rtl:space-x-reverse">
-                    <img src="/LISU.png" className="h-8" alt="LISU Logo" />
+                    <img src="/LISU.png" className="w-[32px] sm:w-[64px] md:w-[96px] lg:w-[128px] xl:w-[256px]" alt="LISU Logo" />
                 </NavLink>
                 <div className="flex items-center md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
                     <button
@@ -114,67 +114,25 @@ function Navbar() {
                         </svg>
                     </button>
                 </div>
-                <div className="flex items-center space-x-4">
-                    {!location.pathname.startsWith('/workbook/') && location.pathname !== '/my-workbooks' && (
-                        <NavLink
-                            to="/"
-                            className={({ isActive }) =>
-                                `block py-2 px-3 rounded md:p-0 ${
-                                    isActive ? 'text-white bg-blue-700 md:bg-transparent' : 'text-gray-900 hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700'
-                                }`
-                            }
-                        >
-                            Home
-                        </NavLink>
+                {/* Center Section - Breadcrumb */}
+                <div className="absolute left-1/2 transform -translate-x-1/2">
+                {(location.pathname.startsWith('/workbook/') || location.pathname === '/my-workbooks') && (
+                    <Breadcrumb aria-label="Breadcrumb" className="bg-transparent">
+                    <Breadcrumb.Item href="/" className="text-gray-900 hover:text-blue-700">
+                        Home
+                    </Breadcrumb.Item>
+                    {location.pathname === '/my-workbooks' ? (
+                        <Breadcrumb.Item className="text-gray-700">My Workbooks</Breadcrumb.Item>
+                    ) : (
+                        <>
+                        <Breadcrumb.Item href="/my-workbooks" className="text-gray-900 hover:text-blue-700">
+                            My Workbooks
+                        </Breadcrumb.Item>
+                        <Breadcrumb.Item className="text-gray-700">{workbookData?.course_name || 'Workbook'}</Breadcrumb.Item>
+                        </>
                     )}
-                    {(location.pathname.startsWith('/workbook/') || location.pathname === '/my-workbooks') && (
-                        <div className="flex items-center h-full">
-                            {location.pathname.startsWith('/workbook/') && (
-                                <Breadcrumb aria-label="Breadcrumb" className="bg-transparent">
-                                    <Breadcrumb.Item 
-                                        href="/"
-                                            className={`flex items-center text-sm font-medium ${
-                                                location.pathname.startsWith('/') 
-                                                    ? 'text-gray-700' 
-                                                    : 'text-gray-900 hover:text-blue-700'
-                                            }`}
-                                    >
-                                        Home
-                                    </Breadcrumb.Item>
-                                    <Breadcrumb.Item 
-                                        href="/my-workbooks"
-                                        className={`flex items-center text-sm font-medium ${
-                                            location.pathname === '/my-workbooks' 
-                                                ? 'text-gray-700' 
-                                                : 'text-gray-900 hover:text-blue-700'
-                                        }`}
-                                    >
-                                        My Workbooks
-                                    </Breadcrumb.Item>
-                                    <Breadcrumb.Item className="text-gray-700">
-                                        {workbookData?.course_name || 'Workbook'}
-                                    </Breadcrumb.Item>
-                                </Breadcrumb>
-                            )}
-                            {location.pathname === '/my-workbooks' && (
-                                <Breadcrumb aria-label="Breadcrumb" className="bg-transparent">
-                                    <Breadcrumb.Item 
-                                        href="/"
-                                        className={`flex items-center text-sm font-medium ${
-                                            location.pathname.startsWith('/') 
-                                                ? 'text-gray-700' 
-                                                : 'text-gray-900'
-                                        }`}
-                                    >
-                                        Home
-                                    </Breadcrumb.Item>
-                                    <Breadcrumb.Item className="text-gray-700">
-                                        My Workbooks
-                                    </Breadcrumb.Item>
-                                </Breadcrumb>
-                            )}
-                        </div>
-                    )}
+                    </Breadcrumb>
+                )}
                 </div>
                 <div
                     className="items-center justify-between hidden w-full md:flex md:w-auto md:order-1"
