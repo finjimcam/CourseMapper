@@ -776,7 +776,11 @@ def create_activity(
 
 
 @app.post("/workbooks/", response_model=Workbook, dependencies=[Depends(cookie)])
-def create_workbook(workbook: WorkbookCreate, session_data: SessionData = Depends(verifier), session: Session = Depends(get_session)) -> Workbook:
+def create_workbook(
+    workbook: WorkbookCreate,
+    session_data: SessionData = Depends(verifier),
+    session: Session = Depends(get_session),
+) -> Workbook:
     workbook_dict = workbook.model_dump()
     workbook_dict["course_lead_id"] = session_data.user_id
     workbook_dict["session"] = session
@@ -790,22 +794,53 @@ def create_workbook(workbook: WorkbookCreate, session_data: SessionData = Depend
     return db_workbook
 
 
-@app.post("/weeks/", response_model=Week)
-def create_week(week: WeekCreate, session: Session = Depends(get_session)) -> Week:
+@app.post("/weeks/", response_model=Week, dependencies=[Depends(cookie)])
+def create_week(
+    week: WeekCreate,
+    session_data: SessionData = Depends(verifier),
+    session: Session = Depends(get_session),
+) -> Week:
+    # check Week validity
     week_dict = week.model_dump()
     week_dict["session"] = session
     try:
         db_week = Week.model_validate(week_dict)
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
-    linked_workbook = cast(
-        Workbook,
+
+    """
+    Check user permissions: Workbook contributors, workbook owners, and site admins may create
+    weeks.
+    """
+    db_workbook = unwrap(
         session.exec(select(Workbook).where(Workbook.id == db_week.workbook_id)).first(),
-    )  # exec is guaranteed by Week model validation as workbook_id is a primary foreign key.
-    db_week.number = linked_workbook.number_of_weeks + 1
-    linked_workbook.number_of_weeks += 1
+    )
+    db_workbook_owner = unwrap(
+        session.exec(select(User).where(User.id == db_workbook.course_lead_id)).first()
+    )
+    db_workbook_contributor_ids = [
+        unwrap(workbook_contributor).contributor_id
+        for workbook_contributor in session.exec(
+            select(WorkbookContributor).where(WorkbookContributor.workbook_id == db_workbook.id)
+        ).all()
+    ]
+    db_user = unwrap(session.exec(select(User).where(User.id == session_data.user_id)).first())
+    db_user_permissions_group = unwrap(
+        session.exec(
+            select(PermissionsGroup).where(PermissionsGroup.id == db_user.permissions_group_id)
+        ).first()
+    )
+    if (
+        session_data.user_id not in db_workbook_contributor_ids
+        and db_workbook_owner.id != session_data.user_id
+        and db_user_permissions_group.name != "Admin"
+    ):
+        raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
+
+    db_week.number = db_workbook.number_of_weeks + 1
+    db_workbook.number_of_weeks += 1
     session.add(db_week)
-    session.add(linked_workbook)
+    session.add(db_workbook)
     session.commit()
     session.refresh(db_week)
     return db_week
