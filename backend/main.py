@@ -1,9 +1,13 @@
 from typing import Annotated, AsyncGenerator, List, Dict, Any, cast
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Response
 from sqlmodel import Session, select
 import uuid
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi_sessions.backends.implementations import InMemoryBackend
+from fastapi_sessions.frontends.implementations import SessionCookie, CookieParameters
+
+from session import BaseVerifier, SessionData
 
 from models.database import (
     create_db_and_tables,
@@ -62,6 +66,50 @@ app.add_middleware(
     allow_headers=["*"],  # Allow all headers
 )
 
+cookie_params = CookieParameters()
+
+cookie = SessionCookie(
+    cookie_name="cookie",
+    identifier="general_verifier",
+    auto_error=True,
+    secret_key="DONOTUSE",
+    cookie_params=cookie_params,
+)
+
+backend = InMemoryBackend[uuid.UUID, SessionData]()
+
+verifier = BaseVerifier(
+    identifier="general_verifier",
+    auto_error=True,
+    backend=backend,
+    auth_http_exception=HTTPException(status_code=403, detail="Invalid session."),
+)
+
+# Session requests 
+@app.post("/session/{name}")
+async def create_session(username: str, response: Response, session: Session = Depends(get_session),) -> dict[str, Any]:
+
+    db_user = session.exec(select(User).where(User.name == username)).first()
+    if db_user is None:
+        raise HTTPException(status_code=422, detail=f"User with name {username} does not exist.")
+
+    session_id = uuid.uuid4()
+    data = SessionData(user_id=db_user.id)
+
+    await backend.create(session_id, data)
+    cookie.attach_to_response(response, session_id)
+
+    return {"ok": True, "session_id": str(session_id)}
+
+@app.get("/session/", dependencies=[Depends(cookie)])
+def read_session(session_data: SessionData = Depends(verifier)):
+    return session_data
+
+@app.delete("/session/")
+async def delete_session(response: Response, session_id: uuid.UUID = Depends(cookie)) -> dict[str, bool]:
+    await backend.delete(session_id)
+    cookie.delete_from_response(response)
+    return {"ok": True}
 
 # Delete requests for removing entries
 @app.delete("/activity-staff/")
