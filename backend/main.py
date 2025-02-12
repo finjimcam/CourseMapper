@@ -846,9 +846,13 @@ def create_week(
     return db_week
 
 
-@app.post("/workbooks/{workbook_id}/duplicate", response_model=Workbook, dependencies=[Depends(cookie)])
+@app.post(
+    "/workbooks/{workbook_id}/duplicate", response_model=Workbook, dependencies=[Depends(cookie)]
+)
 def duplicate_workbook(
-    workbook_id: uuid.UUID, session_data: SessionData = Depends(verifier), session: Session = Depends(get_session)
+    workbook_id: uuid.UUID,
+    session_data: SessionData = Depends(verifier),
+    session: Session = Depends(get_session),
 ) -> Workbook:
     db_user = session.exec(select(User).where(User.id == session_data.user_id)).first()
     # check if user exists
@@ -933,14 +937,17 @@ def duplicate_workbook(
         session.commit()
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
-    
+
     session.refresh(new_workbook)
     return new_workbook
 
 
-@app.post("/workbook-contributors/", response_model=WorkbookContributor)
+@app.post(
+    "/workbook-contributors/", response_model=WorkbookContributor, dependencies=[Depends(cookie)]
+)
 def create_workbook_contributor(
     workbook_contributor: WorkbookContributorCreate,
+    session_data: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
 ) -> WorkbookContributor:
     workbook_contributor_dict = workbook_contributor.model_dump()
@@ -949,6 +956,27 @@ def create_workbook_contributor(
         db_workbook_contributor = WorkbookContributor.model_validate(workbook_contributor_dict)
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
+
+    """
+    Check user permissions: Workbook owners and site admins may add contributors.
+    """
+    db_workbook = unwrap(
+        session.exec(
+            select(Workbook).where(Workbook.id == db_workbook_contributor.workbook_id)
+        ).first()
+    )
+    db_workbook_owner = unwrap(
+        session.exec(select(User).where(User.id == db_workbook.course_lead_id)).first()
+    )
+    db_user = unwrap(session.exec(select(User).where(User.id == session_data.user_id)).first())
+    db_user_permissions_group = unwrap(
+        session.exec(
+            select(PermissionsGroup).where(PermissionsGroup.id == db_user.permissions_group_id)
+        ).first()
+    )
+    if session_data.user_id != db_workbook_owner.id and db_user_permissions_group.name != "Admin":
+        raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
+
     session.add(db_workbook_contributor)
     session.commit()
     session.refresh(db_workbook_contributor)
