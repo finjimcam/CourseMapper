@@ -35,7 +35,7 @@ function Navbar() {
                         type="button"
                         className="flex text-sm bg-gray-800 rounded-full md:me-0 focus:ring-4 focus:ring-gray-300"
                         id="user-menu-button"
-                        aria-expanded="fase"
+                        aria-expanded="false"
                         data-dropdown-toggle="user-dropdown"
                         data-dropdown-placement="bottom"
                     >
