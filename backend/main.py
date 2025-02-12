@@ -484,15 +484,47 @@ def delete_activity(
 
 
 # Patch requests for editing entries
-@app.patch("/activities/{activity_id}")
+@app.patch("/activities/{activity_id}", dependencies=[Depends(cookie)])
 def patch_activity(
     activity_id: uuid.UUID,
     activity_update: ActivityUpdate,
+    session_data: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
 ) -> Activity:
+    # check Activity validity
     db_activity = session.exec(select(Activity).where(Activity.id == activity_id)).first()
     if not db_activity:
         raise HTTPException(status_code=422, detail="Activity not found")
+    
+    """
+    Check user permissions: Workbook contributors, workbook owners, and site admins may edit
+    activities.
+    """
+    db_workbook = unwrap(
+        session.exec(select(Workbook).where(Workbook.id == db_activity.workbook_id)).first(),
+    )
+    db_workbook_owner = unwrap(
+        session.exec(select(User).where(User.id == db_workbook.course_lead_id)).first()
+    )
+    db_workbook_contributor_ids = [
+        unwrap(workbook_contributor).contributor_id
+        for workbook_contributor in session.exec(
+            select(WorkbookContributor).where(WorkbookContributor.workbook_id == db_workbook.id)
+        ).all()
+    ]
+    db_user = unwrap(session.exec(select(User).where(User.id == session_data.user_id)).first())
+    db_user_permissions_group = unwrap(
+        session.exec(
+            select(PermissionsGroup).where(PermissionsGroup.id == db_user.permissions_group_id)
+        ).first()
+    )
+    if (
+        session_data.user_id not in db_workbook_contributor_ids
+        and db_workbook_owner.id != session_data.user_id
+        and db_user_permissions_group.name != "Admin"
+    ):
+        raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
+
     activity_dict = db_activity.model_dump()
     for k, v in activity_update.model_dump().items():
         if v is not None:
