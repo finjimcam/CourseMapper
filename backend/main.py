@@ -306,16 +306,23 @@ def delete_week(
     return {"ok": True}
 
 
-@app.delete("/week-graduate-attributes/")
+@app.delete("/week-graduate-attributes/", dependencies=[Depends(cookie)])
 def delete_week_graduate_attribute(
     week_graduate_attribute: WeekGraduateAttributeDelete,
+    session_data: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
 ) -> dict[str, bool]:
+    # check WeekGraduateAttribute validity
     try:
         week_graduate_attribute.check_primary_keys(session)
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
-    db_week_graduate_attribute = session.exec(
+    
+    """
+    Check user permissions: A workbook owner may remove any week graduate attribute of their
+    workbook, a site admin may remove any week graduate attribute of any workbook.
+    """
+    db_week_graduate_attribute = unwrap(session.exec(
         select(WeekGraduateAttribute).where(
             (WeekGraduateAttribute.week_workbook_id == week_graduate_attribute.week_workbook_id)
             & (WeekGraduateAttribute.week_number == week_graduate_attribute.week_number)
@@ -324,7 +331,22 @@ def delete_week_graduate_attribute(
                 == week_graduate_attribute.graduate_attribute_id
             )
         )
-    ).first()
+    ).first())
+    db_workbook = unwrap(
+        session.exec(select(Workbook).where(Workbook.id == db_week_graduate_attribute.week_workbook_id)).first(),
+    )
+    db_workbook_owner = unwrap(
+        session.exec(select(User).where(User.id == db_workbook.course_lead_id)).first()
+    )
+    db_user = unwrap(session.exec(select(User).where(User.id == session_data.user_id)).first())
+    db_user_permissions_group = unwrap(
+        session.exec(
+            select(PermissionsGroup).where(PermissionsGroup.id == db_user.permissions_group_id)
+        ).first()
+    )
+    if session_data.user_id != db_workbook_owner.id and db_user_permissions_group.name != "Admin":
+        raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
+
     session.delete(db_week_graduate_attribute)
     session.commit()
     return {"ok": True}
