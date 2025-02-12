@@ -87,7 +87,7 @@ verifier = BaseVerifier(
 
 # Session requests 
 @app.post("/session/{name}")
-async def create_session(username: str, response: Response, session: Session = Depends(get_session),) -> dict[str, Any]:
+async def create_session(username: str, response: Response, session: Session = Depends(get_session)) -> dict[str, Any]:
 
     db_user = session.exec(select(User).where(User.name == username)).first()
     if db_user is None:
@@ -112,21 +112,39 @@ async def delete_session(response: Response, session_id: uuid.UUID = Depends(coo
     return {"ok": True}
 
 # Delete requests for removing entries
-@app.delete("/activity-staff/")
+@app.delete("/activity-staff/", dependencies=[Depends(cookie)])
 def delete_activity_staff(
     activity_staff: ActivityStaffDelete,
+    session_data: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
 ) -> dict[str, bool]:
+    # check for activity_staff validity
     try:
         activity_staff.check_primary_keys(session)
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
+    
     db_activity_staff = session.exec(
         select(ActivityStaff).where(
             (ActivityStaff.activity_id == activity_staff.activity_id)
             & (ActivityStaff.staff_id == activity_staff.staff_id)
         )
     ).first()
+
+    """
+    Check user permissions: A staff member may remove themself and a workbook owner may remove any
+    staff member of their workbook.
+    """
+    print(db_activity_staff)
+    db_activity = session.exec(select(Activity).where(Activity.id == db_activity_staff.activity_id)).first()
+    print(db_activity)
+    db_workbook = session.exec(select(Workbook).where(Workbook.id == db_activity.workbook_id)).first()
+    print(db_workbook)
+    db_workbook_owner = session.exec(select(User).where(User.id == db_workbook.course_lead_id)).first()
+    print(db_workbook_owner)
+    if session_data.user_id not in [db_activity_staff.staff_id, db_workbook_owner.id]:
+        raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
+
     session.delete(db_activity_staff)
     session.commit()
     return {"ok": True}
