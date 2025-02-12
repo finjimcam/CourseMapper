@@ -13,6 +13,7 @@ from models.models_base import (
     PermissionsGroup,
     Week,
     Workbook,
+    WorkbookContributor,
     Activity,
     LearningPlatform,
     LearningActivity,
@@ -109,6 +110,7 @@ def _populate_initial_data() -> None:
             course_lead=users["Tim Storer"],
             course_name="Professional Software Development",
             learning_platform=learning_platforms["Moodle"],
+            contributors=[users["Jennifer Boyle"], users["Caitlin Diver"]],
         )
         if workbook.learning_platform is None:
             raise Exception("Workbook not correctly populated. This is a problem with the script.")

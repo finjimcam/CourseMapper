@@ -4,9 +4,11 @@ from fastapi import HTTPException
 from fastapi_sessions.backends.implementations import InMemoryBackend
 from fastapi_sessions.session_verifier import SessionVerifier
 
+
 # Special session model
 class SessionData(BaseModel):
     user_id: uuid.UUID
+
 
 class BaseVerifier(SessionVerifier[uuid.UUID, SessionData]):
     def __init__(

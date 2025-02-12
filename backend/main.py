@@ -85,9 +85,12 @@ verifier = BaseVerifier(
     auth_http_exception=HTTPException(status_code=403, detail="Invalid session."),
 )
 
-# Session requests 
+
+# Session requests
 @app.post("/session/{name}")
-async def create_session(username: str, response: Response, session: Session = Depends(get_session)) -> dict[str, Any]:
+async def create_session(
+    username: str, response: Response, session: Session = Depends(get_session)
+) -> dict[str, Any]:
 
     db_user = session.exec(select(User).where(User.name == username)).first()
     if db_user is None:
@@ -101,15 +104,20 @@ async def create_session(username: str, response: Response, session: Session = D
 
     return {"ok": True, "session_id": str(session_id)}
 
+
 @app.get("/session/", dependencies=[Depends(cookie)])
 def read_session(session_data: SessionData = Depends(verifier)):
     return session_data
 
+
 @app.delete("/session/")
-async def delete_session(response: Response, session_id: uuid.UUID = Depends(cookie)) -> dict[str, bool]:
+async def delete_session(
+    response: Response, session_id: uuid.UUID = Depends(cookie)
+) -> dict[str, bool]:
     await backend.delete(session_id)
     cookie.delete_from_response(response)
     return {"ok": True}
+
 
 # Delete requests for removing entries
 @app.delete("/activity-staff/", dependencies=[Depends(cookie)])
@@ -118,12 +126,12 @@ def delete_activity_staff(
     session_data: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
 ) -> dict[str, bool]:
-    # check for activity_staff validity
+    # check ActivityStaff validity
     try:
         activity_staff.check_primary_keys(session)
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
-    
+
     db_activity_staff = session.exec(
         select(ActivityStaff).where(
             (ActivityStaff.activity_id == activity_staff.activity_id)
@@ -132,17 +140,26 @@ def delete_activity_staff(
     ).first()
 
     """
-    Check user permissions: A staff member may remove themself and a workbook owner may remove any
-    staff member of their workbook.
+    Check user permissions: A staff member may remove themself, a workbook owner may remove any
+    member of their workbook, a site admin may remove any member of any workbook.
     """
-    print(db_activity_staff)
-    db_activity = session.exec(select(Activity).where(Activity.id == db_activity_staff.activity_id)).first()
-    print(db_activity)
-    db_workbook = session.exec(select(Workbook).where(Workbook.id == db_activity.workbook_id)).first()
-    print(db_workbook)
-    db_workbook_owner = session.exec(select(User).where(User.id == db_workbook.course_lead_id)).first()
-    print(db_workbook_owner)
-    if session_data.user_id not in [db_activity_staff.staff_id, db_workbook_owner.id]:
+    db_activity = session.exec(
+        select(Activity).where(Activity.id == db_activity_staff.activity_id)
+    ).first()
+    db_workbook = session.exec(
+        select(Workbook).where(Workbook.id == db_activity.workbook_id)
+    ).first()
+    db_workbook_owner = session.exec(
+        select(User).where(User.id == db_workbook.course_lead_id)
+    ).first()
+    db_user = session.exec(select(User).where(User.id) == session_data.user_id).first()
+    db_user_permissions_group = session.exec(
+        select(PermissionsGroup).where(PermissionsGroup.id == db_user.permissions_group_id)
+    ).first()
+    if (
+        session_data.user_id not in [db_activity_staff.staff_id, db_workbook_owner.id]
+        and db_user_permissions_group.name != "Admin"
+    ):
         raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
 
     session.delete(db_activity_staff)
@@ -150,21 +167,44 @@ def delete_activity_staff(
     return {"ok": True}
 
 
-@app.delete("/workbook-contributors/")
+@app.delete("/workbook-contributors/", dependencies=[Depends(cookie)])
 def delete_workbook_contributor(
     workbook_contributor: WorkbookContributorDelete,
+    session_data: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
 ) -> dict[str, bool]:
+    # check WorkbookContributor validity
     try:
         workbook_contributor.check_primary_keys(session)
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
+
+    """
+    Check user permissions: A workbook contributor member may remove themself and a workbook owner
+    may remove any contributor to their workbook.
+    """
     db_workbook_contributor = session.exec(
         select(WorkbookContributor).where(
             (WorkbookContributor.workbook_id == workbook_contributor.workbook_id)
             & (WorkbookContributor.contributor_id == workbook_contributor.contributor_id)
         )
     ).first()
+    db_workbook = session.exec(
+        select(Workbook).where(Workbook.id == db_workbook_contributor.workbook_id)
+    ).first()
+    db_workbook_owner = session.exec(
+        select(User).where(User.id == db_workbook.course_lead_id)
+    ).first()
+    db_user = session.exec(select(User).where(User.id == session_data.user_id)).first()
+    db_user_permissions_group = session.exec(
+        select(PermissionsGroup).where(PermissionsGroup.id == db_user.permissions_group_id)
+    ).first()
+    if (
+        session_data.user_id not in [db_workbook_contributor.contributor_id, db_workbook_owner.id]
+        and db_user_permissions_group.name != "Admin"
+    ):
+        raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
+
     session.delete(db_workbook_contributor)
     session.commit()
     return {"ok": True}
