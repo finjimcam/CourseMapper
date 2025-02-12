@@ -1040,8 +1040,10 @@ def create_week_graduate_attribute(
     return db_week_graduate_attribute
 
 
-@app.get("/activity-staff/")
-def read_actvity_straff(
+# Get requests for viewing entries
+@app.get("/activity-staff/", dependencies=[Depends(cookie)])
+def read_actvity_staff(
+    _: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
     staff_id: uuid.UUID | None = None,
     activity_id: uuid.UUID | None = None,
@@ -1059,8 +1061,9 @@ def read_actvity_straff(
     return list(session.exec(select(ActivityStaff)).all())
 
 
-@app.get("/week-graduate-attributes/")
+@app.get("/week-graduate-attributes/", dependencies=[Depends(cookie)])
 def read_week_graduate_attributes(
+    _: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
     week_workbook_id: uuid.UUID | None = None,
     week_number: int | None = None,
@@ -1097,8 +1100,9 @@ def read_week_graduate_attributes(
     )
 
 
-@app.get("/workbook-contributors/")
+@app.get("/workbook-contributors/", dependencies=[Depends(cookie)])
 def read_workbook_contributors(
+    _: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
     contributor_id: uuid.UUID | None = None,
     workbook_id: uuid.UUID | None = None,
@@ -1129,27 +1133,32 @@ def read_workbook_contributors(
     )
 
 
-@app.get("/users/")
-def read_users(session: Session = Depends(get_session)) -> List[User]:
+@app.get("/users/", dependencies=[Depends(cookie)])
+def read_users(
+    _: SessionData = Depends(verifier), session: Session = Depends(get_session)
+) -> List[User]:
     return list(session.exec(select(User)).all())
 
 
-@app.get("/permissions-groups/")
+@app.get("/permissions-groups/", dependencies=[Depends(cookie)])
 def read_permissions_groups(
+    _: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
 ) -> List[PermissionsGroup]:
     return list(session.exec(select(PermissionsGroup)).all())
 
 
-@app.get("/learning-platforms/")
+@app.get("/learning-platforms/", dependencies=[Depends(cookie)])
 def read_learning_platforms(
+    _: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
 ) -> List[LearningPlatform]:
     return list(session.exec(select(LearningPlatform)).all())
 
 
-@app.get("/learning-activities/")
+@app.get("/learning-activities/", dependencies=[Depends(cookie)])
 def read_learning_activities(
+    _: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
     learning_platform_id: uuid.UUID | None = None,
 ) -> List[LearningActivity]:
@@ -1164,18 +1173,23 @@ def read_learning_activities(
     )
 
 
-@app.get("/task-statuses/")
-def read_task_statuses(session: Session = Depends(get_session)) -> List[TaskStatus]:
+@app.get("/task-statuses/", dependencies=[Depends(cookie)])
+def read_task_statuses(
+    _: SessionData = Depends(verifier), session: Session = Depends(get_session)
+) -> List[TaskStatus]:
     return list(session.exec(select(TaskStatus)).all())
 
 
-@app.get("/learning-types/")
-def read_learning_types(session: Session = Depends(get_session)) -> List[LearningType]:
+@app.get("/learning-types/", dependencies=[Depends(cookie)])
+def read_learning_types(
+    _: SessionData = Depends(verifier), session: Session = Depends(get_session)
+) -> List[LearningType]:
     return list(session.exec(select(LearningType)).all())
 
 
-@app.get("/workbooks/")
+@app.get("/workbooks/", dependencies=[Depends(cookie)])
 def read_workbooks(
+    _: SessionData = Depends(verifier),
     workbook_id: uuid.UUID | None = None,
     session: Session = Depends(get_session),
 ) -> List[Dict[str, Any]]:
@@ -1205,11 +1219,12 @@ def read_workbooks(
     ]
 
 
-@app.get("/weeks/")
+@app.get("/weeks/", dependencies=[Depends(cookie)])
 def read_weeks(
+    _: SessionData = Depends(verifier),
+    session: Session = Depends(get_session),
     workbook_id: uuid.UUID | None = None,
     week_number: int | None = None,
-    session: Session = Depends(get_session),
 ) -> List[Week]:
     if not workbook_id:
         return list(session.exec(select(Week)).all())
@@ -1222,25 +1237,29 @@ def read_weeks(
     )
 
 
-@app.get("/graduate_attributes/")
+@app.get("/graduate_attributes/", dependencies=[Depends(cookie)])
 def read_graduate_attributes(
+    _: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
 ) -> List[GraduateAttribute]:
     graduate_attributes = list(session.exec(select(GraduateAttribute)).all())
     return graduate_attributes
 
 
-@app.get("/locations/")
-def read_locations(session: Session = Depends(get_session)) -> List[Location]:
+@app.get("/locations/", dependencies=[Depends(cookie)])
+def read_locations(
+    _: SessionData = Depends(verifier), session: Session = Depends(get_session)
+) -> List[Location]:
     locations = list(session.exec(select(Location)).all())
     return locations
 
 
-@app.get("/activities/")
+@app.get("/activities/", dependencies=[Depends(cookie)])
 def read_activities(
+    _: SessionData = Depends(verifier),
+    session: Session = Depends(get_session),
     workbook_id: uuid.UUID | None = None,
     week_number: int | None = None,
-    session: Session = Depends(get_session),
 ) -> List[Activity]:
     if not workbook_id:
         return list(session.exec(select(Activity)).all())
@@ -1256,9 +1275,10 @@ def read_activities(
 
 
 # New endpoint to fetch all workbook details and related data
-@app.get("/workbooks/{workbook_id}/details")
+@app.get("/workbooks/{workbook_id}/details", dependencies=[Depends(cookie)])
 def get_workbook_details(
     workbook_id: uuid.UUID,
+    _: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
 ) -> Dict[str, Any]:
     # Fetch workbook
