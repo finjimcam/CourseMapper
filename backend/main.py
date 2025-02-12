@@ -983,11 +983,17 @@ def create_workbook_contributor(
     return db_workbook_contributor
 
 
-@app.post("/week-graduate-attributes/", response_model=WeekGraduateAttribute)
+@app.post(
+    "/week-graduate-attributes/",
+    response_model=WeekGraduateAttribute,
+    dependencies=[Depends(cookie)],
+)
 def create_week_graduate_attribute(
     week_graduate_attribute: WeekGraduateAttributeCreate,
+    session_data: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
 ) -> WeekGraduateAttribute:
+    # check WeekGraduateAttribute validity
     week_graduate_attribute_dict = week_graduate_attribute.model_dump()
     week_graduate_attribute_dict["session"] = session
     try:
@@ -996,6 +1002,38 @@ def create_week_graduate_attribute(
         )
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
+
+    """
+    Check user permissions: Workbook contributors, workbook owners, and site admins may delete week
+    graduate attributes.
+    """
+    db_workbook = unwrap(
+        session.exec(
+            select(Workbook).where(Workbook.id == db_week_graduate_attribute.week_workbook_id)
+        ).first(),
+    )
+    db_workbook_owner = unwrap(
+        session.exec(select(User).where(User.id == db_workbook.course_lead_id)).first()
+    )
+    db_workbook_contributor_ids = [
+        unwrap(workbook_contributor).contributor_id
+        for workbook_contributor in session.exec(
+            select(WorkbookContributor).where(WorkbookContributor.workbook_id == db_workbook.id)
+        ).all()
+    ]
+    db_user = unwrap(session.exec(select(User).where(User.id == session_data.user_id)).first())
+    db_user_permissions_group = unwrap(
+        session.exec(
+            select(PermissionsGroup).where(PermissionsGroup.id == db_user.permissions_group_id)
+        ).first()
+    )
+    if (
+        session_data.user_id not in db_workbook_contributor_ids
+        and session_data.user_id != db_workbook_owner.id
+        and db_user_permissions_group.name != "Admin"
+    ):
+        raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
+
     session.add(db_week_graduate_attribute)
     session.commit()
     session.refresh(db_week_graduate_attribute)
