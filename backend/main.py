@@ -151,8 +151,8 @@ def delete_activity_staff(
     )
 
     """
-    Check user permissions: A staff member may remove themself, a workbook owner may remove any
-    member of their workbook, a site admin may remove any member of any workbook.
+    Check user permissions: Staff members may remove themselves. Workbook owners and site admins
+    may remove activity staff.
     """
     db_activity = unwrap(
         session.exec(select(Activity).where(Activity.id == db_activity_staff.activity_id)).first()
@@ -193,9 +193,8 @@ def delete_workbook_contributor(
         raise HTTPException(status_code=422, detail=str(e))
 
     """
-    Check user permissions: A workbook contributor member may remove themself, a workbook owner
-    may remove any contributor to their workbook, a site admin may remove any contributor to any
-    workbook.
+    Check user permissions: Workbook contributors may delete themselves. Workbook owners and site
+    admins may delete contributors.
     """
     db_workbook_contributor = unwrap(
         session.exec(
@@ -243,8 +242,8 @@ def delete_week(
         raise HTTPException(status_code=422, detail=str(e))
 
     """
-    Check user permissions: A workbook owner may remove any week of their workbook, a site admin
-    may remove any week of any workbook.
+    Check user permissions: Workbook contributors, workbook owners, and site admins may delete
+    weeks.
     """
     db_week = unwrap(
         session.exec(
@@ -259,13 +258,23 @@ def delete_week(
     db_workbook_owner = unwrap(
         session.exec(select(User).where(User.id == db_workbook.course_lead_id)).first()
     )
+    db_workbook_contributor_ids = [
+        unwrap(workbook_contributor).contributor_id
+        for workbook_contributor in session.exec(
+            select(WorkbookContributor).where(WorkbookContributor.workbook_id == db_workbook.id)
+        ).all()
+    ]
     db_user = unwrap(session.exec(select(User).where(User.id == session_data.user_id)).first())
     db_user_permissions_group = unwrap(
         session.exec(
             select(PermissionsGroup).where(PermissionsGroup.id == db_user.permissions_group_id)
         ).first()
     )
-    if session_data.user_id != db_workbook_owner.id and db_user_permissions_group.name != "Admin":
+    if (
+        session_data.user_id not in db_workbook_contributor_ids
+        and session_data.user_id != db_workbook_owner.id
+        and db_user_permissions_group.name != "Admin"
+    ):
         raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
 
     db_workbook.number_of_weeks -= 1
@@ -319,8 +328,8 @@ def delete_week_graduate_attribute(
         raise HTTPException(status_code=422, detail=str(e))
 
     """
-    Check user permissions: A workbook owner may remove any week graduate attribute of their
-    workbook, a site admin may remove any week graduate attribute of any workbook.
+    Check user permissions: Workbook contributors, workbook owner, and site admins may delete week
+    graduate attributes.
     """
     db_week_graduate_attribute = unwrap(
         session.exec(
@@ -345,13 +354,23 @@ def delete_week_graduate_attribute(
     db_workbook_owner = unwrap(
         session.exec(select(User).where(User.id == db_workbook.course_lead_id)).first()
     )
+    db_workbook_contributor_ids = [
+        unwrap(workbook_contributor).contributor_id
+        for workbook_contributor in session.exec(
+            select(WorkbookContributor).where(WorkbookContributor.workbook_id == db_workbook.id)
+        ).all()
+    ]
     db_user = unwrap(session.exec(select(User).where(User.id == session_data.user_id)).first())
     db_user_permissions_group = unwrap(
         session.exec(
             select(PermissionsGroup).where(PermissionsGroup.id == db_user.permissions_group_id)
         ).first()
     )
-    if session_data.user_id != db_workbook_owner.id and db_user_permissions_group.name != "Admin":
+    if (
+        session_data.user_id not in db_workbook_contributor_ids
+        and session_data.user_id != db_workbook_owner.id
+        and db_user_permissions_group.name != "Admin"
+    ):
         raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
 
     session.delete(db_week_graduate_attribute)
@@ -415,7 +434,7 @@ def delete_activity(
         raise HTTPException(status_code=422, detail=f"Activity with id {db_activity} not found.")
 
     """
-    Check user permissions: Workbook contributors, workbook owner, and site admins may delete
+    Check user permissions: Workbook contributors, workbook owners, and site admins may delete
     activities from weeks.
     """
     db_workbook = unwrap(
@@ -424,13 +443,23 @@ def delete_activity(
     db_workbook_owner = unwrap(
         session.exec(select(User).where(User.id == db_workbook.course_lead_id)).first()
     )
+    db_workbook_contributor_ids = [
+        unwrap(workbook_contributor).contributor_id
+        for workbook_contributor in session.exec(
+            select(WorkbookContributor).where(WorkbookContributor.workbook_id == db_workbook.id)
+        ).all()
+    ]
     db_user = unwrap(session.exec(select(User).where(User.id == session_data.user_id)).first())
     db_user_permissions_group = unwrap(
         session.exec(
             select(PermissionsGroup).where(PermissionsGroup.id == db_user.permissions_group_id)
         ).first()
     )
-    if db_workbook_owner.id != session_data.user_id and db_user_permissions_group.name != "Admin":
+    if (
+        session_data.user_id not in db_workbook_contributor_ids
+        and db_workbook_owner.id != session_data.user_id
+        and db_user_permissions_group.name != "Admin"
+    ):
         raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
 
     # Loop through other activities in week to ensure numbering remains valid
