@@ -683,13 +683,23 @@ def create_activity_staff(
     db_workbook_owner = unwrap(
         session.exec(select(User).where(User.id == db_workbook.course_lead_id)).first()
     )
+    db_workbook_contributor_ids = [
+        unwrap(workbook_contributor).contributor_id
+        for workbook_contributor in session.exec(
+            select(WorkbookContributor).where(WorkbookContributor.workbook_id == db_workbook.id)
+        ).all()
+    ]
     db_user = unwrap(session.exec(select(User).where(User.id == session_data.user_id)).first())
     db_user_permissions_group = unwrap(
         session.exec(
             select(PermissionsGroup).where(PermissionsGroup.id == db_user.permissions_group_id)
         ).first()
     )
-    if session_data.user_id != db_workbook_owner.id and db_user_permissions_group.name != "Admin":
+    if (
+        session_data.user_id not in db_workbook_contributor_ids
+        and session_data.user_id != db_workbook_owner.id
+        and db_user_permissions_group.name != "Admin"
+    ):
         raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
 
     session.add(db_activity_staff)
@@ -698,33 +708,66 @@ def create_activity_staff(
     return db_activity_staff
 
 
-@app.post("/activities/", response_model=Activity)
-def create_activity(activity: ActivityCreate, session: Session = Depends(get_session)) -> Activity:
+@app.post("/activities/", response_model=Activity, dependencies=[Depends(cookie)])
+def create_activity(
+    activity: ActivityCreate,
+    session_data: SessionData = Depends(verifier),
+    session: Session = Depends(get_session),
+) -> Activity:
+    # check Activity validity
     activity_dict = activity.model_dump()
     activity_dict["session"] = session
     try:
         db_activity = Activity.model_validate(activity_dict)
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
-    linked_week = cast(
-        Week,
+
+    """
+    Check user permissions: Workbook contributors, workbook owners, and site admins may add
+    activity staff to a workbook.
+    """
+    db_workbook = unwrap(
+        session.exec(select(Workbook).where(Workbook.id == db_activity.workbook_id)).first()
+    )
+    db_workbook_owner = unwrap(
+        session.exec(select(User).where(User.id == db_workbook.course_lead_id)).first()
+    )
+    db_workbook_contributor_ids = [
+        unwrap(workbook_contributor).contributor_id
+        for workbook_contributor in session.exec(
+            select(WorkbookContributor).where(WorkbookContributor.workbook_id == db_workbook.id)
+        ).all()
+    ]
+    db_user = unwrap(session.exec(select(User).where(User.id == session_data.user_id)).first())
+    db_user_permissions_group = unwrap(
+        session.exec(
+            select(PermissionsGroup).where(PermissionsGroup.id == db_user.permissions_group_id)
+        ).first()
+    )
+    if (
+        session_data.user_id not in db_workbook_contributor_ids
+        and session_data.user_id != db_workbook_owner.id
+        and db_user_permissions_group.name != "Admin"
+    ):
+        raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
+
+    linked_week = unwrap(
         session.exec(
             select(Week).where(
                 (Week.number == db_activity.week_number)
                 & (Week.workbook_id == db_activity.workbook_id)
             )
         ).first(),
-    )  # exec is guaranteed by Activity model validation as week_number and workbook_id are primary foreign keys.
+    )
     db_activity.number = len(linked_week.activities) + 1
-    linked_week = cast(
-        Week,
+    linked_week = unwrap(
         session.exec(
             select(Week).where(
                 (Week.number == db_activity.week_number)
                 & (Week.workbook_id == db_activity.workbook_id)
             )
         ).first(),
-    )  # exec is guaranteed by Activity model validation as week_number and workbook_id are primary foreign keys.
+    )
     db_activity.number = len(linked_week.activities) + 1
     session.add(db_activity)
     session.commit()
