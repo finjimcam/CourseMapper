@@ -193,8 +193,9 @@ def delete_workbook_contributor(
         raise HTTPException(status_code=422, detail=str(e))
 
     """
-    Check user permissions: A workbook contributor member may remove themself and a workbook owner
-    may remove any contributor to their workbook.
+    Check user permissions: A workbook contributor member may remove themself, a workbook owner
+    may remove any contributor to their workbook, a site admin may remove any contributor to any
+    workbook.
     """
     db_workbook_contributor = unwrap(
         session.exec(
@@ -229,33 +230,53 @@ def delete_workbook_contributor(
     return {"ok": True}
 
 
-@app.delete("/weeks/")
-def delete_week(week: WeekDelete, session: Session = Depends(get_session)) -> dict[str, bool]:
+@app.delete("/weeks/", dependencies=[Depends(cookie)])
+def delete_week(
+    week: WeekDelete,
+    session_data: SessionData = Depends(verifier),
+    session: Session = Depends(get_session),
+) -> dict[str, bool]:
+    # check Week validity
     try:
         week.check_primary_keys(session)
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
-    db_week = cast(
-        Week,
+
+    """
+    Check user permissions: A workbook owner may remove any week of their workbook, a site admin
+    may remove any week of any workbook.
+    """
+    db_week = unwrap(
         session.exec(
             select(Week).where(
                 (Week.workbook_id == week.workbook_id) & (Week.number == week.number)
             )
         ).first(),
-    )  # Week has been validated to exist by model validation earlier in this function.
-    linked_workbook = cast(
-        Workbook,
+    )
+    db_workbook = unwrap(
         session.exec(select(Workbook).where(Workbook.id == db_week.workbook_id)).first(),
-    )  # Workbook is guaranteed to exist by model validation.
-    linked_workbook.number_of_weeks -= 1
-    session.add(linked_workbook)
+    )
+    db_workbook_owner = unwrap(
+        session.exec(select(User).where(User.id == db_workbook.course_lead_id)).first()
+    )
+    db_user = unwrap(session.exec(select(User).where(User.id == session_data.user_id)).first())
+    db_user_permissions_group = unwrap(
+        session.exec(
+            select(PermissionsGroup).where(PermissionsGroup.id == db_user.permissions_group_id)
+        ).first()
+    )
+    if session_data.user_id != db_workbook_owner.id and db_user_permissions_group.name != "Admin":
+        raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
+
+    db_workbook.number_of_weeks -= 1
+    session.add(db_workbook)
     session.delete(db_week)
     session.commit()
     # delete this week's activities
     for activity in db_week.activities:
         session.delete(activity)
     # loop through weeks of linked_workbook and update their numbers to maintain continuity
-    for other_week in linked_workbook.weeks:
+    for other_week in db_workbook.weeks:
         if other_week.number is None:
             continue
         if other_week.number > week.number:
