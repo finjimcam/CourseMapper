@@ -846,11 +846,11 @@ def create_week(
     return db_week
 
 
-@app.post("/workbooks/{workbook_id}/duplicate", response_model=Workbook)
+@app.post("/workbooks/{workbook_id}/duplicate", response_model=Workbook, dependencies=[Depends(cookie)])
 def duplicate_workbook(
-    workbook_id: uuid.UUID, user_id: uuid.UUID, session: Session = Depends(get_session)
+    workbook_id: uuid.UUID, session_data: SessionData = Depends(verifier), session: Session = Depends(get_session)
 ) -> Workbook:
-    db_user = session.exec(select(User).where(User.id == user_id)).first()
+    db_user = session.exec(select(User).where(User.id == session_data.user_id)).first()
     # check if user exists
     if not db_user:
         raise HTTPException(status_code=422, detail=f"User with id {db_user} not found.")
@@ -873,7 +873,7 @@ def duplicate_workbook(
             start_date=original_workbook.start_date,
             end_date=original_workbook.end_date,
             course_name=original_workbook.course_name,
-            course_lead_id=user_id,
+            course_lead_id=session_data.user_id,
             learning_platform_id=original_workbook.learning_platform_id,
             number_of_weeks=original_workbook.number_of_weeks,
         )
@@ -933,6 +933,8 @@ def duplicate_workbook(
         session.commit()
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
+    
+    session.refresh(new_workbook)
     return new_workbook
 
 
