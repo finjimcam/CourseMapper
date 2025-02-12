@@ -164,7 +164,7 @@ export function CreateWorkbookModal({ show, onClose }: CreateWorkbookModalProps)
       // Store in sessionStorage and navigate to EditWorkbook
       sessionStorage.setItem('newWorkbookData', JSON.stringify(workbookData));
       onClose();
-      navigate('/workbooks/edit');
+      navigate('/workbooks/create');
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 404) {
         if (err.config?.url?.includes('learning-platforms')) {

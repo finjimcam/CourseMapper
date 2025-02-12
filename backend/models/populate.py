@@ -126,7 +126,7 @@ def _populate_initial_data() -> None:
                     for graduate_attribute in dataframe["Graduate Attribute"].dropna()
                 ],
             )
-            for i in range(1, len(dataframe)):
+            for i in range(len(dataframe)):
                 name = dataframe["Title / Name"].iloc[i]
                 staff_responsible = dataframe["Staff Responsible"].iloc[i]
                 learning_activity = dataframe["Learning Activity"].iloc[i]
@@ -137,6 +137,7 @@ def _populate_initial_data() -> None:
 
                 activity = Activity(
                     week=weeks[week_no],
+                    number=i + 1,
                     workbook=workbook,
                     name=name,
                     location=locations[location],

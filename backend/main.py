@@ -32,6 +32,10 @@ from models.models_base import (
     Location,
     LearningType,
     ActivityStaff,
+    ActivityStaffCreate,
+    ActivityStaffDelete,
+    ActivityStaffCreate,
+    ActivityStaffDelete,
     GraduateAttribute,
     WorkbookContributor,
     WorkbookContributorCreate,
@@ -62,6 +66,26 @@ app.add_middleware(
 
 
 # Delete requests for removing entries
+@app.delete("/activity-staff/")
+def delete_activity_staff(
+    activity_staff: ActivityStaffDelete,
+    session: Session = Depends(get_session),
+) -> dict[str, bool]:
+    try:
+        activity_staff.check_primary_keys(session)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    db_activity_staff = session.exec(
+        select(ActivityStaff).where(
+            (ActivityStaff.activity_id == activity_staff.activity_id)
+            & (ActivityStaff.staff_id == activity_staff.staff_id)
+        )
+    ).first()
+    session.delete(db_activity_staff)
+    session.commit()
+    return {"ok": True}
+
+
 @app.delete("/workbook-contributors/")
 def delete_workbook_contributor(
     workbook_contributor: WorkbookContributorDelete,
@@ -194,7 +218,7 @@ def delete_workbook(
 
 
 @app.delete("/activities/")
-def delete_activitie(
+def delete_activity(
     activity_id: uuid.UUID, session: Session = Depends(get_session)
 ) -> dict[str, bool]:
 
@@ -202,7 +226,38 @@ def delete_activitie(
     # check if workbook exists
     if not db_activity:
         raise HTTPException(status_code=422, detail=f"Activity with id {db_activity} not found.")
-
+    linked_week = cast(
+        Week,
+        session.exec(
+            select(Week).where(
+                (Week.number == db_activity.week_number)
+                & (Week.workbook_id == db_activity.workbook_id)
+            )
+        ).first(),
+    )  # exec is guaranteed by Activity model validation as week_number and workbook_id are primary foreign keys.
+    # Loop through other activities in week to ensure numbering remains valid
+    for other_activity in linked_week.activities:
+        other_number = cast(int, other_activity.number)
+        number = cast(int, db_activity.number)
+        if other_number > number:
+            other_number -= 1
+            session.add(other_activity)
+    linked_week = cast(
+        Week,
+        session.exec(
+            select(Week).where(
+                (Week.number == db_activity.week_number)
+                & (Week.workbook_id == db_activity.workbook_id)
+            )
+        ).first(),
+    )  # exec is guaranteed by Activity model validation as week_number and workbook_id are primary foreign keys.
+    # Loop through other activities in week to ensure numbering remains valid
+    for other_activity in linked_week.activities:
+        other_number = cast(int, other_activity.number)
+        number = cast(int, db_activity.number)
+        if other_number > number:
+            other_number -= 1
+            session.add(other_activity)
     # delete activity
     session.delete(db_activity)
     session.commit()
@@ -232,6 +287,66 @@ def patch_activity(
     # Update data of the activity
     update_data = activity_update.model_dump(exclude_unset=True)  # Only pick the exist key
     for key, value in update_data.items():
+        if key == "number":
+            linked_week = cast(
+                Week,
+                session.exec(
+                    select(Week).where(
+                        (Week.number == db_activity.week_number)
+                        & (Week.workbook_id == db_activity.workbook_id)
+                    )
+                ).first(),
+            )  # exec is guaranteed by Activity model validation as week_number and workbook_id are primary foreign keys.
+            # Validate new activity number. This cannot be done with base model validation, because of the
+            # default value of 0.
+            if value < 1 or value > len(linked_week.activities):
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"Invalid activity number: {value}. Activity number must be between 1 and {len(linked_week.activities)} inclusive.",
+                )
+            # Loop through other activities in week to ensure numbering remains valid
+            for other_activity in linked_week.activities:
+                other_number = cast(int, other_activity.number)
+                number = cast(int, db_activity.number)
+                if value > number:
+                    if other_number > number and other_number <= value:
+                        other_activity.number = other_number - 1
+                        session.add(other_activity)
+                else:
+                    if other_number < number and other_number >= value:
+                        other_activity.number = other_number + 1
+                        session.add(other_activity)
+            session.commit()
+        if key == "number":
+            linked_week = cast(
+                Week,
+                session.exec(
+                    select(Week).where(
+                        (Week.number == db_activity.week_number)
+                        & (Week.workbook_id == db_activity.workbook_id)
+                    )
+                ).first(),
+            )  # exec is guaranteed by Activity model validation as week_number and workbook_id are primary foreign keys.
+            # Validate new activity number. This cannot be done with base model validation, because of the
+            # default value of 0.
+            if value < 1 or value > len(linked_week.activities):
+                raise HTTPException(
+                    status_code=422,
+                    detail=f"Invalid activity number: {value}. Activity number must be between 1 and {len(linked_week.activities)} inclusive.",
+                )
+            # Loop through other activities in week to ensure numbering remains valid
+            for other_activity in linked_week.activities:
+                other_number = cast(int, other_activity.number)
+                number = cast(int, db_activity.number)
+                if value > number:
+                    if other_number > number and other_number <= value:
+                        other_activity.number = other_number - 1
+                        session.add(other_activity)
+                else:
+                    if other_number < number and other_number >= value:
+                        other_activity.number = other_number + 1
+                        session.add(other_activity)
+            session.commit()
         setattr(db_activity, key, value)
 
     session.add(db_activity)
@@ -273,6 +388,23 @@ def patch_workbook(
 
 
 # Post requests for creating new entries
+@app.post("/activity-staff/", response_model=ActivityStaff)
+def create_activity_staff(
+    activity_staff: ActivityStaffCreate,
+    session: Session = Depends(get_session),
+) -> ActivityStaff:
+    activity_staff_dict = activity_staff.model_dump()
+    activity_staff_dict["session"] = session
+    try:
+        db_activity_staff = ActivityStaff.model_validate(activity_staff_dict)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    session.add(db_activity_staff)
+    session.commit()
+    session.refresh(db_activity_staff)
+    return db_activity_staff
+
+
 @app.post("/activities/", response_model=Activity)
 def create_activity(activity: ActivityCreate, session: Session = Depends(get_session)) -> Activity:
     activity_dict = activity.model_dump()
@@ -281,6 +413,26 @@ def create_activity(activity: ActivityCreate, session: Session = Depends(get_ses
         db_activity = Activity.model_validate(activity_dict)
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
+    linked_week = cast(
+        Week,
+        session.exec(
+            select(Week).where(
+                (Week.number == db_activity.week_number)
+                & (Week.workbook_id == db_activity.workbook_id)
+            )
+        ).first(),
+    )  # exec is guaranteed by Activity model validation as week_number and workbook_id are primary foreign keys.
+    db_activity.number = len(linked_week.activities) + 1
+    linked_week = cast(
+        Week,
+        session.exec(
+            select(Week).where(
+                (Week.number == db_activity.week_number)
+                & (Week.workbook_id == db_activity.workbook_id)
+            )
+        ).first(),
+    )  # exec is guaranteed by Activity model validation as week_number and workbook_id are primary foreign keys.
+    db_activity.number = len(linked_week.activities) + 1
     session.add(db_activity)
     session.commit()
     session.refresh(db_activity)
@@ -322,6 +474,96 @@ def create_week(week: WeekCreate, session: Session = Depends(get_session)) -> We
     return db_week
 
 
+@app.post("/workbooks/{workbook_id}/duplicate", response_model=Workbook)
+def duplicate_workbook(
+    workbook_id: uuid.UUID, user_id: uuid.UUID, session: Session = Depends(get_session)
+) -> Workbook:
+    db_user = session.exec(select(User).where(User.id == user_id)).first()
+    # check if user exists
+    if not db_user:
+        raise HTTPException(status_code=422, detail=f"User with id {db_user} not found.")
+
+    db_workbook = session.exec(select(Workbook).where(Workbook.id == workbook_id)).first()
+    # check if workbook exists
+    if not db_workbook:
+        raise HTTPException(status_code=422, detail=f"Workbook with id {db_workbook} not found.")
+
+    try:
+        # get original workbook
+        original_workbook = session.exec(
+            select(Workbook).where(Workbook.id == workbook_id)
+        ).first()
+        if not original_workbook:
+            raise HTTPException(status_code=404, detail="Workbook not found")
+
+        # Copy workbook
+        new_workbook = Workbook(
+            start_date=original_workbook.start_date,
+            end_date=original_workbook.end_date,
+            course_name=original_workbook.course_name,
+            course_lead_id=user_id,
+            learning_platform_id=original_workbook.learning_platform_id,
+            number_of_weeks=original_workbook.number_of_weeks,
+        )
+        session.add(new_workbook)
+        session.commit()
+        session.refresh(new_workbook)
+
+        # Copy weeks
+        original_weeks = session.exec(select(Week).where(Week.workbook_id == workbook_id)).all()
+
+        for original_week in original_weeks:
+            new_week = Week(workbook_id=new_workbook.id, number=original_week.number)
+            session.add(new_week)
+            session.commit()
+            session.refresh(new_week)
+
+        # Copy activities and ActivityStaffs
+        original_activities = session.exec(
+            select(Activity).where(Activity.workbook_id == workbook_id)
+        ).all()
+        # Copy activities
+        for original_activity in original_activities:
+            new_activity = Activity(
+                workbook_id=new_workbook.id,
+                week_number=original_activity.week_number,
+                name=original_activity.name,
+                number=original_activity.number,
+                time_estimate_minutes=original_activity.time_estimate_minutes,
+                location_id=original_activity.location_id,
+                learning_activity_id=original_activity.learning_activity_id,
+                learning_type_id=original_activity.learning_type_id,
+                task_status_id=original_activity.task_status_id,
+            )
+            session.add(new_activity)
+
+            # Copy ActivityStaffs
+            original_ActivityStaffs = session.exec(
+                select(ActivityStaff).where(ActivityStaff.activity_id == original_activity.id)
+            ).all()
+            for original_ActivityStaff in original_ActivityStaffs:
+                new_ActivityStaff = ActivityStaff(
+                    staff_id=original_ActivityStaff.staff_id,
+                    activity_id=new_activity.id,
+                )
+                session.add(new_ActivityStaff)
+
+        # Copy workbook contributors
+        original_contributors = session.exec(
+            select(WorkbookContributor).where(WorkbookContributor.workbook_id == workbook_id)
+        ).all()
+        for contributor in original_contributors:
+            new_contributor = WorkbookContributor(
+                contributor_id=contributor.contributor_id, workbook_id=new_workbook.id
+            )
+            session.add(new_contributor)
+
+        session.commit()
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    return new_workbook
+
+
 @app.post("/workbook-contributors/", response_model=WorkbookContributor)
 def create_workbook_contributor(
     workbook_contributor: WorkbookContributorCreate,
@@ -358,7 +600,25 @@ def create_week_graduate_attribute(
     return db_week_graduate_attribute
 
 
-# Views for individual models
+@app.get("/activity-staff/")
+def read_actvity_straff(
+    session: Session = Depends(get_session),
+    staff_id: uuid.UUID | None = None,
+    activity_id: uuid.UUID | None = None,
+) -> List[ActivityStaff]:
+    if staff_id is not None:
+        return list(
+            session.exec(select(ActivityStaff).where(ActivityStaff.staff_id == staff_id)).all()
+        )
+    elif activity_id is not None:
+        return list(
+            session.exec(
+                select(ActivityStaff).where(ActivityStaff.activity_id == activity_id)
+            ).all()
+        )
+    return list(session.exec(select(ActivityStaff)).all())
+
+
 @app.get("/week-graduate-attributes/")
 def read_week_graduate_attributes(
     session: Session = Depends(get_session),

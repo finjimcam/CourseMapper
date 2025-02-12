@@ -67,9 +67,59 @@ class WorkbookContributorDelete(WorkbookContributorBase):
         return cls
 
 
-class ActivityStaff(SQLModel, table=True):
+class ActivityStaffBase(SQLModel):
     staff_id: uuid.UUID = Field(foreign_key="user.id", primary_key=True)
     activity_id: uuid.UUID = Field(foreign_key="activity.id", primary_key=True)
+
+
+class ActivityStaff(ActivityStaffBase, table=True):
+    @model_validator(mode="before")
+    def check_foreign_keys(cls: "ActivityStaffBase", values: dict[str, Any]) -> dict[str, Any]:
+        session: Session = cast(Session, values.get("session"))
+
+        if session is None:
+            raise ValueError("Session is required for foreign key validation")
+
+        # Validate staff id
+        staff_id = values.get("staff_id")
+        if staff_id and not session.query(User).filter(User.id == staff_id).first():
+            raise ValueError(f"Staff (User) with id {staff_id} does not exist.")
+
+        # Validate activity id
+        activity_id = values.get("activity_id")
+        if activity_id and not session.query(Activity).filter(Activity.id == activity_id).first():
+            raise ValueError(f"Activity with id {activity_id} does not exist.")
+
+        return values
+
+
+class ActivityStaffCreate(ActivityStaffBase):
+    pass
+
+
+class ActivityStaffDelete(ActivityStaffBase):
+    def check_primary_keys(cls: "ActivityStaffDelete", session: Session) -> "ActivityStaffDelete":
+        values = cls.model_dump()
+
+        # Validate ActivityStaff row exists
+        staff_id = values.get("staff_id")
+        activity_id = values.get("activity_id")
+        if (
+            staff_id
+            and activity_id
+            and not session.query(ActivityStaff)
+            .filter(
+                ActivityStaff.activity_id == activity_id,
+                ActivityStaff.staff_id == staff_id,
+            )
+            .first()
+        ):
+            raise ValueError(
+                f"Relationship between staff (User) {staff_id} and Activity "
+                f"{activity_id} does not exist."
+            )
+
+        return cls
 
 
 class WeekGraduateAttributeBase(SQLModel):
@@ -375,6 +425,7 @@ class ActivityBase(SQLModel):
 
 class Activity(ActivityBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    number: Optional[int] = Field(default=0)
 
     location: Optional["Location"] = Relationship(back_populates="activities")
     workbook: Optional["Workbook"] = Relationship(back_populates="activities")
@@ -439,6 +490,7 @@ class ActivityCreate(ActivityBase):
 
 class ActivityUpdate(BaseModel):
     name: Optional[str] = None
+    number: Optional[int] = None
     time_estimate_minutes: Optional[int] = None
     location_id: Optional[uuid.UUID] = None
     learning_activity_id: Optional[uuid.UUID] = None
