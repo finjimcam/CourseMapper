@@ -306,7 +306,6 @@ class WorkbookUpdate(BaseModel):
     end_date: Optional[datetime.date] = None
     course_name: Optional[str] = None
     course_lead_id: Optional[uuid.UUID] = None
-    learning_platform_id: Optional[uuid.UUID] = None
 
 
 class LearningPlatform(SQLModel, table=True):

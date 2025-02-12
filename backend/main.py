@@ -606,16 +606,36 @@ def patch_activity(
     return db_activity
 
 
-@app.patch("/workbooks/{workbook_id}")
+@app.patch("/workbooks/{workbook_id}", dependencies=[Depends(cookie)])
 def patch_workbook(
     workbook_id: uuid.UUID,
     workbook_update: WorkbookUpdate,
+    session_data: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
 ) -> Workbook:
-
+    # check Workbook validity
     db_workbook = session.exec(select(Workbook).where(Workbook.id == workbook_id)).first()
     if not db_workbook:
         raise HTTPException(status_code=422, detail="Activity not found")
+    
+    """
+    Check user permissions: Workbook owners and site admins may edit workbooks.
+    """
+    db_workbook_owner = unwrap(
+        session.exec(select(User).where(User.id == db_workbook.course_lead_id)).first()
+    )
+    db_user = unwrap(session.exec(select(User).where(User.id == session_data.user_id)).first())
+    db_user_permissions_group = unwrap(
+        session.exec(
+            select(PermissionsGroup).where(PermissionsGroup.id == db_user.permissions_group_id)
+        ).first()
+    )
+    if (
+        db_workbook_owner.id != session_data.user_id
+        and db_user_permissions_group.name != "Admin"
+    ):
+        raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
+
     workbook_dict = db_workbook.model_dump()
     for k, v in workbook_update.model_dump().items():
         if v is not None:
