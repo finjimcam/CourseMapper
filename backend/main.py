@@ -1,7 +1,7 @@
-from typing import Annotated, AsyncGenerator, List, Dict, Any, cast
+from typing import Annotated, AsyncGenerator, List, Dict, Any, cast, TypeVar
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException, Response
-from sqlmodel import Session, select
+from sqlmodel import Session, select, SQLModel
 import uuid
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_sessions.backends.implementations import InMemoryBackend
@@ -86,6 +86,15 @@ verifier = BaseVerifier(
 )
 
 
+T = TypeVar("T")  # Define a generic type variable
+
+
+def unwrap(model: T | None) -> T:
+    if model is None:
+        raise HTTPException(status_code=500)
+    return model
+
+
 # Session requests
 @app.post("/session/{name}")
 async def create_session(
@@ -106,7 +115,7 @@ async def create_session(
 
 
 @app.get("/session/", dependencies=[Depends(cookie)])
-def read_session(session_data: SessionData = Depends(verifier)):
+def read_session(session_data: SessionData = Depends(verifier)) -> SessionData:
     return session_data
 
 
@@ -132,30 +141,34 @@ def delete_activity_staff(
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
 
-    db_activity_staff = session.exec(
-        select(ActivityStaff).where(
-            (ActivityStaff.activity_id == activity_staff.activity_id)
-            & (ActivityStaff.staff_id == activity_staff.staff_id)
-        )
-    ).first()
+    db_activity_staff = unwrap(
+        session.exec(
+            select(ActivityStaff).where(
+                (ActivityStaff.activity_id == activity_staff.activity_id)
+                & (ActivityStaff.staff_id == activity_staff.staff_id)
+            )
+        ).first()
+    )
 
     """
     Check user permissions: A staff member may remove themself, a workbook owner may remove any
     member of their workbook, a site admin may remove any member of any workbook.
     """
-    db_activity = session.exec(
-        select(Activity).where(Activity.id == db_activity_staff.activity_id)
-    ).first()
-    db_workbook = session.exec(
-        select(Workbook).where(Workbook.id == db_activity.workbook_id)
-    ).first()
-    db_workbook_owner = session.exec(
-        select(User).where(User.id == db_workbook.course_lead_id)
-    ).first()
-    db_user = session.exec(select(User).where(User.id) == session_data.user_id).first()
-    db_user_permissions_group = session.exec(
-        select(PermissionsGroup).where(PermissionsGroup.id == db_user.permissions_group_id)
-    ).first()
+    db_activity = unwrap(
+        session.exec(select(Activity).where(Activity.id == db_activity_staff.activity_id)).first()
+    )
+    db_workbook = unwrap(
+        session.exec(select(Workbook).where(Workbook.id == db_activity.workbook_id)).first()
+    )
+    db_workbook_owner = unwrap(
+        session.exec(select(User).where(User.id == db_workbook.course_lead_id)).first()
+    )
+    db_user = unwrap(session.exec(select(User).where(User.id == session_data.user_id)).first())
+    db_user_permissions_group = unwrap(
+        session.exec(
+            select(PermissionsGroup).where(PermissionsGroup.id == db_user.permissions_group_id)
+        ).first()
+    )
     if (
         session_data.user_id not in [db_activity_staff.staff_id, db_workbook_owner.id]
         and db_user_permissions_group.name != "Admin"
@@ -183,22 +196,28 @@ def delete_workbook_contributor(
     Check user permissions: A workbook contributor member may remove themself and a workbook owner
     may remove any contributor to their workbook.
     """
-    db_workbook_contributor = session.exec(
-        select(WorkbookContributor).where(
-            (WorkbookContributor.workbook_id == workbook_contributor.workbook_id)
-            & (WorkbookContributor.contributor_id == workbook_contributor.contributor_id)
-        )
-    ).first()
-    db_workbook = session.exec(
-        select(Workbook).where(Workbook.id == db_workbook_contributor.workbook_id)
-    ).first()
-    db_workbook_owner = session.exec(
-        select(User).where(User.id == db_workbook.course_lead_id)
-    ).first()
-    db_user = session.exec(select(User).where(User.id == session_data.user_id)).first()
-    db_user_permissions_group = session.exec(
-        select(PermissionsGroup).where(PermissionsGroup.id == db_user.permissions_group_id)
-    ).first()
+    db_workbook_contributor = unwrap(
+        session.exec(
+            select(WorkbookContributor).where(
+                (WorkbookContributor.workbook_id == workbook_contributor.workbook_id)
+                & (WorkbookContributor.contributor_id == workbook_contributor.contributor_id)
+            )
+        ).first()
+    )
+    db_workbook = unwrap(
+        session.exec(
+            select(Workbook).where(Workbook.id == db_workbook_contributor.workbook_id)
+        ).first()
+    )
+    db_workbook_owner = unwrap(
+        session.exec(select(User).where(User.id == db_workbook.course_lead_id)).first()
+    )
+    db_user = unwrap(session.exec(select(User).where(User.id == session_data.user_id)).first())
+    db_user_permissions_group = unwrap(
+        session.exec(
+            select(PermissionsGroup).where(PermissionsGroup.id == db_user.permissions_group_id)
+        ).first()
+    )
     if (
         session_data.user_id not in [db_workbook_contributor.contributor_id, db_workbook_owner.id]
         and db_user_permissions_group.name != "Admin"

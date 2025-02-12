@@ -10,7 +10,7 @@ class SessionData(BaseModel):
     user_id: uuid.UUID
 
 
-class BaseVerifier(SessionVerifier[uuid.UUID, SessionData]):
+class BaseVerifier(SessionVerifier[uuid.UUID, SessionData]):  # type: ignore[misc]
     def __init__(
         self,
         *,
@@ -25,19 +25,19 @@ class BaseVerifier(SessionVerifier[uuid.UUID, SessionData]):
         self._auth_http_exception = auth_http_exception
 
     @property
-    def identifier(self):
+    def identifier(self) -> str:
         return self._identifier
 
     @property
-    def backend(self):
+    def backend(self) -> InMemoryBackend:
         return self._backend
 
     @property
-    def auto_error(self):
+    def auto_error(self) -> bool:
         return self._auto_error
 
     @property
-    def auth_http_exception(self):
+    def auth_http_exception(self) -> HTTPException:
         return self._auth_http_exception
 
     def verify_session(self, model: SessionData) -> bool:
