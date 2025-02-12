@@ -352,16 +352,29 @@ def delete_week_graduate_attribute(
     return {"ok": True}
 
 
-@app.delete("/workbooks/")
+@app.delete("/workbooks/", dependencies=[Depends(cookie)])
 def delete_workbook(
-    workbook_id: uuid.UUID, session: Session = Depends(get_session)
+    workbook_id: uuid.UUID, session_data: SessionData = Depends(verifier),
+    session: Session = Depends(get_session),
 ) -> dict[str, bool]:
 
+    # check Workbook validity
     db_workbook = session.exec(select(Workbook).where(Workbook.id == workbook_id)).first()
-    # check if workbook exists
     if not db_workbook:
         raise HTTPException(status_code=422, detail=f"Workbook with id {workbook_id} not found.")
 
+    """
+    Check user permissions: Only a site admin may delet a workbook.
+    """
+    db_user = unwrap(session.exec(select(User).where(User.id == session_data.user_id)).first())
+    db_user_permissions_group = unwrap(
+        session.exec(
+            select(PermissionsGroup).where(PermissionsGroup.id == db_user.permissions_group_id)
+        ).first()
+    )
+    if db_user_permissions_group.name != "Admin":
+        raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
+    
     weeks = session.exec(select(Week).where(Week.workbook_id == workbook_id)).all()
     for week in weeks:
         activities = session.exec(
