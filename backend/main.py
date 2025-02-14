@@ -66,10 +66,15 @@ app.add_middleware(
     allow_headers=["*"],  # Allow all headers
 )
 
-cookie_params = CookieParameters()
+cookie_params = CookieParameters(
+    max_age=3600,  # 1 hour
+    secure=False,  # Set to True in production
+    samesite='lax',  # Use 'strict' in production
+    path='/'
+)
 
 cookie = SessionCookie(
-    cookie_name="cookie",
+    cookie_name="session",
     identifier="general_verifier",
     auto_error=True,
     secret_key="DONOTUSE",
@@ -96,7 +101,7 @@ def unwrap(model: T | None) -> T:
 
 
 # Session requests
-@app.post("/session/{name}")
+@app.post("/session/{username}")
 async def create_session(
     username: str, response: Response, session: Session = Depends(get_session)
 ) -> dict[str, Any]:
@@ -115,7 +120,7 @@ async def create_session(
 
 
 @app.get("/session/", dependencies=[Depends(cookie)])
-def read_session(session_data: SessionData = Depends(verifier)) -> SessionData:
+async def read_session(session_data: SessionData = Depends(verifier)) -> SessionData:
     return session_data
 
 
