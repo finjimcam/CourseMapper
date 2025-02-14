@@ -63,7 +63,6 @@ interface TaskStatus {
 }
 
 // --- Helpers & Defaults ---
-const api = axios.create({ baseURL: import.meta.env.VITE_API });
 const defaultActivityForm: Partial<Activity> = {
   name: '',
   time_estimate_minutes: 0,
@@ -134,9 +133,9 @@ function EditWorkbook(): JSX.Element {
 
         // Fetch weeks, activities and staff-activity relationships
         const [weeksRes, activitiesRes, staffActivitiesRes] = await Promise.all([
-          api.get(`/weeks/?workbook_id=${workbook_id}`),
-          api.get(`/activities/?workbook_id=${workbook_id}`),
-          api.get(`/activity-staff/`)
+          axios.get(`${import.meta.env.VITE_API}/weeks/?workbook_id=${workbook_id}`),
+          axios.get(`${import.meta.env.VITE_API}/activities/?workbook_id=${workbook_id}`),
+          axios.get(`${import.meta.env.VITE_API}/activity-staff/`)
         ]);
         const weeksData = weeksRes.data;
         const activitiesData = activitiesRes.data;
@@ -164,12 +163,12 @@ function EditWorkbook(): JSX.Element {
           taskStatusesRes,
           usersRes
         ] = await Promise.all([
-          api.get(`/locations/`),
-          api.get(`/learning-platforms/`),
-          api.get(`/learning-activities/?learning_platform_id=${workbookDetails.workbook.learning_platform_id}`),
-          api.get(`/learning-types/`),
-          api.get(`/task-statuses/`),
-          api.get(`/users/`)
+          axios.get(`${import.meta.env.VITE_API}/locations/`),
+          axios.get(`${import.meta.env.VITE_API}/learning-platforms/`),
+          axios.get(`${import.meta.env.VITE_API}/learning-activities/?learning_platform_id=${workbookDetails.workbook.learning_platform_id}`),
+          axios.get(`${import.meta.env.VITE_API}/learning-types/`),
+          axios.get(`${import.meta.env.VITE_API}/task-statuses/`),
+          axios.get(`${import.meta.env.VITE_API}/users/`)
         ]);
         setLocations(locationsRes.data);
         setLearningPlatforms(learningPlatformsRes.data);
@@ -213,7 +212,7 @@ function EditWorkbook(): JSX.Element {
     const endDate = new Date(startDate);
     endDate.setDate(endDate.getDate() + 6);
     try {
-      await api.post(`/weeks/`, {
+      await axios.post(`${import.meta.env.VITE_API}/weeks/`, {
         workbook_id,
         start_date: formatISODate(startDate),
         end_date: formatISODate(endDate)
@@ -234,7 +233,7 @@ function EditWorkbook(): JSX.Element {
   const handleDeleteWeek = async (weekNumber: number) => {
     if (!workbookData || !workbook_id) return;
     try {
-      await api.delete(`/weeks/`, { data: { workbook_id, number: weekNumber } });
+      await axios.delete(`${import.meta.env.VITE_API}/weeks/`, { data: { workbook_id, number: weekNumber } });
       const updatedWeeks = weeks
         .filter(w => w.number !== weekNumber)
         .map((w, idx) => ({ ...w, number: idx + 1 }));
@@ -255,7 +254,7 @@ function EditWorkbook(): JSX.Element {
   const handleSaveWorkbook = async () => {
     if (!workbookData || !workbook_id) return;
     try {
-      await api.patch(`/workbooks/${workbook_id}`, {
+      await axios.patch(`${import.meta.env.VITE_API}/workbooks/${workbook_id}`, {
         course_name: workbookData.course_name,
         start_date: workbookData.start_date,
         end_date: workbookData.end_date,
@@ -286,9 +285,9 @@ function EditWorkbook(): JSX.Element {
     if (!activity?.id) return;
     try {
       if (activity.staff_id) {
-        await api.delete(`/activity-staff/`, { data: { staff_id: activity.staff_id, activity_id: activity.id } });
+        await axios.delete(`${import.meta.env.VITE_API}/activity-staff/`, { data: { staff_id: activity.staff_id, activity_id: activity.id } });
       }
-      await api.delete(`/activities/`, { params: { activity_id: activity.id } });
+      await axios.delete(`${import.meta.env.VITE_API}/activities/`, { params: { activity_id: activity.id } });
       setWeeks(prev =>
         prev.map(week =>
           week.number === weekNumber
@@ -322,18 +321,18 @@ function EditWorkbook(): JSX.Element {
     }
     try {
       if (editingActivity && editingActivity.activity.id) {
-        await api.patch(`/activities/${editingActivity.activity.id}`, {
+        await axios.patch(`${import.meta.env.VITE_API}/activities/${editingActivity.activity.id}`, {
           ...activityForm,
           week_number: editingActivity.weekNumber
         });
         if (editingActivity.activity.staff_id !== activityForm.staff_id) {
           if (editingActivity.activity.staff_id) {
-            await api.delete(`/activity-staff/`, {
+            await axios.delete(`${import.meta.env.VITE_API}/activity-staff/`, {
               data: { staff_id: editingActivity.activity.staff_id, activity_id: editingActivity.activity.id }
             });
           }
           if (activityForm.staff_id) {
-            await api.post(`/activity-staff/`, {
+            await axios.post(`${import.meta.env.VITE_API}/activity-staff/`, {
               staff_id: activityForm.staff_id,
               activity_id: editingActivity.activity.id
             });
@@ -354,13 +353,13 @@ function EditWorkbook(): JSX.Element {
           )
         );
       } else if (selectedWeek !== null && workbookData?.id) {
-        const { data: newActivity } = await api.post(`/activities/`, {
+        const { data: newActivity } = await axios.post(`${import.meta.env.VITE_API}/activities/`, {
           ...activityForm,
           workbook_id: workbookData.id,
           week_number: selectedWeek
         });
         if (activityForm.staff_id) {
-          await api.post(`/activity-staff/`, { staff_id: activityForm.staff_id, activity_id: newActivity.id });
+          await axios.post(`${import.meta.env.VITE_API}/activity-staff/`, { staff_id: activityForm.staff_id, activity_id: newActivity.id });
         }
         setWeeks(prev =>
           prev.map(week =>
@@ -398,7 +397,7 @@ function EditWorkbook(): JSX.Element {
     try {
       setSaving(true);
       setError(null);
-      await api.patch(`/workbooks/${workbook_id}`, {
+      await axios.patch(`${import.meta.env.VITE_API}/workbooks/${workbook_id}`, {
         course_name: workbookData.course_name,
         start_date: workbookData.start_date,
         end_date: workbookData.end_date,

@@ -66,12 +66,7 @@ app.add_middleware(
     allow_headers=["*"],  # Allow all headers
 )
 
-cookie_params = CookieParameters(
-    max_age=3600,  # 1 hour
-    secure=True,
-    samesite='strict',
-    path='/'
-)
+cookie_params = CookieParameters(max_age=3600, secure=True, samesite="strict", path="/")  # 1 hour
 
 cookie = SessionCookie(
     cookie_name="session",
