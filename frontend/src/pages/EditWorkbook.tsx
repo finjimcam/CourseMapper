@@ -9,7 +9,7 @@ import WeeksTabs from '../components/WeekActivityTabEdit';
 import ErrorModal from '../components/modals/ErrorModal';
 import WorkbookEditModal from '../components/modals/CourseDetailsEditModal';
 import ActivityModal from '../components/modals/ActivityModal';
-import { formatMinutes, WeekInfo, WorkbookData } from '../utils/workbookUtils';
+import { WorkbookDetailsResponse, formatMinutes, WeekInfo, WorkbookData } from '../utils/workbookUtils';
 
 // --- Type definitions ---
 interface LearningPlatform {
@@ -120,7 +120,9 @@ function EditWorkbook(): JSX.Element {
         setLoading(true);
         setError(null);
         // Fetch workbook details
-        const { data: workbookDetails } = await api.get(`/workbooks/${workbook_id}/details`);
+        const { data: workbookDetails } = await axios.get<WorkbookDetailsResponse>(
+          `${import.meta.env.VITE_API}/workbooks/${workbook_id}/details`
+        );
         setWorkbookData({
           id: workbookDetails.workbook.id,
           course_name: workbookDetails.workbook.course_name,

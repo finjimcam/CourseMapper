@@ -68,8 +68,8 @@ app.add_middleware(
 
 cookie_params = CookieParameters(
     max_age=3600,  # 1 hour
-    secure=False,  # Set to True in production
-    samesite='none',  # Use 'strict' in production
+    secure=True,
+    samesite='strict',
     path='/'
 )
 
