@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import axios from 'axios';
 import { Spinner, Button } from 'flowbite-react';
+import Navbar from './components/Navbar';
 
 function Layout() {
   const [loading, setLoading] = useState(true);
@@ -25,18 +26,6 @@ function Layout() {
     checkSession();
   }, []);
 
-  // We can do logout the same way as before:
-  const handleLogout = async () => {
-    try {
-      await axios.delete(`${import.meta.env.VITE_API}/session/`, {
-        withCredentials: true
-      });
-      setSessionValid(false);
-    } catch (err) {
-      console.error('Failed to log out', err);
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -53,12 +42,7 @@ function Layout() {
   // Otherwise, render your real layout
   return (
     <div className="min-h-screen flex flex-col">
-      <nav className="bg-gray-800 text-white p-4 flex justify-between">
-        <span className="font-bold">My Demo Site</span>
-        <Button onClick={handleLogout} color="light">
-          Logout
-        </Button>
-      </nav>
+      <Navbar />
       <main className="flex-1 p-4">
         <Outlet />
       </main>
