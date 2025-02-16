@@ -1,5 +1,5 @@
 // src/components/pages/workbook.tsx
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { Tabs, Spinner } from 'flowbite-react';
@@ -80,8 +80,6 @@ function Workbook(): JSX.Element {
       <div className="bg-white p-6 rounded-lg shadow">
         <CourseHeader
           workbook={workbookData}
-          courseLead={courseLeadData}
-          learningPlatform={learningPlatformData}
         />
         <div className="flex justify-end mb-4">
           <Link

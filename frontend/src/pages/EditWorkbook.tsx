@@ -9,19 +9,9 @@ import WeeksTabs from '../components/WeekActivityTabEdit';
 import ErrorModal from '../components/modals/ErrorModal';
 import WorkbookEditModal from '../components/modals/CourseDetailsEditModal';
 import ActivityModal from '../components/modals/ActivityModal';
-import { formatMinutes, WeekInfo, WorkbookData } from '../utils/workbookUtils';
+import { User, LearningPlatform, formatMinutes, WeekInfo, WorkbookData } from '../utils/workbookUtils';
 
 // --- Type definitions ---
-interface LearningPlatform {
-  id: string;
-  name: string;
-}
-
-interface User {
-  id: string;
-  name: string;
-}
-
 interface Activity {
   id?: string;
   name: string;
@@ -127,7 +117,9 @@ function EditWorkbook(): JSX.Element {
           start_date: workbookDetails.workbook.start_date,
           end_date: workbookDetails.workbook.end_date,
           learning_platform_id: workbookDetails.workbook.learning_platform_id,
-          course_lead_id: workbookDetails.workbook.course_lead_id
+          learning_platform: workbookDetails.workbook.learning_platform,
+          course_lead_id: workbookDetails.workbook.course_lead_id,
+          course_lead: workbookDetails.workbook.course_lead
         });
 
         // Fetch weeks, activities and staff-activity relationships
@@ -487,10 +479,6 @@ function EditWorkbook(): JSX.Element {
           <div className="flex items-center gap-2">
             <CourseHeader
               workbook={workbookData}
-              courseLead={users.find(u => u.id === workbookData.course_lead_id) || null}
-              learningPlatform={
-                learningPlatforms.find(p => p.id === workbookData.learning_platform_id) || null
-              }
             />
             <Button size="xs" color="light" onClick={() => setShowWorkbookModal(true)}>
               <HiPencil className="h-4 w-4" />

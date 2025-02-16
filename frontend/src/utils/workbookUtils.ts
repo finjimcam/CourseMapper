@@ -15,13 +15,36 @@ export interface LearningPlatform {
   name: string;
 }
 
+export interface Activity {
+  id?: string;
+  name: string;
+  time_estimate_minutes: number;
+  week_number: number;
+  location_id: string;
+  learning_activity_id: string;
+  learning_type_id: string;
+  task_status_id: string;
+  staff_id: string;
+}
+
+export interface Week {
+  number: number;
+  start_date: string;
+  end_date: string;
+  activities: Activity[];
+}
+
+export interface Workbook {
+  workbook: WorkbookData;
+  course_lead: User;
+  learning_platform: LearningPlatform;
+}
+
 export interface WorkbookData {
   id: string;
   start_date: string;
   end_date: string;
   course_name: string;
-  course_lead_id: string;
-  learning_platform_id: string;
 }
 
 export interface ActivityData {
