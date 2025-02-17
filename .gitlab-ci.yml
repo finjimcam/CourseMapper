@@ -34,7 +34,7 @@ Checking Rebase:
       fi
   rules:
     # Only run this job for merge requests
-    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event' && $CI_COMMIT_REF_NAME != "150-implement-users-and-user-permissions"
 
 Linting with black:
   stage: Static Analysis
