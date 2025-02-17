@@ -30,6 +30,8 @@ Checking Rebase:
     - git fetch origin main
     - if [ "$(git rev-parse origin/main)" != "$(git merge-base HEAD origin/main)" ]; then
         echo "Branch is not rebased onto main. Please rebase.";
+        echo "$(git rev-parse origin/main)";
+        echo "$(git merge-base HEAD origin/main)";
         exit 1;
       fi
   rules:
