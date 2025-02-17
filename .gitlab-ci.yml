@@ -27,14 +27,9 @@ Checking Rebase:
     # If the head of main != the merge-base of this and main (last common ancestor
     # commit), then this branch is not rebased onto main and the merge onto main
     # may have unintended effects.
-    - git branch
-    - git status
-    - git fetch --all
-    - git checkout $CI_COMMIT_REF_NAME
+    - git fetch origin main
     - if [ "$(git rev-parse origin/main)" != "$(git merge-base HEAD origin/main)" ]; then
         echo "Branch is not rebased onto main. Please rebase.";
-        echo "main $(git rev-parse origin/main)";
-        echo "merge-base $(git merge-base HEAD origin/main)";
         exit 1;
       fi
   rules:
