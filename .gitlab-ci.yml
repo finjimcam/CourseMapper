@@ -16,6 +16,7 @@ before_script:
   - source venv/bin/activate
   - pip install --upgrade pip
   - pip install -r backend/requirements.txt --cache-dir deps_cache
+  - git checkout $CI_COMMIT_REF_NAME
 
 stages:
   - Static Analysis
@@ -27,7 +28,9 @@ Checking Rebase:
     # If the head of main != the merge-base of this and main (last common ancestor
     # commit), then this branch is not rebased onto main and the merge onto main
     # may have unintended effects.
-    - git fetch origin main
+    - git branch
+    - git status
+    - git fetch --all
     - if [ "$(git rev-parse origin/main)" != "$(git merge-base HEAD origin/main)" ]; then
         echo "Branch is not rebased onto main. Please rebase.";
         echo "main $(git rev-parse origin/main)";
