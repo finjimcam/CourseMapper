@@ -32,7 +32,6 @@ export function CreateWorkbookModal({ show, onClose }: CreateWorkbookModalProps)
   const [courseName, setCourseName] = useState('');
   const [learningPlatform, setLearningPlatform] = useState('');
   const [startDate, setStartDate] = useState<Date>(new Date());
-  const [courseLeadId, setCourseLeadId] = useState<string | null>(null);
   const [learningPlatforms, setLearningPlatforms] = useState<LearningPlatform[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -130,22 +129,13 @@ export function CreateWorkbookModal({ show, onClose }: CreateWorkbookModalProps)
       setError('Learning platform is required');
       return;
     }
-    if (!courseLeadId) {
-      setError('Course lead is required');
-      return;
-    }
 
     try {
       // Validate selections against existing data
       const selectedPlatform = learningPlatforms.find(p => p.id === learningPlatform);
-      const selectedUser = users.find(u => u.id === courseLeadId);
       
       if (!selectedPlatform) {
         setError('Invalid learning platform selected');
-        return;
-      }
-      if (!selectedUser) {
-        setError('Invalid course lead selected');
         return;
       }
 
@@ -156,7 +146,6 @@ export function CreateWorkbookModal({ show, onClose }: CreateWorkbookModalProps)
         learningPlatformId: learningPlatform,
         startDate: startDate.toISOString().split('T')[0],
         endDate: startDate.toISOString().split('T')[0], // Initially same as start date, will be updated based on weeks
-        courseLeadId: courseLeadId
       };
       
       console.log('Storing workbook data:', workbookData);
@@ -246,27 +235,6 @@ export function CreateWorkbookModal({ show, onClose }: CreateWorkbookModalProps)
               />
             </div>
 
-            <div>
-              <div className="mb-2 block">
-                <Label htmlFor="courseLead" value="Course Lead" />
-              </div>
-              <Select
-                id="courseLead"
-                value={courseLeadId || ''}
-                onChange={(e) => {
-                  setCourseLeadId(e.target.value || null);
-                  setError(null);
-                }}
-                required
-              >
-                <option value="">Select course lead</option>
-                {users.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.name}
-                  </option>
-                ))}
-              </Select>
-            </div>
           </div>
         )}
       </Modal.Body>
