@@ -1,6 +1,6 @@
 from typing import Annotated, AsyncGenerator, List, Dict, Any, cast, TypeVar
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Depends, HTTPException, Response
+from fastapi import FastAPI, Depends, HTTPException, Response, Query
 from sqlmodel import Session, select, SQLModel
 import uuid
 from fastapi.middleware.cors import CORSMiddleware
@@ -134,6 +134,7 @@ def delete_activity_staff(
     activity_staff: ActivityStaffDelete,
     session_data: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
+    peek: bool = Query(False),
 ) -> dict[str, bool]:
     # check ActivityStaff validity
     try:
@@ -175,6 +176,9 @@ def delete_activity_staff(
     ):
         raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
 
+    if peek:
+        return {"ok": True}
+
     session.delete(db_activity_staff)
     session.commit()
     return {"ok": True}
@@ -185,6 +189,7 @@ def delete_workbook_contributor(
     workbook_contributor: WorkbookContributorDelete,
     session_data: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
+    peek: bool = Query(False),
 ) -> dict[str, bool]:
     # check WorkbookContributor validity
     try:
@@ -224,6 +229,9 @@ def delete_workbook_contributor(
     ):
         raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
 
+    if peek:
+        return {"ok": True}
+
     session.delete(db_workbook_contributor)
     session.commit()
     return {"ok": True}
@@ -234,6 +242,7 @@ def delete_week(
     week: WeekDelete,
     session_data: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
+    peek: bool = Query(False),
 ) -> dict[str, bool]:
     # check Week validity
     try:
@@ -276,6 +285,9 @@ def delete_week(
         and db_user_permissions_group.name != "Admin"
     ):
         raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
+
+    if peek:
+        return {"ok": True}
 
     db_workbook.number_of_weeks -= 1
     session.add(db_workbook)
@@ -320,6 +332,7 @@ def delete_week_graduate_attribute(
     week_graduate_attribute: WeekGraduateAttributeDelete,
     session_data: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
+    peek: bool = Query(False),
 ) -> dict[str, bool]:
     # check WeekGraduateAttribute validity
     try:
@@ -373,6 +386,9 @@ def delete_week_graduate_attribute(
     ):
         raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
 
+    if peek:
+        return {"ok": True}
+
     session.delete(db_week_graduate_attribute)
     session.commit()
     return {"ok": True}
@@ -383,6 +399,7 @@ def delete_workbook(
     workbook_id: uuid.UUID,
     session_data: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
+    peek: bool = Query(False),
 ) -> dict[str, bool]:
     # check Workbook validity
     db_workbook = session.exec(select(Workbook).where(Workbook.id == workbook_id)).first()
@@ -416,7 +433,9 @@ def delete_workbook(
     for contributor in contributors:
         session.delete(contributor)
 
-    # delete workbook
+    if peek:
+        return {"ok": True}
+
     session.delete(db_workbook)
     session.commit()
     return {"ok": True}
@@ -427,6 +446,7 @@ def delete_activity(
     activity_id: uuid.UUID,
     session_data: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
+    peek: bool = Query(False),
 ) -> dict[str, bool]:
     # check Activity validity
     db_activity = session.exec(select(Activity).where(Activity.id == activity_id)).first()
@@ -462,6 +482,9 @@ def delete_activity(
     ):
         raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
 
+    if peek:
+        return {"ok": True}
+
     # Loop through other activities in week to ensure numbering remains valid
     db_week = unwrap(
         session.exec(
@@ -490,7 +513,8 @@ def patch_activity(
     activity_update: ActivityUpdate,
     session_data: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
-) -> Activity:
+    peek: bool = Query(False),
+) -> Activity | None:
     # check Activity validity
     db_activity = session.exec(select(Activity).where(Activity.id == activity_id)).first()
     if not db_activity:
@@ -524,6 +548,9 @@ def patch_activity(
         and db_user_permissions_group.name != "Admin"
     ):
         raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
+
+    if peek:
+        return None
 
     activity_dict = db_activity.model_dump()
     for k, v in activity_update.model_dump().items():
@@ -612,7 +639,8 @@ def patch_workbook(
     workbook_update: WorkbookUpdate,
     session_data: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
-) -> Workbook:
+    peek: bool = Query(False),
+) -> Workbook | None:
     # check Workbook validity
     db_workbook = session.exec(select(Workbook).where(Workbook.id == workbook_id)).first()
     if not db_workbook:
@@ -632,6 +660,9 @@ def patch_workbook(
     )
     if db_workbook_owner.id != session_data.user_id and db_user_permissions_group.name != "Admin":
         raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
+
+    if peek:
+        return None
 
     workbook_dict = db_workbook.model_dump()
     for k, v in workbook_update.model_dump().items():
@@ -661,7 +692,8 @@ def create_activity_staff(
     activity_staff: ActivityStaffCreate,
     session_data: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
-) -> ActivityStaff:
+    peek: bool = Query(False),
+) -> ActivityStaff | None:
     # check ActivityStaff validity
     activity_staff_dict = activity_staff.model_dump()
     activity_staff_dict["session"] = session
@@ -702,6 +734,9 @@ def create_activity_staff(
     ):
         raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
 
+    if peek:
+        return None
+
     session.add(db_activity_staff)
     session.commit()
     session.refresh(db_activity_staff)
@@ -713,7 +748,8 @@ def create_activity(
     activity: ActivityCreate,
     session_data: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
-) -> Activity:
+    peek: bool = Query(False),
+) -> Activity | None:
     # check Activity validity
     activity_dict = activity.model_dump()
     activity_dict["session"] = session
@@ -751,6 +787,9 @@ def create_activity(
     ):
         raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
 
+    if peek:
+        return None
+
     linked_week = unwrap(
         session.exec(
             select(Week).where(
@@ -780,7 +819,8 @@ def create_workbook(
     workbook: WorkbookCreate,
     session_data: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
-) -> Workbook:
+    peek: bool = Query(False),
+) -> Workbook | None:
     workbook_dict = workbook.model_dump()
     workbook_dict["course_lead_id"] = session_data.user_id
     workbook_dict["session"] = session
@@ -788,6 +828,10 @@ def create_workbook(
         db_workbook = Workbook.model_validate(workbook_dict)
     except ValueError as e:
         raise HTTPException(status_code=422, detail=str(e))
+
+    if peek:
+        return None
+
     session.add(db_workbook)
     session.commit()
     session.refresh(db_workbook)
@@ -799,7 +843,8 @@ def create_week(
     week: WeekCreate,
     session_data: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
-) -> Week:
+    peek: bool = Query(False),
+) -> Week | None:
     # check Week validity
     week_dict = week.model_dump()
     week_dict["session"] = session
@@ -837,6 +882,9 @@ def create_week(
     ):
         raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
 
+    if peek:
+        return None
+
     db_week.number = db_workbook.number_of_weeks + 1
     db_workbook.number_of_weeks += 1
     session.add(db_week)
@@ -853,7 +901,8 @@ def duplicate_workbook(
     workbook_id: uuid.UUID,
     session_data: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
-) -> Workbook:
+    peek: bool = Query(False),
+) -> Workbook | None:
     db_user = session.exec(select(User).where(User.id == session_data.user_id)).first()
     # check if user exists
     if not db_user:
@@ -863,6 +912,9 @@ def duplicate_workbook(
     # check if workbook exists
     if not db_workbook:
         raise HTTPException(status_code=422, detail=f"Workbook with id {db_workbook} not found.")
+
+    if peek:
+        return None
 
     try:
         # get original workbook
@@ -949,7 +1001,8 @@ def create_workbook_contributor(
     workbook_contributor: WorkbookContributorCreate,
     session_data: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
-) -> WorkbookContributor:
+    peek: bool = Query(False),
+) -> WorkbookContributor | None:
     workbook_contributor_dict = workbook_contributor.model_dump()
     workbook_contributor_dict["session"] = session
     try:
@@ -977,6 +1030,9 @@ def create_workbook_contributor(
     if session_data.user_id != db_workbook_owner.id and db_user_permissions_group.name != "Admin":
         raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
 
+    if peek:
+        return None
+
     session.add(db_workbook_contributor)
     session.commit()
     session.refresh(db_workbook_contributor)
@@ -992,7 +1048,8 @@ def create_week_graduate_attribute(
     week_graduate_attribute: WeekGraduateAttributeCreate,
     session_data: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
-) -> WeekGraduateAttribute:
+    peek: bool = Query(False),
+) -> WeekGraduateAttribute | None:
     # check WeekGraduateAttribute validity
     week_graduate_attribute_dict = week_graduate_attribute.model_dump()
     week_graduate_attribute_dict["session"] = session
@@ -1034,6 +1091,9 @@ def create_week_graduate_attribute(
     ):
         raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
 
+    if peek:
+        return None
+
     session.add(db_week_graduate_attribute)
     session.commit()
     session.refresh(db_week_graduate_attribute)
@@ -1047,7 +1107,11 @@ def read_actvity_staff(
     session: Session = Depends(get_session),
     staff_id: uuid.UUID | None = None,
     activity_id: uuid.UUID | None = None,
-) -> List[ActivityStaff]:
+    peek: bool = Query(False),
+) -> List[ActivityStaff] | None:
+    if peek:
+        return None
+
     if staff_id is not None:
         return list(
             session.exec(select(ActivityStaff).where(ActivityStaff.staff_id == staff_id)).all()
@@ -1068,7 +1132,11 @@ def read_week_graduate_attributes(
     week_workbook_id: uuid.UUID | None = None,
     week_number: int | None = None,
     graduate_attribute_id: uuid.UUID | None = None,
-) -> List[WeekGraduateAttribute]:
+    peek: bool = Query(False),
+) -> List[WeekGraduateAttribute] | None:
+    if peek:
+        return None
+
     week = week_workbook_id and week_number is not None
     if not week and not graduate_attribute_id:
         return list(session.exec(select(WeekGraduateAttribute)).all())
@@ -1106,7 +1174,11 @@ def read_workbook_contributors(
     session: Session = Depends(get_session),
     contributor_id: uuid.UUID | None = None,
     workbook_id: uuid.UUID | None = None,
-) -> List[WorkbookContributor]:
+    peek: bool = Query(False),
+) -> List[WorkbookContributor] | None:
+    if peek:
+        return None
+
     if not contributor_id and not workbook_id:
         return list(session.exec(select(WorkbookContributor)).all())
     if not contributor_id:
@@ -1135,8 +1207,13 @@ def read_workbook_contributors(
 
 @app.get("/users/", dependencies=[Depends(cookie)])
 def read_users(
-    _: SessionData = Depends(verifier), session: Session = Depends(get_session)
-) -> List[User]:
+    _: SessionData = Depends(verifier),
+    session: Session = Depends(get_session),
+    peek: bool = Query(False),
+) -> List[User] | None:
+    if peek:
+        return None
+
     return list(session.exec(select(User)).all())
 
 
@@ -1144,7 +1221,10 @@ def read_users(
 def read_permissions_groups(
     _: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
-) -> List[PermissionsGroup]:
+    peek: bool = Query(False),
+) -> List[PermissionsGroup] | None:
+    if peek:
+        return None
     return list(session.exec(select(PermissionsGroup)).all())
 
 
@@ -1152,7 +1232,11 @@ def read_permissions_groups(
 def read_learning_platforms(
     _: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
-) -> List[LearningPlatform]:
+    peek: bool = Query(False),
+) -> List[LearningPlatform] | None:
+    if peek:
+        return None
+
     return list(session.exec(select(LearningPlatform)).all())
 
 
@@ -1161,7 +1245,11 @@ def read_learning_activities(
     _: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
     learning_platform_id: uuid.UUID | None = None,
-) -> List[LearningActivity]:
+    peek: bool = Query(False),
+) -> List[LearningActivity] | None:
+    if peek:
+        return None
+
     if not learning_platform_id:
         return list(session.exec(select(LearningActivity)).all())
     return list(
@@ -1175,15 +1263,25 @@ def read_learning_activities(
 
 @app.get("/task-statuses/", dependencies=[Depends(cookie)])
 def read_task_statuses(
-    _: SessionData = Depends(verifier), session: Session = Depends(get_session)
-) -> List[TaskStatus]:
+    _: SessionData = Depends(verifier),
+    session: Session = Depends(get_session),
+    peek: bool = Query(False),
+) -> List[TaskStatus] | None:
+    if peek:
+        return None
+
     return list(session.exec(select(TaskStatus)).all())
 
 
 @app.get("/learning-types/", dependencies=[Depends(cookie)])
 def read_learning_types(
-    _: SessionData = Depends(verifier), session: Session = Depends(get_session)
-) -> List[LearningType]:
+    _: SessionData = Depends(verifier),
+    session: Session = Depends(get_session),
+    peek: bool = Query(False),
+) -> List[LearningType] | None:
+    if peek:
+        return None
+
     return list(session.exec(select(LearningType)).all())
 
 
@@ -1192,7 +1290,11 @@ def read_workbooks(
     _: SessionData = Depends(verifier),
     workbook_id: uuid.UUID | None = None,
     session: Session = Depends(get_session),
-) -> List[Dict[str, Any]]:
+    peek: bool = Query(False),
+) -> List[Dict[str, Any]] | None:
+    if peek:
+        return None
+
     if not workbook_id:
         sqlmodel_workbooks: List[Workbook] = list(session.exec(select(Workbook)).all())
         workbooks: List[Dict[str, Any]] = []
@@ -1225,7 +1327,11 @@ def read_weeks(
     session: Session = Depends(get_session),
     workbook_id: uuid.UUID | None = None,
     week_number: int | None = None,
-) -> List[Week]:
+    peek: bool = Query(False),
+) -> List[Week] | None:
+    if peek:
+        return None
+
     if not workbook_id:
         return list(session.exec(select(Week)).all())
     if not week_number:
@@ -1241,15 +1347,24 @@ def read_weeks(
 def read_graduate_attributes(
     _: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
-) -> List[GraduateAttribute]:
+    peek: bool = Query(False),
+) -> List[GraduateAttribute] | None:
+    if peek:
+        return None
+
     graduate_attributes = list(session.exec(select(GraduateAttribute)).all())
     return graduate_attributes
 
 
 @app.get("/locations/", dependencies=[Depends(cookie)])
 def read_locations(
-    _: SessionData = Depends(verifier), session: Session = Depends(get_session)
-) -> List[Location]:
+    _: SessionData = Depends(verifier),
+    session: Session = Depends(get_session),
+    peek: bool = Query(False),
+) -> List[Location] | None:
+    if peek:
+        return None
+
     locations = list(session.exec(select(Location)).all())
     return locations
 
@@ -1260,7 +1375,11 @@ def read_activities(
     session: Session = Depends(get_session),
     workbook_id: uuid.UUID | None = None,
     week_number: int | None = None,
-) -> List[Activity]:
+    peek: bool = Query(False),
+) -> List[Activity] | None:
+    if peek:
+        return None
+
     if not workbook_id:
         return list(session.exec(select(Activity)).all())
     if not week_number:
@@ -1280,7 +1399,11 @@ def get_workbook_details(
     workbook_id: uuid.UUID,
     _: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
-) -> Dict[str, Any]:
+    peek: bool = Query(False),
+) -> Dict[str, Any] | None:
+    if peek:
+        return None
+
     # Fetch workbook
     workbook = session.exec(select(Workbook).where(Workbook.id == workbook_id)).first()
     if not workbook:
