@@ -34,6 +34,7 @@ export interface ActivityData {
   learning_type: string;
   task_status: string;
   staff: User[];
+  workbook_id: string;
 }
 
 export interface WeekData {
@@ -49,6 +50,7 @@ export interface WeekData {
 export interface WeekInfo {
   weekNumber: number;
   data: WeekData[];
+  workbookId: string;
 }
 
 export interface WorkbookDetailsResponse {
@@ -90,11 +92,26 @@ export const calculateTotalMinutes = (weekData: WeekData[]): number => {
 };
 
 export const processActivitiesData = (activities: ActivityData[]): WeekInfo[] => {
+  console.log('Processing activities:', activities);
   const weeksMap: { [key: number]: WeekInfo } = {};
   activities.forEach((activity) => {
     const weekNumber = activity.week_number || 1;
+    console.log('Processing activity:', {
+      weekNumber,
+      workbookId: activity.workbook_id,
+      activity
+    });
+    
     if (!weeksMap[weekNumber]) {
-      weeksMap[weekNumber] = { weekNumber, data: [] };
+      console.log('Creating new week:', {
+        weekNumber,
+        workbookId: activity.workbook_id
+      });
+      weeksMap[weekNumber] = { 
+        weekNumber, 
+        data: [],
+        workbookId: activity.workbook_id
+      };
     }
     weeksMap[weekNumber].data.push({
       staff: activity.staff.map((user) => user.name),
@@ -106,7 +123,15 @@ export const processActivitiesData = (activities: ActivityData[]): WeekInfo[] =>
       location: activity.location || 'On Campus',
     });
   });
-  return Object.values(weeksMap).sort((a, b) => a.weekNumber - b.weekNumber);
+  const sortedWeeks = Object.values(weeksMap).sort((a, b) => a.weekNumber - b.weekNumber);
+  
+  console.log('Processed weeks data:', sortedWeeks.map(week => ({
+    weekNumber: week.weekNumber,
+    workbookId: week.workbookId,
+    dataCount: week.data.length
+  })));
+  
+  return sortedWeeks;
 };
 
 export const prepareDashboardData = (weeksData: WeekInfo[]) => {

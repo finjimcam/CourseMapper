@@ -3,6 +3,7 @@ import React from 'react';
 import { Table } from 'flowbite-react';
 import ReactApexChart from 'react-apexcharts';
 import { CustomBadge, learningTypeColors } from './CustomBadge';
+import Piechart from './Piechart.tsx';
 
 interface DashboardTabProps {
   series: any[];
@@ -56,6 +57,7 @@ const DashboardTab: React.FC<DashboardTabProps> = ({
           </div>
         ) : (
           <ReactApexChart options={options} series={series} type="bar" height={350} />
+          
         )}
       </div>
       <button
@@ -64,6 +66,10 @@ const DashboardTab: React.FC<DashboardTabProps> = ({
       >
         {showTable ? 'Show Graph' : 'Show Table'}
       </button>
+      <div className="mb-8">
+      <Piechart
+      />
+      </div>
     </div>
   );
 };

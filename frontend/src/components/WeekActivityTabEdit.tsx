@@ -3,7 +3,8 @@ import React from 'react';
 import { Tabs, Button, Tooltip } from 'flowbite-react';
 import { HiTrash } from 'react-icons/hi';
 import WeekActivityTab from './WeekActivityTab';
-import { Week, WeekInfo } from '../utils/workbookUtils';
+import { WeekInfo } from '../utils/workbookUtils';
+import { Week } from '../pages/EditWorkbook';
 
 interface WeeksTabsProps {
   weeks: Week[];
@@ -21,7 +22,10 @@ const WeeksTabs: React.FC<WeeksTabsProps> = ({
   onAddActivity,
   onEditActivity,
   onDeleteActivity,
-}) => (
+}) => {
+  console.log('WeeksTabs - weeks:', weeks);
+  
+  return (
   <Tabs aria-label="Workbook Tabs">
     {weeks.map((week) => (
       <Tabs.Item key={week.number} title={`Week ${week.number}`}>
@@ -38,7 +42,15 @@ const WeeksTabs: React.FC<WeeksTabsProps> = ({
             <Button onClick={() => onAddActivity(week.number)}>Add Activity</Button>
           </div>
           <WeekActivityTab
-            week={convertWeekToWeekInfo(week)}
+            week={(() => {
+              const weekInfo = convertWeekToWeekInfo(week);
+              console.log('WeeksTabs - converted week info:', {
+                weekNumber: weekInfo.weekNumber,
+                workbookId: weekInfo.workbookId,
+                week
+              });
+              return weekInfo;
+            })()}
             originalActivities={week.activities}
             onEditActivity={onEditActivity}
             onDeleteActivity={onDeleteActivity}
@@ -47,6 +59,7 @@ const WeeksTabs: React.FC<WeeksTabsProps> = ({
       </Tabs.Item>
     ))}
   </Tabs>
-);
+  );
+};
 
 export default WeeksTabs;
