@@ -32,15 +32,35 @@ function Workbook(): JSX.Element {
       try {
         setLoading(true);
         setError(null);
+        console.log('Fetching workbook details for ID:', workbook_id);
         const response = await axios.get<WorkbookDetailsResponse>(
           `${import.meta.env.VITE_API}/workbooks/${workbook_id}/details`
         );
+        console.log('Workbook details response:', response.data);
+        
         const { workbook, course_lead, learning_platform, activities } = response.data;
+        
+        // Ensure each activity has the workbook_id
+        const activitiesWithWorkbookId = activities.map(activity => ({
+          ...activity,
+          workbook_id: workbook.id
+        }));
+        
+        console.log('Activities with workbook_id:', activitiesWithWorkbookId);
         setWorkbookData(workbook);
         setCourseLeadData(course_lead);
         setLearningPlatformData(learning_platform);
-        if (activities.length > 0) {
-          const weeksDataArray = processActivitiesData(activities);
+        if (activitiesWithWorkbookId.length > 0) {
+          console.log('Activities from API:', activitiesWithWorkbookId);
+          console.log('Current workbook_id:', workbook_id);
+          const weeksDataArray = processActivitiesData(activitiesWithWorkbookId);
+          console.log('Processed weeks data:', weeksDataArray);
+          
+          // Verify workbookId is set correctly in each week
+          weeksDataArray.forEach(week => {
+            console.log(`Week ${week.weekNumber} workbookId:`, week.workbookId);
+          });
+          
           setWeeksData(weeksDataArray);
         }
         setLoading(false);

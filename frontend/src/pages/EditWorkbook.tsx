@@ -411,18 +411,26 @@ function EditWorkbook(): JSX.Element {
     }
   };
 
-  const convertWeekToWeekInfo = (week: Week): WeekInfo => ({
-    weekNumber: week.number,
-    data: week.activities.map(activity => ({
-      staff: activity.staff_id ? [users.find(u => u.id === activity.staff_id)?.name || ''] : [],
-      title: activity.name,
-      activity: learningActivities.find(a => a.id === activity.learning_activity_id)?.name || 'N/A',
-      type: learningTypes.find(t => t.id === activity.learning_type_id)?.name || 'N/A',
-      time: formatMinutes(activity.time_estimate_minutes),
-      status: taskStatuses.find(ts => ts.id === activity.task_status_id)?.name || 'N/A',
-      location: locations.find(l => l.id === activity.location_id)?.name || 'N/A'
-    }))
-  });
+  const convertWeekToWeekInfo = (week: Week): WeekInfo => {
+    console.log('Converting week to WeekInfo:', {
+      weekNumber: week.number,
+      workbookId: workbook_id
+    });
+    
+    return {
+      weekNumber: week.number,
+      workbookId: workbook_id || '',
+      data: week.activities.map(activity => ({
+        staff: activity.staff_id ? [users.find(u => u.id === activity.staff_id)?.name || ''] : [],
+        title: activity.name,
+        activity: learningActivities.find(a => a.id === activity.learning_activity_id)?.name || 'N/A',
+        type: learningTypes.find(t => t.id === activity.learning_type_id)?.name || 'N/A',
+        time: formatMinutes(activity.time_estimate_minutes),
+        status: taskStatuses.find(ts => ts.id === activity.task_status_id)?.name || 'N/A',
+        location: locations.find(l => l.id === activity.location_id)?.name || 'N/A'
+      }))
+    };
+  };
 
   if (loading)
     return (
