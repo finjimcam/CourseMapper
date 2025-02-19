@@ -7,12 +7,12 @@ import SearchBar from "../components/Searchbar";
 
 function SearchResults() {
     const [results, setResults] = useState<Workbook[] | null>(null);
-    const [searchParams, setSearchParams] = useSearchParams();
+    const [searchParams] = useSearchParams();
 
     useEffect(() => {
         const fetchResults = async () => {
             try {
-                console.log(searchParams);
+              console.log(searchParams);
               const response = await axios.get(`${import.meta.env.VITE_API}/search`, {params: searchParams});
               console.log(response);
               setResults(response.data);
