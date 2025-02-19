@@ -129,7 +129,7 @@ function EditWorkbook(): JSX.Element {
             name: data.learningPlatform,
           }, 
           course_lead: {
-            id: data.courseLeadId,
+            id: 'temp',
             name: data.courseLead
           }
         });
@@ -362,7 +362,6 @@ function EditWorkbook(): JSX.Element {
     }
     if (!workbook.workbook.course_name) errs.push('Course name is required');
     if (!workbook.learning_platform.id) errs.push('Learning platform is required');
-    if (!workbook.course_lead.id) errs.push('Course lead is required');
 
     const start = new Date(workbook.workbook.start_date);
     const end = new Date(workbook.workbook.end_date);
@@ -418,7 +417,6 @@ function EditWorkbook(): JSX.Element {
       const workbookResponse = await axios.post(ENDPOINTS.workbooks, {
         course_name: workbook.workbook.course_name,
         learning_platform_id: workbook.learning_platform.id,
-        course_lead_id: workbook.course_lead.id,
         start_date: workbook.workbook.start_date,
         end_date: workbook.workbook.end_date
       });
