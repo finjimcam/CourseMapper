@@ -4,7 +4,6 @@ import { Table, Button, Tooltip } from 'flowbite-react';
 import { CustomBadge, learningTypeColors, statusColors } from './CustomBadge';
 import { WeekInfo, WeekData } from '../utils/workbookUtils';
 import { HiPencil, HiTrash } from 'react-icons/hi';
-import WeeklyAttributes from './WeeklyAttributes';
 
 interface WeekActivityTabProps {
   week: WeekInfo;
@@ -34,9 +33,8 @@ const WeekActivityTab: React.FC<WeekActivityTabProps> = ({
 
   return (
     <div className="p-4">
-      <div className="flex justify-between items-center mb-4">
+      <div className="mb-4">
         <h2 className="text-2xl font-bold">Week {week.weekNumber} Activities</h2>
-        <WeeklyAttributes weekNumber={week.weekNumber} workbookId={week.workbookId} />
       </div>
       <div className="overflow-x-auto">
       <Table striped>

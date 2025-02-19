@@ -10,6 +10,7 @@ import ErrorModal from '../components/modals/ErrorModal';
 import WorkbookEditModal from '../components/modals/CourseDetailsEditModal';
 import ActivityModal from '../components/modals/ActivityModal';
 import { WorkbookDetailsResponse, formatMinutes, WeekInfo, WorkbookData } from '../utils/workbookUtils';
+import WeeklyAttributes from '../components/WeeklyAttributes';
 
 // --- Type definitions ---
 interface LearningPlatform {
@@ -97,7 +98,7 @@ function EditWorkbook(): JSX.Element {
     activity: Activity;
     activityIndex: number;
   } | null>(null);
-  const [selectedWeek, setSelectedWeek] = useState<number | null>(null);
+  const [selectedWeek, setSelectedWeek] = useState<number>(1);
   const [activityValidationErrors, setActivityValidationErrors] = useState<string[]>([]);
   const [showActivityErrorModal, setShowActivityErrorModal] = useState<boolean>(false);
 
@@ -505,13 +506,20 @@ function EditWorkbook(): JSX.Element {
               <HiPencil className="h-4 w-4" />
             </Button>
           </div>
-          <Button gradientDuoTone="greenToBlue" size="lg" onClick={handleSaveChanges} disabled={saving}>
-            {saving ? 'Saving...' : 'Save Changes'}
-          </Button>
+          <div className="flex flex-col items-end gap-2">
+            <Button gradientDuoTone="greenToBlue" size="lg" onClick={handleSaveChanges} disabled={saving}>
+              {saving ? 'Saving...' : 'Save Changes'}
+            </Button>
+            <WeeklyAttributes weekNumber={selectedWeek} workbookId={workbook_id} />
+          </div>
         </div>
+
+
         <div className="mb-6">
           <Button onClick={handleAddWeek}>Add Week</Button>
+          
         </div>
+        
         <WeeksTabs
           weeks={weeks}
           convertWeekToWeekInfo={convertWeekToWeekInfo}
@@ -520,8 +528,12 @@ function EditWorkbook(): JSX.Element {
             setSelectedWeek(weekNumber);
             setShowActivityModal(true);
           }}
-          onEditActivity={handleEditActivity}
+          onEditActivity={(activity, index, weekNumber) => {
+            setSelectedWeek(weekNumber);
+            handleEditActivity(activity, index, weekNumber);
+          }}
           onDeleteActivity={handleDeleteActivity}
+          onWeekChange={(weekNumber) => setSelectedWeek(weekNumber)}
         />
       </div>
     </div>

@@ -13,6 +13,7 @@ interface WeeksTabsProps {
   onAddActivity: (weekNumber: number) => void;
   onEditActivity: (activity: any, index: number, weekNumber: number) => void;
   onDeleteActivity: (index: number, weekNumber: number) => void;
+  onWeekChange?: (weekNumber: number) => void;
 }
 
 const WeeksTabs: React.FC<WeeksTabsProps> = ({
@@ -22,11 +23,18 @@ const WeeksTabs: React.FC<WeeksTabsProps> = ({
   onAddActivity,
   onEditActivity,
   onDeleteActivity,
+  onWeekChange,
 }) => {
   console.log('WeeksTabs - weeks:', weeks);
   
   return (
-  <Tabs aria-label="Workbook Tabs">
+  <Tabs 
+    aria-label="Workbook Tabs"
+    onActiveTabChange={(tab) => {
+      const weekNumber = weeks[tab].number;
+      onWeekChange?.(weekNumber);
+    }}
+  >
     {weeks.map((week) => (
       <Tabs.Item key={week.number} title={`Week ${week.number}`}>
         <div className="p-4">

@@ -185,7 +185,7 @@ const WeeklyAttributes: React.FC<WeeklyAttributesProps> = ({ weekNumber, workboo
 
   return (
     <div className="p-4 bg-white shadow-md rounded-lg">
-      <h2 className="text-lg font-semibold mb-2">Graduate Attributes for Week {weekNumber}</h2>
+      <h2 className="text-lg font-semibold mb-2">Graduate Attributes</h2>
       {!workbookId ? (
         <p>No workbook selected</p>
       ) : loading ? (
@@ -193,7 +193,6 @@ const WeeklyAttributes: React.FC<WeeklyAttributesProps> = ({ weekNumber, workboo
       ) : (
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">First Graduate Attribute</label>
             <DropdownRadio 
               options={graduateAttributes}
               selected={selectedAttributes[0]}
@@ -202,7 +201,6 @@ const WeeklyAttributes: React.FC<WeeklyAttributesProps> = ({ weekNumber, workboo
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Second Graduate Attribute</label>
             <DropdownRadio 
               options={graduateAttributes}
               selected={selectedAttributes[1]}

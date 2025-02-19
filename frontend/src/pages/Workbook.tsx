@@ -2,10 +2,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
-import { Tabs, Spinner } from 'flowbite-react';
+import { Tabs, Spinner, Button } from 'flowbite-react';
 import CourseHeader from '../components/CourseDetailsHeader';
 import DashboardTab from '../components/DashboardTab';
 import WeekActivityTab from '../components/WeekActivityTab';
+import WeeklyAttributes from '../components/WeeklyAttributes';
 import {
   WorkbookData,
   WorkbookDetailsResponse,
@@ -26,6 +27,8 @@ function Workbook(): JSX.Element {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [showTable, setShowTable] = useState<boolean>(false);
+  const [selectedWeek, setSelectedWeek] = useState<number>(1);
+  const [isDashboardTab, setIsDashboardTab] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchWorkbookData = async () => {
@@ -96,22 +99,37 @@ function Workbook(): JSX.Element {
   const dashboardData = prepareDashboardData(weeksData);
 
   return (
+    
     <div className="container mx-auto px-4 py-8">
       <div className="bg-white p-6 rounded-lg shadow">
-        <CourseHeader
-          workbook={workbookData}
-          courseLead={courseLeadData}
-          learningPlatform={learningPlatformData}
-        />
-        <div className="flex justify-end mb-4">
-          <Link
-            to={`/workbook/edit/${workbook_id}`}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-          >
-            Edit Workbook
-          </Link>
+        <div className="flex justify-between items-start mb-4">
+          <div className="flex items-center gap-2">
+            <CourseHeader
+              workbook={workbookData}
+              courseLead={courseLeadData}
+              learningPlatform={learningPlatformData}
+            />
+          </div>
+          <div className="flex flex-col items-end gap-2">
+            <Link
+              to={`/workbook/edit/${workbook_id}`}
+              className="px-5 py-2.5 text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm text-center"
+            >
+              Edit Workbook
+            </Link>
+            {!isDashboardTab && <WeeklyAttributes weekNumber={selectedWeek} workbookId={workbook_id} />}
+          </div>
         </div>
-        <Tabs aria-label="Workbook Tabs">
+        <Tabs 
+          aria-label="Workbook Tabs"
+          onActiveTabChange={(tab) => {
+            const isOnDashboard = tab === 0;
+            setIsDashboardTab(isOnDashboard);
+            if (!isOnDashboard) {
+              setSelectedWeek(tab);
+            }
+          }}
+        >
           <Tabs.Item title="Dashboard">
             <DashboardTab
               series={dashboardData.series}
