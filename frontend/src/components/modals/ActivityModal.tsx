@@ -1,7 +1,7 @@
 // src/components/ActivityModal.tsx
-import React from 'react';
-import { Modal, Button, Label, TextInput, Select } from 'flowbite-react';
-import { Activity, GenericData } from '../../utils/workbookUtils';
+import React from "react";
+import { Modal, Button, Label, TextInput, Select } from "flowbite-react";
+import { Activity, GenericData } from "../../utils/workbookUtils";
 
 interface ActivityModalProps {
   show: boolean;
@@ -28,18 +28,18 @@ const ActivityModal: React.FC<ActivityModalProps> = ({
   users,
   onSave,
   onCancel,
-  onFieldChange,
+  onFieldChange
 }) => (
   <Modal show={show} onClose={onCancel}>
-    <Modal.Header>{editing ? 'Edit Activity' : 'Add New Activity'}</Modal.Header>
+    <Modal.Header>{editing ? "Edit Activity" : "Add New Activity"}</Modal.Header>
     <Modal.Body>
       <div className="space-y-4">
         <div>
           <Label htmlFor="activityName" value="Activity Name" />
           <TextInput
             id="activityName"
-            value={activity.name || ''}
-            onChange={(e) => onFieldChange('name', e.target.value)}
+            value={activity.name || ""}
+            onChange={(e) => onFieldChange("name", e.target.value)}
           />
         </div>
         <div>
@@ -47,16 +47,16 @@ const ActivityModal: React.FC<ActivityModalProps> = ({
           <TextInput
             id="timeEstimate"
             type="number"
-            value={activity.time_estimate_minutes || ''}
-            onChange={(e) => onFieldChange('time_estimate_minutes', parseInt(e.target.value))}
+            value={activity.time_estimate_minutes || ""}
+            onChange={(e) => onFieldChange("time_estimate_minutes", parseInt(e.target.value))}
           />
         </div>
         <div>
           <Label htmlFor="location" value="Location" />
           <Select
             id="location"
-            value={activity.location_id || ''}
-            onChange={(e) => onFieldChange('location_id', e.target.value)}
+            value={activity.location_id || ""}
+            onChange={(e) => onFieldChange("location_id", e.target.value)}
           >
             <option value="">Select location</option>
             {locations.map((loc: GenericData) => (
@@ -70,8 +70,8 @@ const ActivityModal: React.FC<ActivityModalProps> = ({
           <Label htmlFor="learningActivity" value="Learning Activity" />
           <Select
             id="learningActivity"
-            value={activity.learning_activity_id || ''}
-            onChange={(e) => onFieldChange('learning_activity_id', e.target.value)}
+            value={activity.learning_activity_id || ""}
+            onChange={(e) => onFieldChange("learning_activity_id", e.target.value)}
           >
             <option value="">Select learning activity</option>
             {learningActivities.map((act: GenericData) => (
@@ -85,8 +85,8 @@ const ActivityModal: React.FC<ActivityModalProps> = ({
           <Label htmlFor="learningType" value="Learning Type" />
           <Select
             id="learningType"
-            value={activity.learning_type_id || ''}
-            onChange={(e) => onFieldChange('learning_type_id', e.target.value)}
+            value={activity.learning_type_id || ""}
+            onChange={(e) => onFieldChange("learning_type_id", e.target.value)}
           >
             <option value="">Select learning type</option>
             {learningTypes.map((type: GenericData) => (
@@ -100,8 +100,8 @@ const ActivityModal: React.FC<ActivityModalProps> = ({
           <Label htmlFor="taskStatus" value="Task Status" />
           <Select
             id="taskStatus"
-            value={activity.task_status_id || ''}
-            onChange={(e) => onFieldChange('task_status_id', e.target.value)}
+            value={activity.task_status_id || ""}
+            onChange={(e) => onFieldChange("task_status_id", e.target.value)}
           >
             <option value="">Select status</option>
             {taskStatuses.map((status: GenericData) => (
@@ -115,8 +115,8 @@ const ActivityModal: React.FC<ActivityModalProps> = ({
           <Label htmlFor="staff" value="Staff Member Responsible" />
           <Select
             id="staff"
-            value={activity.staff_id || ''}
-            onChange={(e) => onFieldChange('staff_id', e.target.value)}
+            value={activity.staff_id || ""}
+            onChange={(e) => onFieldChange("staff_id", e.target.value)}
           >
             <option value="">Select staff member</option>
             {users.map((user: GenericData) => (
@@ -129,7 +129,7 @@ const ActivityModal: React.FC<ActivityModalProps> = ({
       </div>
     </Modal.Body>
     <Modal.Footer>
-      <Button onClick={onSave}>{editing ? 'Save Changes' : 'Add Activity'}</Button>
+      <Button onClick={onSave}>{editing ? "Save Changes" : "Add Activity"}</Button>
       <Button color="gray" onClick={onCancel}>
         Cancel
       </Button>

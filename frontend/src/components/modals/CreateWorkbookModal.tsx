@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
-import { Button, Modal, Label, TextInput, Select } from 'flowbite-react';
-import DatePicker from 'react-datepicker';
+import { useState, useEffect } from "react";
+import { Button, Modal, Label, TextInput, Select } from "flowbite-react";
+import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 interface LearningPlatform {
   id: string;
@@ -24,8 +24,8 @@ interface CreateWorkbookModalProps {
 
 export function CreateWorkbookModal({ show, onClose }: CreateWorkbookModalProps) {
   const navigate = useNavigate();
-  const [courseName, setCourseName] = useState('');
-  const [learningPlatform, setLearningPlatform] = useState('');
+  const [courseName, setCourseName] = useState("");
+  const [learningPlatform, setLearningPlatform] = useState("");
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [learningPlatforms, setLearningPlatforms] = useState<LearningPlatform[]>([]);
   const [loading, setLoading] = useState(true);
@@ -35,42 +35,43 @@ export function CreateWorkbookModal({ show, onClose }: CreateWorkbookModalProps)
     const fetchData = async () => {
       try {
         // Fetch and validate learning platforms
-        const platformsResponse = await axios.get(`${import.meta.env.VITE_API}/learning-platforms/`);
-        console.log('Raw platforms response:', platformsResponse.data);
-        
+        const platformsResponse = await axios.get(
+          `${import.meta.env.VITE_API}/learning-platforms/`
+        );
+        console.log("Raw platforms response:", platformsResponse.data);
+
         let platforms;
         try {
           // Ensure we have valid JSON data
-          if (typeof platformsResponse.data === 'string') {
+          if (typeof platformsResponse.data === "string") {
             platforms = JSON.parse(platformsResponse.data);
           } else {
             platforms = platformsResponse.data;
           }
-          
+
           // Validate platform structure
           if (!Array.isArray(platforms)) {
-            throw new Error('Platforms data is not an array');
+            throw new Error("Platforms data is not an array");
           }
-          
+
           // Validate each platform object
-          platforms = platforms.filter(p => p && typeof p === 'object' && p.id && p.name);
-          
+          platforms = platforms.filter((p) => p && typeof p === "object" && p.id && p.name);
+
           if (platforms.length === 0) {
-            throw new Error('No valid learning platforms found');
+            throw new Error("No valid learning platforms found");
           }
-          
-          console.log('Processed platforms:', platforms);
+
+          console.log("Processed platforms:", platforms);
           setLearningPlatforms(platforms);
         } catch (err) {
-          console.error('Platform processing error:', err);
-          setError('Failed to process learning platforms data');
+          console.error("Platform processing error:", err);
+          setError("Failed to process learning platforms data");
           setLoading(false);
           return;
         }
-      
       } catch (err) {
         const error = err as Error;
-        setError(error.message || 'Failed to fetch data');
+        setError(error.message || "Failed to fetch data");
       } finally {
         setLoading(false);
       }
@@ -83,20 +84,20 @@ export function CreateWorkbookModal({ show, onClose }: CreateWorkbookModalProps)
 
   const handleSubmit = async () => {
     if (!courseName.trim()) {
-      setError('Course title is required');
+      setError("Course title is required");
       return;
     }
     if (!learningPlatform) {
-      setError('Learning platform is required');
+      setError("Learning platform is required");
       return;
     }
 
     try {
       // Validate selections against existing data
-      const selectedPlatform = learningPlatforms.find(p => p.id === learningPlatform);
-      
+      const selectedPlatform = learningPlatforms.find((p) => p.id === learningPlatform);
+
       if (!selectedPlatform) {
-        setError('Invalid learning platform selected');
+        setError("Invalid learning platform selected");
         return;
       }
 
@@ -105,27 +106,27 @@ export function CreateWorkbookModal({ show, onClose }: CreateWorkbookModalProps)
         platformName: selectedPlatform.name,
         courseName: courseName.trim(),
         learningPlatformId: learningPlatform,
-        startDate: startDate.toISOString().split('T')[0],
-        endDate: startDate.toISOString().split('T')[0], // Initially same as start date, will be updated based on weeks
+        startDate: startDate.toISOString().split("T")[0],
+        endDate: startDate.toISOString().split("T")[0] // Initially same as start date, will be updated based on weeks
       };
-      
-      console.log('Storing workbook data:', workbookData);
-    
+
+      console.log("Storing workbook data:", workbookData);
+
       // Store in sessionStorage and navigate to EditWorkbook
-      sessionStorage.setItem('newWorkbookData', JSON.stringify(workbookData));
+      sessionStorage.setItem("newWorkbookData", JSON.stringify(workbookData));
       onClose();
-      navigate('/workbooks/create');
+      navigate("/workbooks/create");
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 404) {
-        if (err.config?.url?.includes('learning-platforms')) {
-          setError('Invalid learning platform selected');
-        } else if (err.config?.url?.includes('users')) {
-          setError('Invalid course lead selected');
+        if (err.config?.url?.includes("learning-platforms")) {
+          setError("Invalid learning platform selected");
+        } else if (err.config?.url?.includes("users")) {
+          setError("Invalid course lead selected");
         } else {
-          setError('Resource not found');
+          setError("Resource not found");
         }
       } else {
-        setError('Failed to validate selection');
+        setError("Failed to validate selection");
       }
     }
   };
@@ -138,10 +139,8 @@ export function CreateWorkbookModal({ show, onClose }: CreateWorkbookModalProps)
           <div className="text-center py-4">Loading data...</div>
         ) : (
           <div className="space-y-6">
-            {error && (
-              <div className="text-red-500 text-sm">{error}</div>
-            )}
-            
+            {error && <div className="text-red-500 text-sm">{error}</div>}
+
             <div>
               <div className="mb-2 block">
                 <Label htmlFor="courseName" value="Course Title" />
@@ -195,13 +194,16 @@ export function CreateWorkbookModal({ show, onClose }: CreateWorkbookModalProps)
                 className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
               />
             </div>
-
           </div>
         )}
       </Modal.Body>
       <Modal.Footer>
-        <Button onClick={handleSubmit} disabled={loading}>Create Workbook</Button>
-        <Button color="gray" onClick={onClose}>Cancel</Button>
+        <Button onClick={handleSubmit} disabled={loading}>
+          Create Workbook
+        </Button>
+        <Button color="gray" onClick={onClose}>
+          Cancel
+        </Button>
       </Modal.Footer>
     </Modal>
   );

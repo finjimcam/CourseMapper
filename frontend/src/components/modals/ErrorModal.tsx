@@ -1,6 +1,6 @@
 // src/components/ErrorModal.tsx
-import React from 'react';
-import { Modal, Button } from 'flowbite-react';
+import React from "react";
+import { Modal, Button } from "flowbite-react";
 
 interface ErrorModalProps {
   show: boolean;
@@ -31,7 +31,9 @@ const ErrorModal: React.FC<ErrorModalProps> = ({
         <p className="text-red-500 font-medium">{message}</p>
         <ul className="list-disc list-inside space-y-1">
           {errors.map((error, index) => (
-            <li key={index} className="text-gray-700">{error}</li>
+            <li key={index} className="text-gray-700">
+              {error}
+            </li>
           ))}
         </ul>
       </div>

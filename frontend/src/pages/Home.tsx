@@ -1,12 +1,12 @@
 // Home.tsx
 
-import { useEffect, useState } from 'react';
-import axios from 'axios';
-import SearchBar from '../components/Searchbar.tsx';
-import Carousel from '../components/Carousel.tsx';
-import { Link, useNavigate } from 'react-router-dom';
-import { CreateWorkbookModal } from '../components/modals/CreateWorkbookModal.tsx';
-import { getErrorMessage } from '../utils/workbookUtils.ts';
+import { useEffect, useState } from "react";
+import axios from "axios";
+import SearchBar from "../components/Searchbar.tsx";
+import Carousel from "../components/Carousel.tsx";
+import { Link, useNavigate } from "react-router-dom";
+import { CreateWorkbookModal } from "../components/modals/CreateWorkbookModal.tsx";
+import { getErrorMessage } from "../utils/workbookUtils.ts";
 
 function Home() {
   const navigate = useNavigate();
@@ -37,8 +37,8 @@ function Home() {
     endDate: Date;
     coordinatorIds: string[];
   }) => {
-    sessionStorage.setItem('newWorkbookData', JSON.stringify(workbookData));
-    navigate('/workbooks/edit');
+    sessionStorage.setItem("newWorkbookData", JSON.stringify(workbookData));
+    navigate("/workbooks/edit");
   };
 
   if (loading) return <div className="text-center mt-10">Loading...</div>;

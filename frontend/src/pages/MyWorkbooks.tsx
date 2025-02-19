@@ -1,12 +1,12 @@
 // MyWorkbooks.tsx
 
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import SearchBar from '../components/Searchbar.tsx';
-import Carousel from '../components/Carousel.tsx';
-import { CreateWorkbookModal } from '../components/modals/CreateWorkbookModal.tsx';
-import { getErrorMessage } from '../utils/workbookUtils.ts';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import SearchBar from "../components/Searchbar.tsx";
+import Carousel from "../components/Carousel.tsx";
+import { CreateWorkbookModal } from "../components/modals/CreateWorkbookModal.tsx";
+import { getErrorMessage } from "../utils/workbookUtils.ts";
 
 function MyWorkbooks() {
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ function MyWorkbooks() {
   useEffect(() => {
     const fetchWorkbooks = async () => {
       try {
-        // TODO: specify the user to get workbooks they are involved in 
+        // TODO: specify the user to get workbooks they are involved in
         const response = await axios.get(`${import.meta.env.VITE_API}/workbooks/`);
         setWorkbooks(response.data);
         setLoading(false);
@@ -39,10 +39,10 @@ function MyWorkbooks() {
     coordinatorIds: string[];
   }) => {
     // Store the workbook data in sessionStorage
-    sessionStorage.setItem('newWorkbookData', JSON.stringify(workbookData));
-    
+    sessionStorage.setItem("newWorkbookData", JSON.stringify(workbookData));
+
     // Navigate to the edit page
-    navigate('/workbooks/edit');
+    navigate("/workbooks/edit");
   };
 
   if (loading) return <div className="text-center mt-10">Loading...</div>;

@@ -1,9 +1,9 @@
 // src/components/DashboardTab.tsx
-import React from 'react';
-import { Table } from 'flowbite-react';
-import ReactApexChart from 'react-apexcharts';
-import { CustomBadge, learningTypeColors } from './CustomBadge';
-import { ApexOptions } from 'apexcharts';
+import React from "react";
+import { Table } from "flowbite-react";
+import ReactApexChart from "react-apexcharts";
+import { CustomBadge, learningTypeColors } from "./CustomBadge";
+import { ApexOptions } from "apexcharts";
 
 interface DashboardTabProps {
   series: ApexOptions["series"];
@@ -20,7 +20,7 @@ const DashboardTab: React.FC<DashboardTabProps> = ({
   summaryData,
   allLearningTypes,
   showTable,
-  toggleShowTable,
+  toggleShowTable
 }) => {
   return (
     <div className="p-4">
@@ -31,7 +31,7 @@ const DashboardTab: React.FC<DashboardTabProps> = ({
             <Table striped>
               <Table.Head>
                 <Table.HeadCell>
-                  <CustomBadge label="Week" colorMapping={{ default: '#6c757d' }} />
+                  <CustomBadge label="Week" colorMapping={{ default: "#6c757d" }} />
                 </Table.HeadCell>
                 {allLearningTypes.map((type) => (
                   <Table.HeadCell key={type}>
@@ -39,10 +39,10 @@ const DashboardTab: React.FC<DashboardTabProps> = ({
                   </Table.HeadCell>
                 ))}
                 <Table.HeadCell>
-                  <CustomBadge label="Total Hours" colorMapping={{ default: '#6c757d' }} />
+                  <CustomBadge label="Total Hours" colorMapping={{ default: "#6c757d" }} />
                 </Table.HeadCell>
               </Table.Head>
-              <Table.Body style={{ textAlign: 'center' }}>
+              <Table.Body style={{ textAlign: "center" }}>
                 {summaryData.map((row, index) => (
                   <Table.Row key={index}>
                     <Table.Cell>{row.week}</Table.Cell>
@@ -63,7 +63,7 @@ const DashboardTab: React.FC<DashboardTabProps> = ({
         onClick={toggleShowTable}
         className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
       >
-        {showTable ? 'Show Graph' : 'Show Table'}
+        {showTable ? "Show Graph" : "Show Table"}
       </button>
     </div>
   );

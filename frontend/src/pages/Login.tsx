@@ -1,12 +1,12 @@
 // src/pages/Login.tsx
-import React, { useState } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import { Button, Label, TextInput, Card } from 'flowbite-react';
+import React, { useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import { Button, Label, TextInput, Card } from "flowbite-react";
 
 function Login() {
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,10 +19,10 @@ function Login() {
         { withCredentials: true }
       );
       // If successful, navigate to homepage or a protected route
-      navigate('/');
+      navigate("/");
     } catch (err) {
       console.error(err);
-      alert('Login failed. Ensure username exists on the backend.');
+      alert("Login failed. Ensure username exists on the backend.");
     }
   };
 

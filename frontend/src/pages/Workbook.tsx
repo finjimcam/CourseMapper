@@ -1,18 +1,18 @@
 // src/components/pages/workbook.tsx
-import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import axios from 'axios';
-import { Tabs, Spinner } from 'flowbite-react';
-import CourseHeader from '../components/CourseDetailsHeader';
-import DashboardTab from '../components/DashboardTab';
-import WeekActivityTab from '../components/WeekActivityTab';
+import { useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import axios from "axios";
+import { Tabs, Spinner } from "flowbite-react";
+import CourseHeader from "../components/CourseDetailsHeader";
+import DashboardTab from "../components/DashboardTab";
+import WeekActivityTab from "../components/WeekActivityTab";
 import {
   Workbook,
   WorkbookDetailsResponse,
   WeekInfo,
   processActivitiesData,
-  prepareDashboardData,
-} from '../utils/workbookUtils';
+  prepareDashboardData
+} from "../utils/workbookUtils";
 
 function WorkbookPage(): JSX.Element {
   const { workbook_id } = useParams<{ workbook_id: string }>();
@@ -35,9 +35,10 @@ function WorkbookPage(): JSX.Element {
         );
         const { workbook, course_lead, learning_platform, activities } = response.data;
         if (course_lead && learning_platform) {
-          setWorkbookData({workbook: workbook, 
-              course_lead: course_lead,
-              learning_platform: learning_platform
+          setWorkbookData({
+            workbook: workbook,
+            course_lead: course_lead,
+            learning_platform: learning_platform
           });
         }
         //setCourseLeadData(course_lead);
@@ -49,8 +50,8 @@ function WorkbookPage(): JSX.Element {
         setLoading(false);
       } catch (err) {
         const errorObj = err as Error;
-        console.error('Error fetching workbook data:', errorObj);
-        setError(errorObj.message || 'An error occurred while fetching workbook data');
+        console.error("Error fetching workbook data:", errorObj);
+        setError(errorObj.message || "An error occurred while fetching workbook data");
         setLoading(false);
       }
     };
@@ -81,9 +82,7 @@ function WorkbookPage(): JSX.Element {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="bg-white p-6 rounded-lg shadow">
-        <CourseHeader
-          workbook={workbookData}
-        />
+        <CourseHeader workbook={workbookData} />
         <div className="flex justify-end mb-4">
           <Link
             to={`/workbook/edit/${workbook_id}`}

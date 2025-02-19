@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
-import { Outlet, Navigate } from 'react-router-dom';
-import axios from 'axios';
-import { Spinner } from 'flowbite-react';
-import Navbar from './components/Navbar';
+import { useEffect, useState } from "react";
+import { Outlet, Navigate } from "react-router-dom";
+import axios from "axios";
+import { Spinner } from "flowbite-react";
+import Navbar from "./components/Navbar";
 
 function Layout() {
   const [loading, setLoading] = useState(true);

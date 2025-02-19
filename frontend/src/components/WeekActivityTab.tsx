@@ -1,9 +1,9 @@
 // src/components/WeekActivityTab.tsx
-import React from 'react';
-import { Table, Button, Tooltip } from 'flowbite-react';
-import { CustomBadge, learningTypeColors, statusColors } from './CustomBadge';
-import { WeekInfo, WeekData, Activity } from '../utils/workbookUtils';
-import { HiPencil, HiTrash } from 'react-icons/hi';
+import React from "react";
+import { Table, Button, Tooltip } from "flowbite-react";
+import { CustomBadge, learningTypeColors, statusColors } from "./CustomBadge";
+import { WeekInfo, WeekData, Activity } from "../utils/workbookUtils";
+import { HiPencil, HiTrash } from "react-icons/hi";
 
 interface WeekActivityTabProps {
   week: WeekInfo;
@@ -23,7 +23,7 @@ const WeekActivityTab: React.FC<WeekActivityTabProps> = ({
   week,
   originalActivities,
   onEditActivity,
-  onDeleteActivity,
+  onDeleteActivity
 }) => (
   <div className="p-4">
     <h2 className="text-2xl font-bold mb-4">Week {week.weekNumber} Activities</h2>
@@ -42,7 +42,7 @@ const WeekActivityTab: React.FC<WeekActivityTabProps> = ({
         <Table.Body>
           {week.data.map((row: WeekData, index: number) => (
             <Table.Row key={index}>
-              <Table.Cell>{row.staff.length > 0 ? row.staff.join(', ') : 'N/A'}</Table.Cell>
+              <Table.Cell>{row.staff.length > 0 ? row.staff.join(", ") : "N/A"}</Table.Cell>
               <Table.Cell>{row.title}</Table.Cell>
               <Table.Cell>{row.activity}</Table.Cell>
               <Table.Cell>
@@ -61,7 +61,9 @@ const WeekActivityTab: React.FC<WeekActivityTabProps> = ({
                         <Button
                           size="xs"
                           color="light"
-                          onClick={() => onEditActivity(originalActivities[index], index, week.weekNumber)}
+                          onClick={() =>
+                            onEditActivity(originalActivities[index], index, week.weekNumber)
+                          }
                         >
                           <HiPencil className="h-4 w-4" />
                         </Button>
