@@ -1,6 +1,6 @@
 // src/utils/workbookUtils.ts
-import { ApexOptions } from 'apexcharts';
-import { learningTypeColors } from '../components/CustomBadge';
+import { ApexOptions } from "apexcharts";
+import { learningTypeColors } from "../components/CustomBadge";
 
 // =====================
 // Type Definitions
@@ -42,7 +42,7 @@ export interface Week {
 
 export interface Workbook {
   workbook: WorkbookData;
-  course_lead: User; 
+  course_lead: User;
   learning_platform: LearningPlatform;
 }
 
@@ -92,10 +92,10 @@ export interface WorkbookDetailsResponse {
 // =====================
 
 export const getErrorMessage = (err: unknown) =>
-  err instanceof Error ? err.message : 'An error occurred';
+  err instanceof Error ? err.message : "An error occurred";
 
 export const timeToMinutes = (time: string): number => {
-  const [hoursStr, minutesStr] = time.split(':');
+  const [hoursStr, minutesStr] = time.split(":");
   const hours = parseInt(hoursStr) || 0;
   const minutes = parseInt(minutesStr) || 0;
   return hours * 60 + minutes;
@@ -104,7 +104,7 @@ export const timeToMinutes = (time: string): number => {
 export const formatMinutes = (minutes: number): string => {
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
-  return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+  return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
 };
 
 export const calculateLearningTypeMinutes = (weekData: WeekData[]): { [key: string]: number } => {
@@ -130,12 +130,14 @@ export const processActivitiesData = (activities: ActivityData[]): WeekInfo[] =>
     }
     weeksMap[weekNumber].data.push({
       staff: activity.staff.map((user) => user.name),
-      title: activity.name || 'Untitled',
-      activity: activity.learning_activity || 'N/A',
-      type: activity.learning_type || 'N/A',
-      time: activity.time_estimate_minutes ? formatMinutes(activity.time_estimate_minutes) : '00:00',
-      status: activity.task_status || 'Unassigned',
-      location: activity.location || 'On Campus',
+      title: activity.name || "Untitled",
+      activity: activity.learning_activity || "N/A",
+      type: activity.learning_type || "N/A",
+      time: activity.time_estimate_minutes
+        ? formatMinutes(activity.time_estimate_minutes)
+        : "00:00",
+      status: activity.task_status || "Unassigned",
+      location: activity.location || "On Campus"
     });
   });
   return Object.values(weeksMap).sort((a, b) => a.weekNumber - b.weekNumber);
@@ -145,7 +147,7 @@ export const prepareDashboardData = (weeksData: WeekInfo[]) => {
   const weekTotals = weeksData.map((week) => ({
     weekNumber: week.weekNumber,
     totals: calculateLearningTypeMinutes(week.data),
-    totalMinutes: calculateTotalMinutes(week.data),
+    totalMinutes: calculateTotalMinutes(week.data)
   }));
 
   const maxMinutes = Math.max(...weekTotals.map((week) => week.totalMinutes), 0);
@@ -163,8 +165,8 @@ export const prepareDashboardData = (weeksData: WeekInfo[]) => {
     learningTypeUsage[type] = isUsed;
   });
 
-  const usedLearningTypes = learningTypesCapitalized.filter((type) =>
-    learningTypeUsage[type.toLowerCase()]
+  const usedLearningTypes = learningTypesCapitalized.filter(
+    (type) => learningTypeUsage[type.toLowerCase()]
   );
   const unusedLearningTypes = learningTypesCapitalized.filter(
     (type) => !learningTypeUsage[type.toLowerCase()]
@@ -175,28 +177,28 @@ export const prepareDashboardData = (weeksData: WeekInfo[]) => {
     const lowerType = type.toLowerCase();
     return {
       name: type,
-      data: weekTotals.map((week) => week.totals[lowerType] || 0),
+      data: weekTotals.map((week) => week.totals[lowerType] || 0)
     };
   });
 
   const options: ApexOptions = {
     chart: {
-      type: 'bar',
+      type: "bar",
       stacked: true,
       height: 350,
-      toolbar: { show: false },
+      toolbar: { show: false }
     },
     plotOptions: {
-      bar: { horizontal: false, columnWidth: '15%', borderRadius: 5 },
+      bar: { horizontal: false, columnWidth: "15%", borderRadius: 5 }
     },
     dataLabels: { enabled: false },
     xaxis: {
       categories: weekTotals.map((week) => `Week ${week.weekNumber}`),
       axisBorder: { show: true },
-      axisTicks: { show: true },
+      axisTicks: { show: true }
     },
     yaxis: {
-      title: { text: 'Hours' },
+      title: { text: "Hours" },
       min: 0,
       max: yAxisMax,
       tickAmount: yAxisMax / 60,
@@ -204,13 +206,13 @@ export const prepareDashboardData = (weeksData: WeekInfo[]) => {
         formatter: (value: number) => {
           const hours = Math.floor(value / 60);
           const minutes = value % 60;
-          return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-        },
-      },
+          return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+        }
+      }
     },
     legend: {
-      position: 'bottom',
-      horizontalAlign: 'left',
+      position: "bottom",
+      horizontalAlign: "left",
       formatter: (seriesName: string) => {
         const lowercaseSeriesName = seriesName.toLowerCase();
         const isUsed = learningTypeUsage[lowercaseSeriesName];
@@ -223,29 +225,27 @@ export const prepareDashboardData = (weeksData: WeekInfo[]) => {
         fillColors: allLearningTypes.map((type) => {
           const lowercaseType = type.toLowerCase();
           const isUsed = learningTypeUsage[lowercaseType];
-          return isUsed ? learningTypeColors[lowercaseType] : '#d4d4d4';
-        }),
-      },
+          return isUsed ? learningTypeColors[lowercaseType] : "#d4d4d4";
+        })
+      }
     },
     colors: allLearningTypes.map((type) => {
       const lowercaseType = type.toLowerCase();
-      return learningTypeUsage[lowercaseType]
-        ? learningTypeColors[lowercaseType]
-        : '#999';
+      return learningTypeUsage[lowercaseType] ? learningTypeColors[lowercaseType] : "#999";
     }),
     fill: { opacity: 1 },
     grid: {
       show: true,
-      borderColor: '#e0e0e0',
+      borderColor: "#e0e0e0",
       strokeDashArray: 0,
-      position: 'back',
-    },
+      position: "back"
+    }
   };
 
   const summaryData = weekTotals.map((week) => {
     const row: { [key: string]: string } = {
       week: `Week ${week.weekNumber}`,
-      total: formatMinutes(week.totalMinutes),
+      total: formatMinutes(week.totalMinutes)
     };
     allLearningTypes.forEach((type) => {
       row[type.toLowerCase()] = formatMinutes(week.totals[type.toLowerCase()] || 0);
