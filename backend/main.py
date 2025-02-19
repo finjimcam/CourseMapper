@@ -5,8 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi_sessions.backends.implementations import InMemoryBackend
 from fastapi_sessions.frontends.implementations import SessionCookie, CookieParameters
 
-import BaseVerifier, SessionData
-from sqlmodel import Session, select, SQLModel
+from session import BaseVerifier, SessionData
+from sqlmodel import Session, select
 import re
 import uuid
 from helpers import add_workbook_details

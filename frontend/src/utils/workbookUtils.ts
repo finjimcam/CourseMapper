@@ -76,8 +76,8 @@ export interface WeekInfo {
 
 export interface WorkbookDetailsResponse {
   workbook: WorkbookData;
-  course_lead: User | null;
-  learning_platform: LearningPlatform | null;
+  course_lead: User;
+  learning_platform: LearningPlatform;
   activities: ActivityData[];
 }
 
