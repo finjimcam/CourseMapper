@@ -83,6 +83,7 @@ Linting with eslint in frontend:
     - npm ci 
   script:
     - npm run lint
+    - npm run prettier-format
   only:
     changes:
       - frontend/**/*
