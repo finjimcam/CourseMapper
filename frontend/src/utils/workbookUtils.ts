@@ -36,7 +36,7 @@ export interface Week {
 
 export interface Workbook {
   workbook: WorkbookData;
-  course_lead: User;
+  course_lead: User; 
   learning_platform: LearningPlatform;
 }
 

@@ -7,21 +7,19 @@ import CourseHeader from '../components/CourseDetailsHeader';
 import DashboardTab from '../components/DashboardTab';
 import WeekActivityTab from '../components/WeekActivityTab';
 import {
-  WorkbookData,
+  Workbook,
   WorkbookDetailsResponse,
   WeekInfo,
   processActivitiesData,
   prepareDashboardData,
-  User,
-  LearningPlatform,
 } from '../utils/workbookUtils';
 
-function Workbook(): JSX.Element {
+function WorkbookPage(): JSX.Element {
   const { workbook_id } = useParams<{ workbook_id: string }>();
 
-  const [workbookData, setWorkbookData] = useState<WorkbookData | null>(null);
-  const [courseLeadData, setCourseLeadData] = useState<User | null>(null);
-  const [learningPlatformData, setLearningPlatformData] = useState<LearningPlatform | null>(null);
+  const [workbookData, setWorkbookData] = useState<Workbook | null>(null);
+  //const [courseLeadData, setCourseLeadData] = useState<User | null>(null);
+  //const [learningPlatformData, setLearningPlatformData] = useState<LearningPlatform | null>(null);
   const [weeksData, setWeeksData] = useState<WeekInfo[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,9 +34,14 @@ function Workbook(): JSX.Element {
           `${import.meta.env.VITE_API}/workbooks/${workbook_id}/details`
         );
         const { workbook, course_lead, learning_platform, activities } = response.data;
-        setWorkbookData(workbook);
-        setCourseLeadData(course_lead);
-        setLearningPlatformData(learning_platform);
+        if (course_lead && learning_platform) {
+          setWorkbookData({workbook: workbook, 
+              course_lead: course_lead,
+              learning_platform: learning_platform
+          });
+        }
+        //setCourseLeadData(course_lead);
+        //setLearningPlatformData(learning_platform);
         if (activities.length > 0) {
           const weeksDataArray = processActivitiesData(activities);
           setWeeksData(weeksDataArray);
@@ -111,4 +114,4 @@ function Workbook(): JSX.Element {
   );
 }
 
-export default Workbook;
+export default WorkbookPage;
