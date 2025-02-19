@@ -4,7 +4,7 @@ export default function FooterComponent() {
   return (
     
 
-    <footer className="bg-black">
+    <footer style={{ backgroundColor: "#002446" }}>
         <div className="w-full mx-auto p-4 md:py-8">
             <div className="sm:flex sm:items-center sm:justify-between">
                 <a href="https://www.gla.ac.uk/" className="flex items-center mx-5 mb-4 sm:mb-0 space-x-3 rtl:space-x-reverse w-256px sm:w-256px md:w-400px lg:w-512px">
