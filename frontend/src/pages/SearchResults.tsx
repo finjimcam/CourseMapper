@@ -32,7 +32,7 @@ function SearchResults() {
           <br/>
           <SearchBar/>
           <br/>
-          <Grid workbooks={results}/>
+          {(results && results.length > 0) ? <Grid workbooks={results} /> : <p>No search results found.</p>}
         </div>
     );
 }
