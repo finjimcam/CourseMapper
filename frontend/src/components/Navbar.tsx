@@ -39,7 +39,7 @@ function Navbar() {
             }));
         })
         .then(({ sessionData, users }) => {
-            const currentUser = users.find(user => user.id === sessionData.user_id);
+            const currentUser = users.find((user: { id: string; }) => user.id === sessionData.user_id);
             if (currentUser) {
                 setUsername(currentUser.name);
             }

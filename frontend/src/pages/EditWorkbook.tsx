@@ -9,19 +9,9 @@ import WeeksTabs from '../components/WeekActivityTabEdit';
 import ErrorModal from '../components/modals/ErrorModal';
 import WorkbookEditModal from '../components/modals/CourseDetailsEditModal';
 import ActivityModal from '../components/modals/ActivityModal';
-import { WorkbookDetailsResponse, formatMinutes, WeekInfo, WorkbookData } from '../utils/workbookUtils';
+import { WorkbookDetailsResponse, User, LearningPlatform, formatMinutes, WeekInfo, Workbook } from '../utils/workbookUtils';
 
 // --- Type definitions ---
-interface LearningPlatform {
-  id: string;
-  name: string;
-}
-
-interface User {
-  id: string;
-  name: string;
-}
-
 interface Activity {
   id?: string;
   name: string;
@@ -81,7 +71,7 @@ function EditWorkbook(): JSX.Element {
   const { workbook_id } = useParams<{ workbook_id: string }>();
 
   // Main state
-  const [workbookData, setWorkbookData] = useState<WorkbookData | null>(null);
+  const [workbookData, setWorkbookData] = useState<Workbook | null>(null);
   const [weeks, setWeeks] = useState<Week[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -123,13 +113,17 @@ function EditWorkbook(): JSX.Element {
           `${import.meta.env.VITE_API}/workbooks/${workbook_id}/details`
         );
         setWorkbookData({
-          id: workbookDetails.workbook.id,
-          course_name: workbookDetails.workbook.course_name,
-          start_date: workbookDetails.workbook.start_date,
-          end_date: workbookDetails.workbook.end_date,
-          learning_platform_id: workbookDetails.workbook.learning_platform_id,
-          course_lead_id: workbookDetails.workbook.course_lead_id
+          workbook: {id: workbookDetails.workbook.id,
+                    course_name: workbookDetails.workbook.course_name,
+                    start_date: workbookDetails.workbook.start_date,
+                    end_date: workbookDetails.workbook.end_date},
+          learning_platform: {id: workbookDetails.learning_platform.id,
+                    name: workbookDetails.learning_platform.name},
+          course_lead: {id: workbookDetails.course_lead.id,
+                    name: workbookDetails.course_lead.name}
         });
+
+        console.log(workbookData);
 
         // Fetch weeks, activities and staff-activity relationships
         const [weeksRes, activitiesRes, staffActivitiesRes] = await Promise.all([
@@ -165,7 +159,7 @@ function EditWorkbook(): JSX.Element {
         ] = await Promise.all([
           axios.get(`${import.meta.env.VITE_API}/locations/`),
           axios.get(`${import.meta.env.VITE_API}/learning-platforms/`),
-          axios.get(`${import.meta.env.VITE_API}/learning-activities/?learning_platform_id=${workbookDetails.workbook.learning_platform_id}`),
+          axios.get(`${import.meta.env.VITE_API}/learning-activities/?learning_platform_id=${workbookDetails.learning_platform.id}`),
           axios.get(`${import.meta.env.VITE_API}/learning-types/`),
           axios.get(`${import.meta.env.VITE_API}/task-statuses/`),
           axios.get(`${import.meta.env.VITE_API}/users/`)
@@ -203,8 +197,8 @@ function EditWorkbook(): JSX.Element {
     if (lastWeek && lastWeek.end_date) {
       startDate = new Date(lastWeek.end_date);
       startDate.setDate(startDate.getDate() + 1);
-    } else if (workbookData && workbookData.start_date) {
-      startDate = new Date(workbookData.start_date);
+    } else if (workbookData && workbookData.workbook.start_date) {
+      startDate = new Date(workbookData.workbook.start_date);
     } else {
       setError("Invalid workbook or week data.");
       return;
@@ -224,7 +218,7 @@ function EditWorkbook(): JSX.Element {
         activities: []
       };
       setWeeks(prev => [...prev, newWeek]);
-      setWorkbookData(prev => prev ? { ...prev, end_date: formatISODate(endDate) } : prev);
+      setWorkbookData(prev => prev ? { ...prev, workbook: {...prev.workbook, end_date: formatISODate(endDate) }} : prev);
     } catch (err) {
       setError(getErrorMessage(err));
     }
@@ -237,10 +231,10 @@ function EditWorkbook(): JSX.Element {
       const updatedWeeks = weeks
         .filter(w => w.number !== weekNumber)
         .map((w, idx) => ({ ...w, number: idx + 1 }));
-      const recalculated = recalcWeeks(workbookData.start_date, updatedWeeks);
+      const recalculated = recalcWeeks(workbookData.workbook.start_date, updatedWeeks);
       setWeeks(recalculated);
       setWorkbookData(prev =>
-        prev ? { ...prev, end_date: recalculated.length ? recalculated[recalculated.length - 1].end_date : prev.start_date } : prev
+        prev ? { ...prev, end_date: recalculated.length ? recalculated[recalculated.length - 1].end_date : prev.workbook.start_date } : prev
       );
     } catch (err) {
       setError(getErrorMessage(err));
@@ -248,23 +242,30 @@ function EditWorkbook(): JSX.Element {
   };
 
   const handleWorkbookFieldChange = (field: string, value: string) => {
-    setWorkbookData(prev => (prev ? { ...prev, [field]: value } : prev));
+    let field_name = field.split(".");
+    if (field_name[0] === "workbook") {
+      setWorkbookData(prev => (prev ? { ...prev, workbook: {...prev.workbook, [field_name[1]]: value} } : prev));
+    } else if (field_name[0] === "course_lead") {
+      setWorkbookData(prev => (prev ? { ...prev, course_lead: {...prev.course_lead, [field_name[1]]: value} } : prev));
+    } else {
+      setWorkbookData(prev => (prev ? { ...prev, learning_platform: {...prev.course_lead, [field_name[1]]: value} } : prev));
+    }
   };
 
   const handleSaveWorkbook = async () => {
     if (!workbookData || !workbook_id) return;
     try {
       await axios.patch(`${import.meta.env.VITE_API}/workbooks/${workbook_id}`, {
-        course_name: workbookData.course_name,
-        start_date: workbookData.start_date,
-        end_date: workbookData.end_date,
-        course_lead_id: workbookData.course_lead_id,
-        learning_platform_id: workbookData.learning_platform_id
+        course_name: workbookData.workbook.course_name,
+        start_date: workbookData.workbook.start_date,
+        end_date: workbookData.workbook.end_date,
+        course_lead_id: workbookData.course_lead.id,
+        learning_platform_id: workbookData.learning_platform.id
       });
-      const updatedWeeks = recalcWeeks(workbookData.start_date, weeks);
+      const updatedWeeks = recalcWeeks(workbookData.workbook.start_date, weeks);
       setWeeks(updatedWeeks);
       setWorkbookData(prev =>
-        prev ? { ...prev, end_date: updatedWeeks.length ? updatedWeeks[updatedWeeks.length - 1].end_date : prev.start_date } : prev
+        prev ? { ...prev, end_date: updatedWeeks.length ? updatedWeeks[updatedWeeks.length - 1].end_date : prev.workbook.start_date } : prev
       );
       setShowWorkbookModal(false);
     } catch (err) {
@@ -352,10 +353,10 @@ function EditWorkbook(): JSX.Element {
               : week
           )
         );
-      } else if (selectedWeek !== null && workbookData?.id) {
+      } else if (selectedWeek !== null && workbookData?.workbook.id) {
         const { data: newActivity } = await axios.post(`${import.meta.env.VITE_API}/activities/`, {
           ...activityForm,
-          workbook_id: workbookData.id,
+          workbook_id: workbookData.workbook.id,
           week_number: selectedWeek
         });
         if (activityForm.staff_id) {
@@ -398,11 +399,11 @@ function EditWorkbook(): JSX.Element {
       setSaving(true);
       setError(null);
       await axios.patch(`${import.meta.env.VITE_API}/workbooks/${workbook_id}`, {
-        course_name: workbookData.course_name,
-        start_date: workbookData.start_date,
-        end_date: workbookData.end_date,
-        course_lead_id: workbookData.course_lead_id,
-        learning_platform_id: workbookData.learning_platform_id
+        course_name: workbookData.workbook.course_name,
+        start_date: workbookData.workbook.start_date,
+        end_date: workbookData.workbook.end_date,
+        course_lead_id: workbookData.course_lead.id,
+        learning_platform_id: workbookData.learning_platform.id
       });
       setSaving(false);
       navigate(`/workbook/${workbook_id}`);
@@ -488,10 +489,6 @@ function EditWorkbook(): JSX.Element {
           <div className="flex items-center gap-2">
             <CourseHeader
               workbook={workbookData}
-              courseLead={users.find(u => u.id === workbookData.course_lead_id) || null}
-              learningPlatform={
-                learningPlatforms.find(p => p.id === workbookData.learning_platform_id) || null
-              }
             />
             <Button size="xs" color="light" onClick={() => setShowWorkbookModal(true)}>
               <HiPencil className="h-4 w-4" />

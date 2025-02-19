@@ -10,11 +10,6 @@ interface LearningPlatform {
   name: string;
 }
 
-interface User {
-  id: string;
-  name: string;
-}
-
 interface CreateWorkbookModalProps {
   show: boolean;
   onClose: () => void;
@@ -33,7 +28,6 @@ export function CreateWorkbookModal({ show, onClose }: CreateWorkbookModalProps)
   const [learningPlatform, setLearningPlatform] = useState('');
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [learningPlatforms, setLearningPlatforms] = useState<LearningPlatform[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -73,40 +67,7 @@ export function CreateWorkbookModal({ show, onClose }: CreateWorkbookModalProps)
           setLoading(false);
           return;
         }
-        
-        // Fetch and validate users
-        const usersResponse = await axios.get(`${import.meta.env.VITE_API}/users/`);
-        console.log('Raw users response:', usersResponse.data);
-        
-        let users;
-        try {
-          // Ensure we have valid JSON data
-          if (typeof usersResponse.data === 'string') {
-            users = JSON.parse(usersResponse.data);
-          } else {
-            users = usersResponse.data;
-          }
-          
-          // Validate users structure
-          if (!Array.isArray(users)) {
-            throw new Error('Users data is not an array');
-          }
-          
-          // Validate each user object
-          users = users.filter(u => u && typeof u === 'object' && u.id && u.name);
-          
-          if (users.length === 0) {
-            throw new Error('No valid users found');
-          }
-          
-          console.log('Processed users:', users);
-          setUsers(users);
-        } catch (err) {
-          console.error('Users processing error:', err);
-          setError('Failed to process users data');
-          setLoading(false);
-          return;
-        }
+      
       } catch (err) {
         const error = err as Error;
         setError(error.message || 'Failed to fetch data');
