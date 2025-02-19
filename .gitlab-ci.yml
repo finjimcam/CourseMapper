@@ -64,7 +64,7 @@ Unit tests on backend:
 
 Type checking for frontend:
   stage: Static Analysis
-  image: node:16
+  image: node:20.17.0-alpine
   cache:
     paths:
       - node_modules/
@@ -76,12 +76,13 @@ Type checking for frontend:
     changes:
       - frontend/**/*
 
-Linting with black in frontend:
+Linting with eslint in frontend:
   stage: Static Analysis
+  image: node:20.17.0-alpine
+  before_script:
+    - npm ci 
   script:
-    - black --check --diff frontend
+    - npm run lint
   only:
     changes:
-      - frontend/**/*  rules:
-    - changes:
-      - backend/**/*
+      - frontend/**/*
