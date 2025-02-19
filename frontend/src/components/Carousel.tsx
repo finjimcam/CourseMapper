@@ -23,7 +23,7 @@ function Carousel({ items }: { items: Array<CarouselItem> }) {
     if (items.length < carouselSize) {
       setVisibleItems(items);
     } else {
-      let settingItems: CarouselItem[] = [];
+      const settingItems: CarouselItem[] = [];
       for (let i = currentPosition; i < currentPosition + carouselSize; i++) {
         settingItems.push(items[i % items.length]);
       }

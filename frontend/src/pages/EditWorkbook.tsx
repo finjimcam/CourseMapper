@@ -9,47 +9,18 @@ import WeeksTabs from '../components/WeekActivityTabEdit';
 import ErrorModal from '../components/modals/ErrorModal';
 import WorkbookEditModal from '../components/modals/CourseDetailsEditModal';
 import ActivityModal from '../components/modals/ActivityModal';
-import { WorkbookDetailsResponse, User, LearningPlatform, formatMinutes, WeekInfo, Workbook } from '../utils/workbookUtils';
+import { WorkbookDetailsResponse, User, LearningPlatform, formatMinutes, WeekInfo, Workbook, Activity, Week, GenericData, getErrorMessage } from '../utils/workbookUtils';
 
 // --- Type definitions ---
-interface Activity {
-  id?: string;
-  name: string;
-  time_estimate_minutes: number;
-  week_number: number;
-  location_id: string;
-  learning_activity_id: string;
-  learning_type_id: string;
-  task_status_id: string;
-  staff_id: string;
-}
-
-export interface Week {
-  number: number;
-  start_date: string;
-  end_date: string;
-  activities: Activity[];
-}
-
-interface Location {
-  id: string;
-  name: string;
-}
-
 interface LearningActivity {
   id: string;
   name: string;
   platform_id: string;
 }
 
-interface LearningType {
-  id: string;
-  name: string;
-}
-
-interface TaskStatus {
-  id: string;
-  name: string;
+interface ActivityStaff {
+  staff_id: string;
+  activity_id: string;
 }
 
 // --- Helpers & Defaults ---
@@ -63,8 +34,6 @@ const defaultActivityForm: Partial<Activity> = {
   staff_id: ''
 };
 const formatISODate = (date: Date) => date.toISOString().split('T')[0];
-const getErrorMessage = (err: unknown) =>
-  err instanceof Error ? err.message : 'An error occurred';
 
 function EditWorkbook(): JSX.Element {
   const navigate = useNavigate();
@@ -96,10 +65,10 @@ function EditWorkbook(): JSX.Element {
 
   // Reference data states
   const [learningPlatforms, setLearningPlatforms] = useState<LearningPlatform[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
+  const [locations, setLocations] = useState<GenericData[]>([]);
   const [learningActivities, setLearningActivities] = useState<LearningActivity[]>([]);
-  const [learningTypes, setLearningTypes] = useState<LearningType[]>([]);
-  const [taskStatuses, setTaskStatuses] = useState<TaskStatus[]>([]);
+  const [learningTypes, setLearningTypes] = useState<GenericData[]>([]);
+  const [taskStatuses, setTaskStatuses] = useState<GenericData[]>([]);
   const [users, setUsers] = useState<User[]>([]);
 
   useEffect(() => {
@@ -137,7 +106,7 @@ function EditWorkbook(): JSX.Element {
 
         // Merge staff info into activities
         const activitiesWithStaff = activitiesData.map((activity: Activity) => {
-          const staffActivity = staffActivitiesData.find((sa: any) => sa.activity_id === activity.id);
+          const staffActivity = staffActivitiesData.find((sa: ActivityStaff) => sa.activity_id === activity.id);
           return { ...activity, staff_id: staffActivity?.staff_id || '' };
         });
         const organizedWeeks = weeksData.map((week: { number: number; start_date: string; end_date: string }) => ({
@@ -242,7 +211,7 @@ function EditWorkbook(): JSX.Element {
   };
 
   const handleWorkbookFieldChange = (field: string, value: string) => {
-    let field_name = field.split(".");
+    const field_name = field.split(".");
     if (field_name[0] === "workbook") {
       setWorkbookData(prev => (prev ? { ...prev, workbook: {...prev.workbook, [field_name[1]]: value} } : prev));
     } else if (field_name[0] === "course_lead") {

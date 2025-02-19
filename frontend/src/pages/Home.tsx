@@ -6,12 +6,13 @@ import SearchBar from '../components/Searchbar.tsx';
 import Carousel from '../components/Carousel.tsx';
 import { Link, useNavigate } from 'react-router-dom';
 import { CreateWorkbookModal } from '../components/modals/CreateWorkbookModal.tsx';
+import { getErrorMessage } from '../utils/workbookUtils.ts';
 
 function Home() {
   const navigate = useNavigate();
   const [workbooks, setWorkbooks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   useEffect(() => {
@@ -20,8 +21,8 @@ function Home() {
         const response = await axios.get(`${import.meta.env.VITE_API}/workbooks/`);
         setWorkbooks(response.data);
         setLoading(false);
-      } catch (err: any) {
-        setError(err.message || 'An error occurred');
+      } catch (err) {
+        setError(getErrorMessage(err));
         setLoading(false);
       }
     };

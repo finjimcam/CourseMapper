@@ -6,6 +6,7 @@ import axios from 'axios';
 import SearchBar from '../components/Searchbar.tsx';
 import Carousel from '../components/Carousel.tsx';
 import { CreateWorkbookModal } from '../components/modals/CreateWorkbookModal.tsx';
+import { getErrorMessage } from '../utils/workbookUtils.ts';
 
 function MyWorkbooks() {
   const navigate = useNavigate();
@@ -21,9 +22,8 @@ function MyWorkbooks() {
         const response = await axios.get(`${import.meta.env.VITE_API}/workbooks/`);
         setWorkbooks(response.data);
         setLoading(false);
-      } catch (err: any) {
-        const error = err as Error;
-        setError(error.message || 'An error occurred');
+      } catch (err: unknown) {
+        setError(getErrorMessage(err));
         setLoading(false);
       }
     };

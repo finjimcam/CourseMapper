@@ -2,17 +2,17 @@
 import React from 'react';
 import { Table, Button, Tooltip } from 'flowbite-react';
 import { CustomBadge, learningTypeColors, statusColors } from './CustomBadge';
-import { WeekInfo, WeekData } from '../utils/workbookUtils';
+import { WeekInfo, WeekData, Activity } from '../utils/workbookUtils';
 import { HiPencil, HiTrash } from 'react-icons/hi';
 
 interface WeekActivityTabProps {
   week: WeekInfo;
   /** (Optional) The original Activity objects corresponding to each row */
-  originalActivities?: any[];
+  originalActivities?: Activity[];
   /** (Optional) Callback when the user wants to edit an activity.
    * Receives (activity, activityIndex, weekNumber)
    */
-  onEditActivity?: (activity: any, activityIndex: number, weekNumber: number) => void;
+  onEditActivity?: (activity: Activity, activityIndex: number, weekNumber: number) => void;
   /** (Optional) Callback when the user wants to delete an activity.
    * Receives (activityIndex, weekNumber)
    */

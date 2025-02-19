@@ -17,7 +17,7 @@ function Layout() {
         });
         setSessionValid(true);
       } catch (err) {
-        // session invalid
+        console.log(err);
         setSessionValid(false);
       } finally {
         setLoading(false);

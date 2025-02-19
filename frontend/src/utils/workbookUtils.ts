@@ -5,6 +5,12 @@ import { learningTypeColors } from '../components/CustomBadge';
 // =====================
 // Type Definitions
 // =====================
+
+export interface GenericData {
+  id: string;
+  name: string;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -84,6 +90,9 @@ export interface WorkbookDetailsResponse {
 // =====================
 // Utility Functions
 // =====================
+
+export const getErrorMessage = (err: unknown) =>
+  err instanceof Error ? err.message : 'An error occurred';
 
 export const timeToMinutes = (time: string): number => {
   const [hoursStr, minutesStr] = time.split(':');
