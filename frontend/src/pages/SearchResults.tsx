@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import Grid from "../components/Grid";
 import { Workbook } from "../utils/workbookUtils";
+import SearchBar from "../components/Searchbar";
 
 function SearchResults() {
     const [results, setResults] = useState<Workbook[] | null>(null);
@@ -27,6 +28,10 @@ function SearchResults() {
     
     return (
         <div>
+          <h2 className="text-3xl font-bold text-left">Search Results</h2>
+          <br/>
+          <SearchBar/>
+          <br/>
           <Grid workbooks={results}/>
         </div>
     );
