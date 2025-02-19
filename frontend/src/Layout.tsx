@@ -3,6 +3,7 @@ import { Outlet, Navigate } from 'react-router-dom';
 import axios from 'axios';
 import { Spinner, Button } from 'flowbite-react';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 
 function Layout() {
   const [loading, setLoading] = useState(true);
@@ -46,6 +47,7 @@ function Layout() {
       <main className="flex-1 p-4">
         <Outlet />
       </main>
+      <Footer />
     </div>
   );
 }
