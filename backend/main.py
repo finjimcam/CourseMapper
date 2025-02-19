@@ -28,7 +28,6 @@ from models.models_base import (
     Workbook,
     WorkbookCreate,
     WorkbookUpdate,
-    WorkbookSearch,
     Activity,
     ActivityCreate,
     ActivityUpdate,
@@ -1330,9 +1329,9 @@ def search_workbooks(
     name: str | None = None,
     starts_after: datetime.date | None = None,
     ends_before: datetime.date | None = None,
-    led_by: list[str] = [],
-    contributed_by: list[str] = [],
-    learning_platform: list[str] = [],
+    led_by: str | None = None,
+    contributed_by: str | None = None,
+    learning_platform: str | None = None,
     _: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
     peek: bool = Query(False),
@@ -1346,35 +1345,23 @@ def search_workbooks(
         if name is not None:
             if not re.search(name, workbook.course_name, re.IGNORECASE):
                 continue
-        # if workbook lead list provided, returned workbooks must match at least one.
+        # if workbook lead provided, returned workbooks must match.
         if led_by:
-            matched = False
-            for user in led_by:
-                if re.search(user, workbook.course_lead.name, re.IGNORECASE):
-                    matched = True
-                    break
-            if not matched:
+            if not re.search(led_by, workbook.course_lead.name, re.IGNORECASE):
                 continue
-        # if workbook contributor list is provided, returned workbooks must match at least one.
+        # if workbook contributor is provided, returned workbooks must match.
         if contributed_by:
             matched = False
-            for user_a in workbook.contributors:
-                for user_b in contributed_by:
-                    if re.search(user_a, user_b, re.IGNORECASE):
-                        matched = True
-                        break
-                else:
-                    break
-            if not matched:
-                continue
-        # if learning platform list is provided, returned workbooks must match at least one
-        if learning_platform:
-            matched = False
-            for learning_platform in learning_platform:
-                if re.search(name, workbook.learning_platform.name, re.IGNORECASE):
+            for user in workbook.contributors:
+                print(user.name)
+                if re.search(contributed_by, user.name, re.IGNORECASE):
                     matched = True
                     break
             if not matched:
+                continue
+        # if learning platform is provided, returned workbooks must match.
+        if learning_platform:
+            if not re.search(learning_platform, workbook.learning_platform.name, re.IGNORECASE):
                 continue
         # if starts_after is provided, returned workbooks must start on or after that date
         if starts_after:
