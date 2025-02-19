@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import { ApexOptions } from 'apexcharts';
+import axios from 'axios';
 
 interface WeekGraduateAttribute {
   week_workbook_id: string;
@@ -24,18 +25,14 @@ const PieChart: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch selections and graduate attributes concurrently
+        // Fetch selections and graduate attributes concurrently using axios
         const [gradSelRes, gradRes] = await Promise.all([
-          fetch('http://localhost:8000/week-graduate-attributes/'),
-          fetch('http://localhost:8000/graduate_attributes/')
+          axios.get(`${import.meta.env.VITE_API}/week-graduate-attributes/`),
+          axios.get(`${import.meta.env.VITE_API}/graduate_attributes/`)
         ]);
 
-        if (!gradSelRes.ok || !gradRes.ok) {
-          throw new Error(`HTTP error! status: ${gradSelRes.status} or ${gradRes.status}`);
-        }
-
-        const gradSelData: WeekGraduateAttribute[] = await gradSelRes.json();
-        const gradData: GraduateAttribute[] = await gradRes.json();
+        const gradSelData: WeekGraduateAttribute[] = gradSelRes.data;
+        const gradData: GraduateAttribute[] = gradRes.data;
 
         // Create a lookup map for attribute names
         const attributeMap: Record<string, string> = {};
