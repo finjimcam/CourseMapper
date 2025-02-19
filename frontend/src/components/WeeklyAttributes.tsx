@@ -88,78 +88,97 @@ const WeeklyAttributes: React.FC<WeeklyAttributesProps> = ({ weekNumber, workboo
         newAttribute
       });
 
-      // Create a new array with the updated attribute at the specified position
-      const updatedAttributes = [...selectedAttributes];
-      updatedAttributes[position] = newAttribute;
+      if (!workbookId) {
+        // If no workbookId, just update the local state
+        const updatedAttributes = [...selectedAttributes];
+        updatedAttributes[position] = newAttribute;
+        setSelectedAttributes(updatedAttributes);
+        return;
+      }
+
+      // Get current attributes for this week
+      const currentAttributes = await axios.get(`${import.meta.env.VITE_API}/week-graduate-attributes/`, {
+        params: { 
+          week_number: weekNumber,
+          week_workbook_id: workbookId
+        }
+      });
       
-      if (workbookId) {
-        // Remove existing attributes for this week
-        console.log('Deleting existing attributes...');
-        
-        // First, get current attributes for this week
-        const currentAttributes = await axios.get(`${import.meta.env.VITE_API}/week-graduate-attributes/`, {
-          params: { 
+      console.log('Current attributes:', currentAttributes.data);
+      
+      // Find if there's an existing attribute at this position
+      const existingAttrAtPosition = currentAttributes.data[position];
+      
+      if (existingAttrAtPosition) {
+        // Delete only the attribute at this position
+        console.log('Deleting attribute at position:', position);
+        await axios.delete(`${import.meta.env.VITE_API}/week-graduate-attributes/`, {
+          data: { 
             week_number: weekNumber,
-            week_workbook_id: workbookId
+            week_workbook_id: workbookId,
+            graduate_attribute_id: existingAttrAtPosition.graduate_attribute_id
           }
         });
-        
-        console.log('Current attributes:', currentAttributes.data);
-        
-        // Delete each existing attribute
-        for (const attr of currentAttributes.data) {
-          console.log('Deleting attribute:', attr);
-          await axios.delete(`${import.meta.env.VITE_API}/week-graduate-attributes/`, {
-            data: { 
-              week_number: weekNumber,
-              week_workbook_id: workbookId,
-              graduate_attribute_id: attr.graduate_attribute_id
-            }
-          });
-        }
-
-        // Save the new attributes
-        for (const attr of updatedAttributes) {
-          if (attr) {
-            console.log('Saving new attribute:', {
-              week_number: weekNumber,
-              week_workbook_id: workbookId,
-              graduate_attribute_id: attr.id
-            });
-
-            await axios.post(`${import.meta.env.VITE_API}/week-graduate-attributes/`, {
-              week_number: weekNumber,
-              week_workbook_id: workbookId,
-              graduate_attribute_id: attr.id
-            });
-          }
-        }
-
-        // Refresh the selected attributes
-        const [attributesRes, selectedRes] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API}/graduate_attributes/`),
-          axios.get(`${import.meta.env.VITE_API}/week-graduate-attributes/`, {
-            params: { 
-              week_number: weekNumber,
-              week_workbook_id: workbookId
-            },
-          }),
-        ]);
-
-        const selectedIds = selectedRes.data.map((item: any) => item.graduate_attribute_id);
-        const selected = attributesRes.data.filter((attr: GraduateAttribute) => 
-          selectedIds.includes(attr.id)
-        );
-        setSelectedAttributes(selected);
-      } else {
-        setSelectedAttributes(updatedAttributes);
       }
+
+      // Save the new attribute
+      console.log('Saving new attribute:', {
+        week_number: weekNumber,
+        week_workbook_id: workbookId,
+        graduate_attribute_id: newAttribute.id
+      });
+
+      await axios.post(`${import.meta.env.VITE_API}/week-graduate-attributes/`, {
+        week_number: weekNumber,
+        week_workbook_id: workbookId,
+        graduate_attribute_id: newAttribute.id
+      });
+
+      // Update the local state immediately
+      const updatedAttributes = [...selectedAttributes];
+      updatedAttributes[position] = newAttribute;
+      setSelectedAttributes(updatedAttributes);
+
+      // Then refresh from server to ensure consistency
+      const selectedRes = await axios.get(`${import.meta.env.VITE_API}/week-graduate-attributes/`, {
+        params: { 
+          week_number: weekNumber,
+          week_workbook_id: workbookId
+        },
+      });
+
+      const selectedIds = selectedRes.data.map((item: any) => item.graduate_attribute_id);
+      const selected = graduateAttributes.filter((attr: GraduateAttribute) => 
+        selectedIds.includes(attr.id)
+      );
+      setSelectedAttributes(selected);
     } catch (error: any) {
       console.error('Error saving graduate attributes:', {
         error: error.message,
         response: error.response?.data,
         config: error.config
       });
+      
+      // Handle permission errors
+      if (error.response?.status === 403) {
+        alert('Permission denied. You do not have permission to modify graduate attributes.');
+      } else {
+        alert('Failed to save graduate attribute. Please try again.');
+      }
+      
+      // Refresh the view to ensure consistency
+      const selectedRes = await axios.get(`${import.meta.env.VITE_API}/week-graduate-attributes/`, {
+        params: { 
+          week_number: weekNumber,
+          week_workbook_id: workbookId
+        },
+      });
+
+      const selectedIds = selectedRes.data.map((item: any) => item.graduate_attribute_id);
+      const selected = graduateAttributes.filter((attr: GraduateAttribute) => 
+        selectedIds.includes(attr.id)
+      );
+      setSelectedAttributes(selected);
     }
     setSaving(false);
   };
