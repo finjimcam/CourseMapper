@@ -138,6 +138,7 @@ function Workbook(): JSX.Element {
               allLearningTypes={dashboardData.allLearningTypes}
               showTable={showTable}
               toggleShowTable={() => setShowTable(!showTable)}
+              workbook_id={workbook_id || ''}
             />
           </Tabs.Item>
           {weeksData.map((week) => (

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import { graduateAttributeColors } from './CustomBadge';
 
 interface GraduateAttribute {
   id: string;
@@ -57,6 +58,14 @@ const WeeklyAttributes: React.FC<WeeklyAttributesProps> = ({ weekNumber, workboo
         console.log('Graduate attributes response:', attributesRes.data);
         console.log('Selected graduate attributes response:', selectedRes.data);
         console.log('Selected graduate attributes params:', selectedRes.config?.params);
+
+        // Log the normalized names and their colors
+        attributesRes.data.forEach((attr: GraduateAttribute) => {
+          const normalizedKey = attr.name.toLowerCase().replace(/\s+/g, '');
+          console.log('Weekly Attributes - Attribute:', attr.name);
+          console.log('Weekly Attributes - Normalized key:', normalizedKey);
+          console.log('Weekly Attributes - Color:', graduateAttributeColors[normalizedKey]);
+        });
 
         setGraduateAttributes(attributesRes.data);
         
@@ -240,7 +249,11 @@ const DropdownRadio: React.FC<DropdownRadioProps> = ({ options, selected, disabl
     <div className="relative inline-block w-full" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full text-left text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 flex items-center justify-between dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+        style={{
+          backgroundColor: selected ? graduateAttributeColors[selected.name.toLowerCase()] : '#6c757d',
+          color: '#000000'
+        }}
+        className="w-full text-left focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 flex items-center justify-between"
       >
         {selected ? selected.name : "Select an Attribute"}
         <svg className="w-2.5 h-2.5 ml-2" aria-hidden="true" fill="none" viewBox="0 0 10 6">
@@ -257,8 +270,11 @@ const DropdownRadio: React.FC<DropdownRadioProps> = ({ options, selected, disabl
                   className={`flex items-center p-2 rounded-sm ${
                     disabledOptions.some(disabled => disabled.id === attr.id)
                       ? 'opacity-50 cursor-not-allowed'
-                      : 'hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer'
+                      : 'hover:bg-gray-100 cursor-pointer'
                   }`}
+                  style={{
+                    backgroundColor: selected?.id === attr.id ? graduateAttributeColors[attr.name.toLowerCase()] : 'transparent'
+                  }}
                   onClick={() => {
                     if (!disabledOptions.some(disabled => disabled.id === attr.id)) {
                       onSelect(attr);

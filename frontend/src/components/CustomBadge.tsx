@@ -26,7 +26,21 @@ export const learningTypeColors: { [key: string]: string } = {
     production: '#bdea75',      // Green
     investigation: '#f8807f',   // Red
     assessment: '#44546a',      // Navy
-  };  
+};
+
+// Color mappings for graduate attributes
+export const graduateAttributeColors: { [key: string]: string } = {
+    'adaptable': '#FABC2A',
+    'effective communication': '#FFCAB1',
+    'reflective learners': '#F38D68',
+    'resourceful and responsible': '#EE6C4D',
+    'subject specialists': '#F76F8E',
+    'confident': '#F2BAC9',
+    'ethically and socially aware': '#7FD8BE',
+    'experienced collaborators': '#A1FCDF',
+    'independent and critical thinkers': '#3B5249',
+    'investigative': '#519872'
+};
 
 export const CustomBadge: React.FC<CustomBadgeProps> = ({ label, colorMapping }) => {
   const normalizedKey = normaliseKey(label); // Normalize the label

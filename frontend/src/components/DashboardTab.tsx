@@ -12,6 +12,7 @@ interface DashboardTabProps {
   allLearningTypes: string[];
   showTable: boolean;
   toggleShowTable: () => void;
+  workbook_id: string;
 }
 
 const DashboardTab: React.FC<DashboardTabProps> = ({
@@ -21,6 +22,7 @@ const DashboardTab: React.FC<DashboardTabProps> = ({
   allLearningTypes,
   showTable,
   toggleShowTable,
+  workbook_id,
 }) => {
   return (
     <div className="p-4">
@@ -68,6 +70,7 @@ const DashboardTab: React.FC<DashboardTabProps> = ({
       </button>
       <div className="mb-8">
       <Piechart
+        workbook_id={workbook_id}
       />
       </div>
     </div>

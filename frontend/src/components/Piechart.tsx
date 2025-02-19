@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import { ApexOptions } from 'apexcharts';
 import axios from 'axios';
+import { graduateAttributeColors } from './CustomBadge';
 
 interface WeekGraduateAttribute {
   week_workbook_id: string;
@@ -14,44 +15,76 @@ interface GraduateAttribute {
   name: string;
 }
 
-const PieChart: React.FC = () => {
+interface PieChartProps {
+  workbook_id: string;
+}
+
+const PieChart: React.FC<PieChartProps> = ({ workbook_id }) => {
   const [chartData, setChartData] = useState<{ series: number[]; labels: string[] }>({
     series: [],
     labels: [],
   });
+  const [chartColors, setChartColors] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch selections and graduate attributes concurrently using axios
-        const [gradSelRes, gradRes] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API}/week-graduate-attributes/`),
-          axios.get(`${import.meta.env.VITE_API}/graduate_attributes/`)
-        ]);
-
-        const gradSelData: WeekGraduateAttribute[] = gradSelRes.data;
+        console.log('PieChart - Fetching data for workbook_id:', workbook_id);
+        
+        // Get all graduate attributes to show in chart (even if not used)
+        const gradRes = await axios.get(`${import.meta.env.VITE_API}/graduate_attributes/`);
         const gradData: GraduateAttribute[] = gradRes.data;
+        console.log('PieChart - All graduate attributes:', gradData);
 
-        // Create a lookup map for attribute names
-        const attributeMap: Record<string, string> = {};
-        gradData.forEach((attr) => {
-          attributeMap[attr.id] = attr.name;
+        // Get graduate attributes for this workbook from all weeks
+        const url = `${import.meta.env.VITE_API}/week-graduate-attributes/?week_workbook_id=${workbook_id}`;
+        console.log('PieChart - Fetching workbook attributes from:', url);
+        const gradSelRes = await axios.get(url);
+        console.log('PieChart - Workbook graduate attributes response:', gradSelRes.data);
+        const gradSelData: WeekGraduateAttribute[] = gradSelRes.data;
+
+        // Count occurrences of each graduate attribute
+        const attributeCounts: { [key: string]: number } = {};
+        gradSelData.forEach(item => {
+          attributeCounts[item.graduate_attribute_id] = (attributeCounts[item.graduate_attribute_id] || 0) + 1;
         });
 
-        // Aggregate counts for each graduate attribute (each occurrence counts as 1)
-        const counts: Record<string, number> = {};
-        gradSelData.forEach((item) => {
-          counts[item.graduate_attribute_id] = (counts[item.graduate_attribute_id] || 0) + 1;
+        // Track which attributes are used and separate them
+        const attributeUsage: { [key: string]: boolean } = {};
+        const usedAttributes: string[] = [];
+        const unusedAttributes: string[] = [];
+        
+        gradData.forEach(attr => {
+          const count = attributeCounts[attr.id] || 0;
+          attributeUsage[attr.name.toLowerCase()] = count > 0;
+          if (count > 0) {
+            usedAttributes.push(attr.name);
+          } else {
+            unusedAttributes.push(attr.name);
+          }
         });
 
-        // Prepare labels and series arrays
-        // Each slice represents a graduate attribute; label is its name (or fallback to its id)
-        const labels = Object.keys(counts).map((id) => attributeMap[id] || id);
-        const series = Object.keys(counts).map((id) => counts[id]);
+        // Combine labels with used attributes first
+        const allLabels = [...usedAttributes, ...unusedAttributes];
+        
+        // Create series data in the same order
+        const series = allLabels.map(label => {
+          const attrId = gradData.find(attr => attr.name === label)?.id;
+          return attrId ? (attributeCounts[attrId] || 0) : 0;
+        });
 
-        setChartData({ series, labels });
+        // Create colors array in the same order
+        const colors = allLabels.map(label => {
+          const normalizedKey = label.toLowerCase();
+          return attributeUsage[normalizedKey]
+            ? graduateAttributeColors[normalizedKey] || '#6c757d'
+            : '#d4d4d4';
+        });
+
+        setChartData({ series, labels: allLabels });
+        setChartColors(colors);
         setLoading(false);
       } catch (err: any) {
         setError(err.message);
@@ -60,22 +93,46 @@ const PieChart: React.FC = () => {
     };
 
     fetchData();
-  }, []);
+  }, [workbook_id]);
 
   const chartOptions: { series: number[]; options: ApexOptions } = {
     series: chartData.series,
     options: {
       chart: {
-        width: 380,
+        width: 600,
+        height: 600,
         type: 'pie'
       },
+      title: {
+        text: 'Graduate Attributes Distribution',
+        align: 'center',
+        style: {
+          fontSize: '20px'
+        }
+      },
       labels: chartData.labels,
+      colors: chartColors,
+      legend: {
+        position: 'right',
+        height: 600,
+        fontSize: '14px',
+        formatter: function(seriesName: string, opts?: any) {
+          const value = opts.w.globals.series[opts.seriesIndex];
+          return value > 0 
+            ? `${seriesName}: ${value}` 
+            : `<span style="color: #999">${seriesName}</span>`;
+        }
+      },
+      dataLabels: {
+        enabled: false,
+        formatter: function() { return ''; }
+      },
       responsive: [
         {
           breakpoint: 480,
           options: {
             chart: {
-              width: 200
+              width: 600
             },
             legend: {
               position: 'bottom'
@@ -101,7 +158,7 @@ const PieChart: React.FC = () => {
           options={chartOptions.options}
           series={chartOptions.series}
           type="pie"
-          width={380}
+          width={600}
         />
       </div>
     </div>
