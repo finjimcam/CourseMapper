@@ -8,7 +8,7 @@ function SearchBar() {
     function makeSearch(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
         console.log(searchInput);
-        navigate({pathname: `/results`, search: createSearchParams({text_input: searchInput}).toString()});
+        navigate({pathname: `/results`, search: createSearchParams({name: searchInput}).toString()});
     }
 
     return (

@@ -311,6 +311,15 @@ class WorkbookUpdate(BaseModel):
     course_lead_id: Optional[uuid.UUID] = None
 
 
+class WorkbookSearch(BaseModel):
+    name: Optional[str] = None
+    starts_after: Optional[datetime.date] = None
+    ends_before: Optional[datetime.date] = None
+    led_by: list[str] = []
+    contributed_by: list[str] = []
+    learning_platform: list[str] = []
+
+
 class LearningPlatform(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(nullable=False)

@@ -9,6 +9,7 @@ from session import BaseVerifier, SessionData
 from sqlmodel import Session, select
 import re
 import uuid
+import datetime
 from helpers import add_workbook_details
 
 from models.database import (
@@ -27,6 +28,7 @@ from models.models_base import (
     Workbook,
     WorkbookCreate,
     WorkbookUpdate,
+    WorkbookSearch,
     Activity,
     ActivityCreate,
     ActivityUpdate,
@@ -1323,6 +1325,74 @@ def read_workbooks(
     ]
 
 
+@app.get("/workbooks/search/", dependencies=[Depends(cookie)])
+def search_workbooks(
+    name: str | None = None,
+    starts_after: datetime.date | None = None,
+    ends_before: datetime.date | None = None,
+    led_by: list[str] = [],
+    contributed_by: list[str] = [],
+    learning_platform: list[str] = [],
+    _: SessionData = Depends(verifier),
+    session: Session = Depends(get_session),
+    peek: bool = Query(False),
+) -> List[Dict[str, Any]] | None:
+    if peek:
+        return None
+    
+    workbooks = []
+    for workbook in session.exec(select(Workbook)):
+        # if workbook name provided, returned workbooks must match it.
+        if name is not None:
+            if not re.search(name, workbook.course_name, re.IGNORECASE):
+                continue
+        # if workbook lead list provided, returned workbooks must match at least one.
+        if led_by:
+            matched = False
+            for user in led_by:
+                if re.search(user, workbook.course_lead.name, re.IGNORECASE):
+                    matched = True
+                    break
+            if not matched:
+                continue
+        # if workbook contributor list is provided, returned workbooks must match at least one.
+        if contributed_by:
+            matched = False
+            for user_a in workbook.contributors:
+                for user_b in contributed_by:
+                    if re.search(user_a, user_b, re.IGNORECASE):
+                        matched = True
+                        break
+                else:
+                    break
+            if not matched:
+                continue
+        # if learning platform list is provided, returned workbooks must match at least one
+        if learning_platform:
+            matched = False
+            for learning_platform in learning_platform:
+                if re.search(name, workbook.learning_platform.name, re.IGNORECASE):
+                    matched = True
+                    break
+            if not matched:
+                continue
+        # if starts_after is provided, returned workbooks must start on or after that date
+        if starts_after:
+            if workbook.start_date < starts_after:
+                continue
+        # if ends_before is provided, returned workbooks must start on or after that date
+        if ends_before:
+            if workbook.end_date > ends_before:
+                continue
+        workbooks.append(workbook)
+
+    results: List[Dict[str, Any]] = []
+    for workbook in workbooks:
+        results.append(add_workbook_details(session, workbook))
+
+    return results
+
+
 @app.get("/weeks/", dependencies=[Depends(cookie)])
 def read_weeks(
     _: SessionData = Depends(verifier),
@@ -1460,24 +1530,3 @@ def get_workbook_details(
     response["activities"] = activities_list
 
     return response
-
-
-@app.get("/search")
-def search(
-    text_input: str, 
-    session: Session = Depends(get_session)
-) -> List[Dict[str, Any]]:
-    workbooks = []
-    for workbook in session.exec(select(Workbook)):
-        if re.search(text_input, workbook.course_name, re.IGNORECASE):
-            workbooks.append(workbook)
-        elif workbook.course_lead:
-            if re.search(text_input, workbook.course_lead.name, re.IGNORECASE): workbooks.append(workbook)
-        elif workbook.learning_platform:
-            if re.search(text_input, workbook.learning_platform.name, re.IGNORECASE): workbooks.append(workbook)
-
-    results: List[Dict[str, Any]] = []
-    for workbook in workbooks:
-        results.append(add_workbook_details(session, workbook))
-
-    return results

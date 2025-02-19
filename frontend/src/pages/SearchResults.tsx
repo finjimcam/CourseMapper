@@ -13,7 +13,21 @@ function SearchResults() {
         const fetchResults = async () => {
             try {
               console.log(searchParams);
-              const response = await axios.get(`${import.meta.env.VITE_API}/search`, {params: searchParams});
+              const queryObject: Record<string, any> = {};
+              searchParams.forEach((value, key) => {
+                  if (key in queryObject) {
+                      if (Array.isArray(queryObject[key])) {
+                          queryObject[key].push(value);
+                      } else {
+                          queryObject[key] = [queryObject[key], value];
+                      }
+                  } else {
+                      queryObject[key] = value;
+                  }
+              });
+              const response = await axios.get(`${import.meta.env.VITE_API}/workbooks/search/`, 
+                {params: queryObject,}
+              );
               console.log(response);
               setResults(response.data);
             } catch (err: any) {
