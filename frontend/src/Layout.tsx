@@ -44,7 +44,7 @@ function Layout() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1 p-4">
+      <main className="flex-1 p-4 mt-[80px]">
         <Outlet />
       </main>
       <Footer />

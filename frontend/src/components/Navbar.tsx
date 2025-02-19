@@ -63,8 +63,8 @@ function Navbar() {
     };
 
     return (
-        <nav className="bg-white border-gray-200">
-            <div className="relative flex items-center justify-between mx-auto p-4 w-full">
+        <nav className="bg-white dark:bg-gray-900 fixed w-full z-20 top-0 start-0 border-b border-gray-200 dark:border-gray-600">
+            <div className="w-full flex flex-wrap items-center justify-between p-4">
                 <NavLink to="/" className="flex items-center space-x-3 rtl:space-x-reverse">
                     <img src="/LISU.png" className="w-[32px] sm:w-[64px] md:w-[96px] lg:w-[128px] xl:w-[256px]" alt="LISU Logo" />
                 </NavLink>
