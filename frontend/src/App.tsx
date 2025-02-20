@@ -2,7 +2,7 @@ import {
   createBrowserRouter,
   Route,
   createRoutesFromElements,
-  RouterProvider
+  RouterProvider,
 } from 'react-router-dom';
 
 // Layout
@@ -34,7 +34,7 @@ const router = createBrowserRouter(
         <Route path="workbooks/create" element={<CreateWorkbook />} />
         <Route path="workbook/:workbook_id" element={<WorkbookPage />} />
         <Route path="workbook/edit/:workbook_id" element={<EditWorkbook />} />
-      <Route path="results" element={<SearchResults />} />
+        <Route path="results" element={<SearchResults />} />
       </Route>
     </>
   )

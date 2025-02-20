@@ -1,10 +1,16 @@
-// src/utils/workbookUtils.ts
 import { ApexOptions } from 'apexcharts';
 import { learningTypeColors } from '../components/CustomBadge';
+import axios from 'axios';
 
 // =====================
 // Type Definitions
 // =====================
+
+export interface GenericData {
+  id: string;
+  name: string;
+}
+
 export interface User {
   id: string;
   name: string;
@@ -36,7 +42,7 @@ export interface Week {
 
 export interface Workbook {
   workbook: WorkbookData;
-  course_lead: User; 
+  course_lead: User;
   learning_platform: LearningPlatform;
 }
 
@@ -85,6 +91,35 @@ export interface WorkbookDetailsResponse {
 // Utility Functions
 // =====================
 
+export const getUsername = async (): Promise<string> => {
+  return axios
+    .get(`${import.meta.env.VITE_API}/session/`, {
+      withCredentials: true,
+    })
+    .then((sessionResponse) => {
+      // Get user details using the user_id from session
+      console.log(sessionResponse);
+      return axios.get(`${import.meta.env.VITE_API}/users/`).then((usersResponse) => ({
+        sessionData: sessionResponse.data,
+        users: usersResponse.data,
+      }));
+    })
+    .then(({ sessionData, users }) => {
+      const currentUser = users.find((user: { id: string }) => user.id === sessionData.user_id);
+      if (currentUser) {
+        return currentUser.name;
+      }
+      return '';
+    })
+    .catch((error) => {
+      console.error('Error fetching user data:', error);
+      return ''; // Reset username on error
+    });
+};
+
+export const getErrorMessage = (err: unknown) =>
+  err instanceof Error ? err.message : 'An error occurred';
+
 export const timeToMinutes = (time: string): number => {
   const [hoursStr, minutesStr] = time.split(':');
   const hours = parseInt(hoursStr) || 0;
@@ -124,7 +159,9 @@ export const processActivitiesData = (activities: ActivityData[]): WeekInfo[] =>
       title: activity.name || 'Untitled',
       activity: activity.learning_activity || 'N/A',
       type: activity.learning_type || 'N/A',
-      time: activity.time_estimate_minutes ? formatMinutes(activity.time_estimate_minutes) : '00:00',
+      time: activity.time_estimate_minutes
+        ? formatMinutes(activity.time_estimate_minutes)
+        : '00:00',
       status: activity.task_status || 'Unassigned',
       location: activity.location || 'On Campus',
     });
@@ -154,8 +191,8 @@ export const prepareDashboardData = (weeksData: WeekInfo[]) => {
     learningTypeUsage[type] = isUsed;
   });
 
-  const usedLearningTypes = learningTypesCapitalized.filter((type) =>
-    learningTypeUsage[type.toLowerCase()]
+  const usedLearningTypes = learningTypesCapitalized.filter(
+    (type) => learningTypeUsage[type.toLowerCase()]
   );
   const unusedLearningTypes = learningTypesCapitalized.filter(
     (type) => !learningTypeUsage[type.toLowerCase()]
@@ -220,9 +257,7 @@ export const prepareDashboardData = (weeksData: WeekInfo[]) => {
     },
     colors: allLearningTypes.map((type) => {
       const lowercaseType = type.toLowerCase();
-      return learningTypeUsage[lowercaseType]
-        ? learningTypeColors[lowercaseType]
-        : '#999';
+      return learningTypeUsage[lowercaseType] ? learningTypeColors[lowercaseType] : '#999';
     }),
     fill: { opacity: 1 },
     grid: {

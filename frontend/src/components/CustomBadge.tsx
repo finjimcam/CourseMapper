@@ -1,14 +1,14 @@
 import { Badge } from 'flowbite-react';
-import fontColorContrast from 'font-color-contrast'
+import fontColorContrast from 'font-color-contrast';
 
 interface CustomBadgeProps {
-    label: string;
-    colorMapping: { [key: string]: string }; // Accept a color mapping
+  label: string;
+  colorMapping: { [key: string]: string }; // Accept a color mapping
 }
 
 const normaliseKey = (status: string): string => {
-    return status.trim().toLowerCase().replace(/\s+/g, ''); // Normalize spaces
-  };
+  return status.trim().toLowerCase().replace(/\s+/g, ''); // Normalize spaces
+};
 
 // Color mappings for statuses
 export const statusColors: { [key: string]: string } = {
@@ -19,14 +19,14 @@ export const statusColors: { [key: string]: string } = {
 
 // Color mappings for learning types
 export const learningTypeColors: { [key: string]: string } = {
-    practice: '#bb98dc',        // Purple
-    acquisition: '#a1f5ed',     // turqoise
-    discussion: '#7aaeea',      // Blue
-    collaboration: '#ffd21a',   // Yellow
-    production: '#bdea75',      // Green
-    investigation: '#f8807f',   // Red
-    assessment: '#44546a',      // Navy
-  };  
+  practice: '#bb98dc', // Purple
+  acquisition: '#a1f5ed', // turqoise
+  discussion: '#7aaeea', // Blue
+  collaboration: '#ffd21a', // Yellow
+  production: '#bdea75', // Green
+  investigation: '#f8807f', // Red
+  assessment: '#44546a', // Navy
+};
 
 export const CustomBadge: React.FC<CustomBadgeProps> = ({ label, colorMapping }) => {
   const normalizedKey = normaliseKey(label); // Normalize the label

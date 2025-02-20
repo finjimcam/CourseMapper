@@ -1,16 +1,17 @@
 // src/components/ActivityModal.tsx
 import React from 'react';
 import { Modal, Button, Label, TextInput, Select } from 'flowbite-react';
+import { Activity, GenericData } from '../../utils/workbookUtils';
 
 interface ActivityModalProps {
   show: boolean;
-  activity: any;
+  activity: Partial<Activity>;
   editing: boolean;
-  locations: any[];
-  learningActivities: any[];
-  learningTypes: any[];
-  taskStatuses: any[];
-  users: any[];
+  locations: GenericData[];
+  learningActivities: GenericData[];
+  learningTypes: GenericData[];
+  taskStatuses: GenericData[];
+  users: GenericData[];
   onSave: () => void;
   onCancel: () => void;
   onFieldChange: (field: string, value: string | number) => void;
@@ -58,7 +59,7 @@ const ActivityModal: React.FC<ActivityModalProps> = ({
             onChange={(e) => onFieldChange('location_id', e.target.value)}
           >
             <option value="">Select location</option>
-            {locations.map((loc: any) => (
+            {locations.map((loc: GenericData) => (
               <option key={loc.id} value={loc.id}>
                 {loc.name}
               </option>
@@ -73,7 +74,7 @@ const ActivityModal: React.FC<ActivityModalProps> = ({
             onChange={(e) => onFieldChange('learning_activity_id', e.target.value)}
           >
             <option value="">Select learning activity</option>
-            {learningActivities.map((act: any) => (
+            {learningActivities.map((act: GenericData) => (
               <option key={act.id} value={act.id}>
                 {act.name}
               </option>
@@ -88,7 +89,7 @@ const ActivityModal: React.FC<ActivityModalProps> = ({
             onChange={(e) => onFieldChange('learning_type_id', e.target.value)}
           >
             <option value="">Select learning type</option>
-            {learningTypes.map((type: any) => (
+            {learningTypes.map((type: GenericData) => (
               <option key={type.id} value={type.id}>
                 {type.name}
               </option>
@@ -103,7 +104,7 @@ const ActivityModal: React.FC<ActivityModalProps> = ({
             onChange={(e) => onFieldChange('task_status_id', e.target.value)}
           >
             <option value="">Select status</option>
-            {taskStatuses.map((status: any) => (
+            {taskStatuses.map((status: GenericData) => (
               <option key={status.id} value={status.id}>
                 {status.name}
               </option>
@@ -118,7 +119,7 @@ const ActivityModal: React.FC<ActivityModalProps> = ({
             onChange={(e) => onFieldChange('staff_id', e.target.value)}
           >
             <option value="">Select staff member</option>
-            {users.map((user: any) => (
+            {users.map((user: GenericData) => (
               <option key={user.id} value={user.id}>
                 {user.name}
               </option>

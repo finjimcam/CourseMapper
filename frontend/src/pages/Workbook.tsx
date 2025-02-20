@@ -18,8 +18,6 @@ function WorkbookPage(): JSX.Element {
   const { workbook_id } = useParams<{ workbook_id: string }>();
 
   const [workbookData, setWorkbookData] = useState<Workbook | null>(null);
-  //const [courseLeadData, setCourseLeadData] = useState<User | null>(null);
-  //const [learningPlatformData, setLearningPlatformData] = useState<LearningPlatform | null>(null);
   const [weeksData, setWeeksData] = useState<WeekInfo[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,13 +33,12 @@ function WorkbookPage(): JSX.Element {
         );
         const { workbook, course_lead, learning_platform, activities } = response.data;
         if (course_lead && learning_platform) {
-          setWorkbookData({workbook: workbook, 
-              course_lead: course_lead,
-              learning_platform: learning_platform
+          setWorkbookData({
+            workbook: workbook,
+            course_lead: course_lead,
+            learning_platform: learning_platform,
           });
         }
-        //setCourseLeadData(course_lead);
-        //setLearningPlatformData(learning_platform);
         if (activities.length > 0) {
           const weeksDataArray = processActivitiesData(activities);
           setWeeksData(weeksDataArray);
@@ -81,9 +78,7 @@ function WorkbookPage(): JSX.Element {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="bg-white p-6 rounded-lg shadow">
-        <CourseHeader
-          workbook={workbookData}
-        />
+        <CourseHeader workbook={workbookData} />
         <div className="flex justify-end mb-4">
           <Link
             to={`/workbook/edit/${workbook_id}`}

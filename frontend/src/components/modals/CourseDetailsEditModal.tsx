@@ -3,12 +3,13 @@ import React from 'react';
 import { Modal, Button, Label, TextInput, Select } from 'flowbite-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { GenericData, Workbook } from '../../utils/workbookUtils';
 
 interface WorkbookEditModalProps {
   show: boolean;
-  workbook: any;
-  users: any[];
-  learningPlatforms: any[];
+  workbook: Workbook;
+  users: GenericData[];
+  learningPlatforms: GenericData[];
   weeksCount: number;
   onSave: () => void;
   onCancel: () => void;
@@ -44,7 +45,7 @@ const WorkbookEditModal: React.FC<WorkbookEditModalProps> = ({
             value={workbook.course_lead.id || ''}
             onChange={(e) => onChange('course_lead.id', e.target.value)}
           >
-            {users.map((user: any) => (
+            {users.map((user: GenericData) => (
               <option key={user.id} value={user.id}>
                 {user.name}
               </option>
@@ -54,7 +55,8 @@ const WorkbookEditModal: React.FC<WorkbookEditModalProps> = ({
         <div>
           <Label htmlFor="learningPlatform" value="Learning Platform" />
           <div className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-gray-900">
-            {learningPlatforms.find((p: any) => p.id === workbook.learning_platform)?.name || 'Not selected'}
+            {learningPlatforms.find((p: GenericData) => p.id === workbook.learning_platform.id)
+              ?.name || 'Not selected'}
           </div>
         </div>
         <div>

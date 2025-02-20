@@ -13,11 +13,11 @@ function Layout() {
     const checkSession = async () => {
       try {
         await axios.get(`${import.meta.env.VITE_API}/session/`, {
-          withCredentials: true
+          withCredentials: true,
         });
         setSessionValid(true);
       } catch (err) {
-        // session invalid
+        console.log(err);
         setSessionValid(false);
       } finally {
         setLoading(false);

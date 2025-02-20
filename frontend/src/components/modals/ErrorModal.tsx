@@ -18,11 +18,11 @@ interface ErrorModalProps {
 
 const ErrorModal: React.FC<ErrorModalProps> = ({
   show,
-  title = "Errors",
-  message = "Please fix the following issues:",
+  title = 'Errors',
+  message = 'Please fix the following issues:',
   errors,
   onClose,
-  buttonText = "Close"
+  buttonText = 'Close',
 }) => (
   <Modal show={show} onClose={onClose}>
     <Modal.Header>{title}</Modal.Header>
@@ -31,7 +31,9 @@ const ErrorModal: React.FC<ErrorModalProps> = ({
         <p className="text-red-500 font-medium">{message}</p>
         <ul className="list-disc list-inside space-y-1">
           {errors.map((error, index) => (
-            <li key={index} className="text-gray-700">{error}</li>
+            <li key={index} className="text-gray-700">
+              {error}
+            </li>
           ))}
         </ul>
       </div>
