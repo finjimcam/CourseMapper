@@ -1,6 +1,6 @@
-// src/utils/workbookUtils.ts
 import { ApexOptions } from "apexcharts";
 import { learningTypeColors } from "../components/CustomBadge";
+import axios from "axios";
 
 // =====================
 // Type Definitions
@@ -90,6 +90,32 @@ export interface WorkbookDetailsResponse {
 // =====================
 // Utility Functions
 // =====================
+
+export const getUsername = async (): Promise<string> => {
+  return axios
+    .get(`${import.meta.env.VITE_API}/session/`, {
+      withCredentials: true
+    })
+    .then((sessionResponse) => {
+      // Get user details using the user_id from session
+      console.log(sessionResponse);
+      return axios.get(`${import.meta.env.VITE_API}/users/`).then((usersResponse) => ({
+        sessionData: sessionResponse.data,
+        users: usersResponse.data
+      }));
+    })
+    .then(({ sessionData, users }) => {
+      const currentUser = users.find((user: { id: string }) => user.id === sessionData.user_id);
+      if (currentUser) {
+        return currentUser.name;
+      }
+      return "";
+    })
+    .catch((error) => {
+      console.error("Error fetching user data:", error);
+      return ""; // Reset username on error
+    });
+};
 
 export const getErrorMessage = (err: unknown) =>
   err instanceof Error ? err.message : "An error occurred";

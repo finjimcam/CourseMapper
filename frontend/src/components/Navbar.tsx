@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { Breadcrumb, Dropdown } from "flowbite-react";
 import axios from "axios";
+import { getUsername } from "../utils/workbookUtils";
 
 interface WorkbookData {
   id: string;
@@ -29,27 +30,8 @@ function Navbar() {
 
   useEffect(() => {
     // Fetch user data when component mounts
-    axios
-      .get(`${import.meta.env.VITE_API}/session/`, {
-        withCredentials: true
-      })
-      .then((sessionResponse) => {
-        // Get user details using the user_id from session
-        return axios.get(`${import.meta.env.VITE_API}/users/`).then((usersResponse) => ({
-          sessionData: sessionResponse.data,
-          users: usersResponse.data
-        }));
-      })
-      .then(({ sessionData, users }) => {
-        const currentUser = users.find((user: { id: string }) => user.id === sessionData.user_id);
-        if (currentUser) {
-          setUsername(currentUser.name);
-        }
-      })
-      .catch((error) => {
-        console.error("Error fetching user data:", error);
-        setUsername(""); // Reset username on error
-      });
+    const promise = getUsername();
+    promise.then((name) => setUsername(name));
   }, [location.pathname]); // Add location.pathname to dependency array to re-run on navigation
 
   const handleLogout = async () => {

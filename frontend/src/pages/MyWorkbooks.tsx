@@ -6,7 +6,7 @@ import axios from "axios";
 import SearchBar from "../components/Searchbar.tsx";
 import Carousel from "../components/Carousel.tsx";
 import { CreateWorkbookModal } from "../components/modals/CreateWorkbookModal.tsx";
-import { getErrorMessage } from "../utils/workbookUtils.ts";
+import { getErrorMessage } from "../utils/workbookUtils.tsx";
 
 function MyWorkbooks() {
   const navigate = useNavigate();
