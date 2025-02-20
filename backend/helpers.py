@@ -1,7 +1,6 @@
 from typing import Any, Dict, List
-from sqlmodel import select
+from sqlmodel import Session, select
 from models.models_base import User, LearningPlatform, Workbook
-from sqlmodel import Session
 
 
 def add_workbook_details(session: Session, workbook: Workbook) -> Dict[str, Any]:
