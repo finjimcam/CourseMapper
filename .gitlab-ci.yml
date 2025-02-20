@@ -59,7 +59,7 @@ Unit tests on backend:
   script:
     - python -m unittest discover -s backend -p "test_*.py"
   rules:
-    changes:
+    - changes:
       - backend/**/*
 
 Type checking for frontend:
