@@ -62,7 +62,7 @@ Unit tests on backend:
     - changes:
       - backend/**/*
 
-Type checking for frontend:
+Type checking with tsc in frontend:
   stage: Static Analysis
   image: node:20.17.0-alpine
   cache:
@@ -83,7 +83,7 @@ Linting with eslint in frontend:
     - npm ci 
   script:
     - npm run lint
-    - npm run prettier-format
+    - npm run prettier
   only:
     changes:
       - frontend/**/*
