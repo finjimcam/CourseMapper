@@ -1463,18 +1463,17 @@ def get_workbook_details(
 
 
 @app.get("/search")
-def search(
-    text_input: str, 
-    session: Session = Depends(get_session)
-) -> List[Dict[str, Any]]:
+def search(text_input: str, session: Session = Depends(get_session)) -> List[Dict[str, Any]]:
     workbooks = []
     for workbook in session.exec(select(Workbook)):
         if re.search(text_input, workbook.course_name, re.IGNORECASE):
             workbooks.append(workbook)
         elif workbook.course_lead:
-            if re.search(text_input, workbook.course_lead.name, re.IGNORECASE): workbooks.append(workbook)
+            if re.search(text_input, workbook.course_lead.name, re.IGNORECASE):
+                workbooks.append(workbook)
         elif workbook.learning_platform:
-            if re.search(text_input, workbook.learning_platform.name, re.IGNORECASE): workbooks.append(workbook)
+            if re.search(text_input, workbook.learning_platform.name, re.IGNORECASE):
+                workbooks.append(workbook)
 
     results: List[Dict[str, Any]] = []
     for workbook in workbooks:
