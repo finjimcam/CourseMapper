@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import axios from 'axios';
-import { Spinner, Button } from 'flowbite-react';
+import { Spinner } from 'flowbite-react';
 import Navbar from './components/Navbar';
 
 function Layout() {

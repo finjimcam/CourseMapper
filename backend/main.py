@@ -1,13 +1,15 @@
 from typing import Annotated, AsyncGenerator, List, Dict, Any, cast, TypeVar
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException, Response, Query
-from sqlmodel import Session, select, SQLModel
-import uuid
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_sessions.backends.implementations import InMemoryBackend
 from fastapi_sessions.frontends.implementations import SessionCookie, CookieParameters
 
 from session import BaseVerifier, SessionData
+from sqlmodel import Session, select
+import re
+import uuid
+from helpers import add_workbook_details
 
 from models.database import (
     create_db_and_tables,
@@ -1410,40 +1412,8 @@ def get_workbook_details(
         raise HTTPException(status_code=404, detail="Workbook not found")
 
     # Fetch related data
-    course_lead = session.exec(select(User).where(User.id == workbook.course_lead_id)).first()
-    learning_platform = session.exec(
-        select(LearningPlatform).where(LearningPlatform.id == workbook.learning_platform_id)
-    ).first()
+    response: Dict[str, Any] = add_workbook_details(session, workbook)
     activities = list(session.exec(select(Activity).where(Activity.workbook_id == workbook_id)))
-
-    # Build response
-    response: Dict[str, Any] = {
-        "workbook": {
-            "id": str(workbook.id),
-            "start_date": workbook.start_date.isoformat(),
-            "end_date": workbook.end_date.isoformat(),
-            "course_name": workbook.course_name,
-            "course_lead_id": str(workbook.course_lead_id),
-            "learning_platform_id": str(workbook.learning_platform_id),
-        },
-        "course_lead": (
-            {
-                "id": str(course_lead.id),
-                "name": course_lead.name,
-            }
-            if course_lead
-            else None
-        ),
-        "learning_platform": (
-            {
-                "id": str(learning_platform.id),
-                "name": learning_platform.name,
-            }
-            if learning_platform
-            else None
-        ),
-        "activities": [],
-    }
 
     # Process activities
     activities_list: List[Dict[str, Any]] = []
@@ -1490,3 +1460,23 @@ def get_workbook_details(
     response["activities"] = activities_list
 
     return response
+
+
+@app.get("/search")
+def search(text_input: str, session: Session = Depends(get_session)) -> List[Dict[str, Any]]:
+    workbooks = []
+    for workbook in session.exec(select(Workbook)):
+        if re.search(text_input, workbook.course_name, re.IGNORECASE):
+            workbooks.append(workbook)
+        elif workbook.course_lead:
+            if re.search(text_input, workbook.course_lead.name, re.IGNORECASE):
+                workbooks.append(workbook)
+        elif workbook.learning_platform:
+            if re.search(text_input, workbook.learning_platform.name, re.IGNORECASE):
+                workbooks.append(workbook)
+
+    results: List[Dict[str, Any]] = []
+    for workbook in workbooks:
+        results.append(add_workbook_details(session, workbook))
+
+    return results
