@@ -1,6 +1,6 @@
 // src/components/ErrorModal.tsx
-import React from "react";
-import { Modal, Button } from "flowbite-react";
+import React from 'react';
+import { Modal, Button } from 'flowbite-react';
 
 interface ErrorModalProps {
   show: boolean;
@@ -18,11 +18,11 @@ interface ErrorModalProps {
 
 const ErrorModal: React.FC<ErrorModalProps> = ({
   show,
-  title = "Errors",
-  message = "Please fix the following issues:",
+  title = 'Errors',
+  message = 'Please fix the following issues:',
   errors,
   onClose,
-  buttonText = "Close"
+  buttonText = 'Close',
 }) => (
   <Modal show={show} onClose={onClose}>
     <Modal.Header>{title}</Modal.Header>

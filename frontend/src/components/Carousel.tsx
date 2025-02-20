@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 interface CarouselItem {
   id: number;
@@ -48,7 +48,7 @@ function Carousel({ items }: { items: Array<CarouselItem> }) {
             <Link
               to={`/workbook/${item.id}`}
               key={item.id}
-              style={{ color: "inherit", textDecoration: "inherit" }}
+              style={{ color: 'inherit', textDecoration: 'inherit' }}
             >
               <h6 className="text-lg font-bold dark:text-white">{item.course_name}</h6>
               <p className="text-gray-500 md:text-l dark:text-gray-400">{item.course_lead}</p>

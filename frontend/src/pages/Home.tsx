@@ -1,12 +1,12 @@
 // Home.tsx
 
-import { useEffect, useState } from "react";
-import axios from "axios";
-import SearchBar from "../components/Searchbar.tsx";
-import Carousel from "../components/Carousel.tsx";
-import { Link, useNavigate } from "react-router-dom";
-import { CreateWorkbookModal } from "../components/modals/CreateWorkbookModal.tsx";
-import { getErrorMessage, getUsername } from "../utils/workbookUtils.tsx";
+import { useEffect, useState } from 'react';
+import axios from 'axios';
+import SearchBar from '../components/Searchbar.tsx';
+import Carousel from '../components/Carousel.tsx';
+import { Link, useNavigate } from 'react-router-dom';
+import { CreateWorkbookModal } from '../components/modals/CreateWorkbookModal.tsx';
+import { getErrorMessage, getUsername } from '../utils/workbookUtils.tsx';
 
 function Home() {
   const navigate = useNavigate();
@@ -14,7 +14,7 @@ function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState('');
 
   useEffect(() => {
     const fetchWorkbooks = async () => {
@@ -41,8 +41,8 @@ function Home() {
     endDate: Date;
     coordinatorIds: string[];
   }) => {
-    sessionStorage.setItem("newWorkbookData", JSON.stringify(workbookData));
-    navigate("/workbooks/edit");
+    sessionStorage.setItem('newWorkbookData', JSON.stringify(workbookData));
+    navigate('/workbooks/edit');
   };
 
   if (loading) return <div className="text-center mt-10">Loading...</div>;

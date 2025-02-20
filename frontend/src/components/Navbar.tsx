@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
-import { Breadcrumb, Dropdown } from "flowbite-react";
-import axios from "axios";
-import { getUsername } from "../utils/workbookUtils";
+import { useEffect, useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
+import { Breadcrumb, Dropdown } from 'flowbite-react';
+import axios from 'axios';
+import { getUsername } from '../utils/workbookUtils';
 
 interface WorkbookData {
   id: string;
@@ -12,18 +12,18 @@ interface WorkbookData {
 function Navbar() {
   const location = useLocation();
   const [workbookData, setWorkbookData] = useState<WorkbookData | null>(null);
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState('');
 
   useEffect(() => {
-    if (location.pathname.startsWith("/workbook/")) {
-      const workbookId = location.pathname.split("/")[2];
+    if (location.pathname.startsWith('/workbook/')) {
+      const workbookId = location.pathname.split('/')[2];
       axios
         .get(`${import.meta.env.VITE_API}/workbooks/${workbookId}/details`)
         .then((response) => {
           setWorkbookData(response.data.workbook);
         })
         .catch((error) => {
-          console.error("Error fetching workbook data:", error);
+          console.error('Error fetching workbook data:', error);
         });
     }
   }, [location.pathname]);
@@ -37,12 +37,12 @@ function Navbar() {
   const handleLogout = async () => {
     try {
       await axios.delete(`${import.meta.env.VITE_API}/session/`, {
-        withCredentials: true
+        withCredentials: true,
       });
-      setUsername(""); // Reset username state on logout
-      window.location.href = "/login"; // Redirect to login page instead
+      setUsername(''); // Reset username state on logout
+      window.location.href = '/login'; // Redirect to login page instead
     } catch (err) {
-      console.error("Failed to log out", err);
+      console.error('Failed to log out', err);
     }
   };
 
@@ -59,39 +59,39 @@ function Navbar() {
             label={<img className="w-8 h-8 rounded-full" src="/user.png" alt="user photo" />}
           >
             <Dropdown.Header>
-              <span className="block text-sm text-gray-900">{username || "User"}</span>
+              <span className="block text-sm text-gray-900">{username || 'User'}</span>
             </Dropdown.Header>
             <Dropdown.Divider />
             <Dropdown.Item onClick={handleLogout}>Sign out</Dropdown.Item>
           </Dropdown>
         </div>
         <div className="flex items-center space-x-4">
-          {!location.pathname.startsWith("/workbook/") &&
-            location.pathname !== "/my-workbooks" && (
+          {!location.pathname.startsWith('/workbook/') &&
+            location.pathname !== '/my-workbooks' && (
               <NavLink
                 to="/"
                 className={({ isActive }) =>
                   `block py-2 px-3 rounded md:p-0 ${
                     isActive
-                      ? "text-white bg-blue-700 md:bg-transparent"
-                      : "text-gray-900 hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700"
+                      ? 'text-white bg-blue-700 md:bg-transparent'
+                      : 'text-gray-900 hover:bg-gray-100 md:hover:bg-transparent md:hover:text-blue-700'
                   }`
                 }
               >
                 Home
               </NavLink>
             )}
-          {(location.pathname.startsWith("/workbook/") ||
-            location.pathname === "/my-workbooks") && (
+          {(location.pathname.startsWith('/workbook/') ||
+            location.pathname === '/my-workbooks') && (
             <div className="flex items-center h-full">
-              {location.pathname.startsWith("/workbook/") && (
+              {location.pathname.startsWith('/workbook/') && (
                 <Breadcrumb aria-label="Breadcrumb" className="bg-transparent">
                   <Breadcrumb.Item
                     href="/"
                     className={`flex items-center text-sm font-medium ${
-                      location.pathname.startsWith("/")
-                        ? "text-gray-700"
-                        : "text-gray-900 hover:text-blue-700"
+                      location.pathname.startsWith('/')
+                        ? 'text-gray-700'
+                        : 'text-gray-900 hover:text-blue-700'
                     }`}
                   >
                     Home
@@ -99,24 +99,24 @@ function Navbar() {
                   <Breadcrumb.Item
                     href="/my-workbooks"
                     className={`flex items-center text-sm font-medium ${
-                      location.pathname === "/my-workbooks"
-                        ? "text-gray-700"
-                        : "text-gray-900 hover:text-blue-700"
+                      location.pathname === '/my-workbooks'
+                        ? 'text-gray-700'
+                        : 'text-gray-900 hover:text-blue-700'
                     }`}
                   >
                     My Workbooks
                   </Breadcrumb.Item>
                   <Breadcrumb.Item className="text-gray-700">
-                    {workbookData?.course_name || "Workbook"}
+                    {workbookData?.course_name || 'Workbook'}
                   </Breadcrumb.Item>
                 </Breadcrumb>
               )}
-              {location.pathname === "/my-workbooks" && (
+              {location.pathname === '/my-workbooks' && (
                 <Breadcrumb aria-label="Breadcrumb" className="bg-transparent">
                   <Breadcrumb.Item
                     href="/"
                     className={`flex items-center text-sm font-medium ${
-                      location.pathname.startsWith("/") ? "text-gray-700" : "text-gray-900"
+                      location.pathname.startsWith('/') ? 'text-gray-700' : 'text-gray-900'
                     }`}
                   >
                     Home

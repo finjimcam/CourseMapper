@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
-import { Workbook } from "../utils/workbookUtils";
+import { Link } from 'react-router-dom';
+import { Workbook } from '../utils/workbookUtils';
 
 const Grid: React.FC<{ workbooks: Workbook[] | null }> = ({ workbooks }) => (
   <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -12,7 +12,7 @@ const Grid: React.FC<{ workbooks: Workbook[] | null }> = ({ workbooks }) => (
           <Link
             to={`/workbook/${item.workbook.id}`}
             key={item.workbook.id}
-            style={{ color: "inherit", textDecoration: "inherit" }}
+            style={{ color: 'inherit', textDecoration: 'inherit' }}
           >
             <h6 className="text-lg font-bold dark:text-white">{item.workbook.course_name}</h6>
             <p className="text-gray-500 md:text-l dark:text-gray-400">{item.course_lead.name}</p>

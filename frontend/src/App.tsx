@@ -2,23 +2,23 @@ import {
   createBrowserRouter,
   Route,
   createRoutesFromElements,
-  RouterProvider
-} from "react-router-dom";
+  RouterProvider,
+} from 'react-router-dom';
 
 // Layout
-import Layout from "./Layout";
+import Layout from './Layout';
 
 // Pages
-import Home from "./pages/Home";
-import About from "./pages/About";
-import MyWorkbooks from "./pages/MyWorkbooks";
-import WorkbookPage from "./pages/Workbook";
-import CreateWorkbook from "./pages/CreateWorkbook";
-import EditWorkbook from "./pages/EditWorkbook";
-import SearchResults from "./pages/SearchResults";
-import Login from "./pages/Login";
+import Home from './pages/Home';
+import About from './pages/About';
+import MyWorkbooks from './pages/MyWorkbooks';
+import WorkbookPage from './pages/Workbook';
+import CreateWorkbook from './pages/CreateWorkbook';
+import EditWorkbook from './pages/EditWorkbook';
+import SearchResults from './pages/SearchResults';
+import Login from './pages/Login';
 
-import "./App.css";
+import './App.css';
 
 const router = createBrowserRouter(
   createRoutesFromElements(

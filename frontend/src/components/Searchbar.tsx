@@ -1,16 +1,16 @@
-import { FormEvent, useState } from "react";
-import { createSearchParams, useNavigate } from "react-router-dom";
+import { FormEvent, useState } from 'react';
+import { createSearchParams, useNavigate } from 'react-router-dom';
 
 function SearchBar() {
   const navigate = useNavigate();
-  const [searchInput, setSearchInput] = useState("");
+  const [searchInput, setSearchInput] = useState('');
 
   function makeSearch(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     console.log(searchInput);
     navigate({
       pathname: `/results`,
-      search: createSearchParams({ text_input: searchInput }).toString()
+      search: createSearchParams({ text_input: searchInput }).toString(),
     });
   }
 

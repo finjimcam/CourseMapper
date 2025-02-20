@@ -1,15 +1,15 @@
 // src/pages/CreateWorkbook.tsx
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { Spinner, Button } from "flowbite-react";
-import { HiPencil } from "react-icons/hi";
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { Spinner, Button } from 'flowbite-react';
+import { HiPencil } from 'react-icons/hi';
 
-import CourseHeader from "../components/CourseDetailsHeader";
-import WeeksTabs from "../components/WeekActivityTabEdit";
-import ErrorModal from "../components/modals/ErrorModal";
-import WorkbookEditModal from "../components/modals/CourseDetailsEditModal";
-import ActivityModal from "../components/modals/ActivityModal";
+import CourseHeader from '../components/CourseDetailsHeader';
+import WeeksTabs from '../components/WeekActivityTabEdit';
+import ErrorModal from '../components/modals/ErrorModal';
+import WorkbookEditModal from '../components/modals/CourseDetailsEditModal';
+import ActivityModal from '../components/modals/ActivityModal';
 import {
   User,
   LearningPlatform,
@@ -17,8 +17,8 @@ import {
   Week,
   Activity,
   WeekInfo,
-  Workbook
-} from "../utils/workbookUtils";
+  Workbook,
+} from '../utils/workbookUtils';
 
 // =====================
 // Constants & Endpoints
@@ -36,17 +36,17 @@ const ENDPOINTS = {
   workbooks: `${API_URL}/workbooks/`,
   weeks: `${API_URL}/weeks/`,
   activities: `${API_URL}/activities/`,
-  activityStaff: `${API_URL}/activity-staff/`
+  activityStaff: `${API_URL}/activity-staff/`,
 };
 
 const initialActivityState: Partial<Activity> = {
-  name: "",
+  name: '',
   time_estimate_minutes: 0,
-  location_id: "",
-  learning_activity_id: "",
-  learning_type_id: "",
-  task_status_id: "",
-  staff_id: ""
+  location_id: '',
+  learning_activity_id: '',
+  learning_type_id: '',
+  task_status_id: '',
+  staff_id: '',
 };
 
 // =====================
@@ -121,25 +121,25 @@ function EditWorkbook(): JSX.Element {
         setLoading(true);
         setError(null);
 
-        const storedData = sessionStorage.getItem("newWorkbookData");
-        if (!storedData) throw new Error("No workbook data found");
+        const storedData = sessionStorage.getItem('newWorkbookData');
+        if (!storedData) throw new Error('No workbook data found');
 
         const data = JSON.parse(storedData);
         setWorkbook({
           workbook: {
-            id: "temp", // Temporary ID for new workbook
+            id: 'temp', // Temporary ID for new workbook
             course_name: data.courseName,
             start_date: data.startDate,
-            end_date: data.endDate
+            end_date: data.endDate,
           },
           learning_platform: {
             id: data.learningPlatformId,
-            name: data.learningPlatform
+            name: data.learningPlatform,
           },
           course_lead: {
-            id: "temp",
-            name: data.courseLead
-          }
+            id: 'temp',
+            name: data.courseLead,
+          },
         });
 
         const [
@@ -148,14 +148,14 @@ function EditWorkbook(): JSX.Element {
           learningActivitiesRes,
           learningTypesRes,
           taskStatusesRes,
-          usersRes
+          usersRes,
         ] = await Promise.all([
           axios.get(ENDPOINTS.locations),
           axios.get(ENDPOINTS.learningPlatforms),
           axios.get(ENDPOINTS.learningActivities(data.learningPlatformId)),
           axios.get(ENDPOINTS.learningTypes),
           axios.get(ENDPOINTS.taskStatuses),
-          axios.get(ENDPOINTS.users)
+          axios.get(ENDPOINTS.users),
         ]);
 
         setLocations(locationsRes.data);
@@ -166,7 +166,7 @@ function EditWorkbook(): JSX.Element {
         setUsers(usersRes.data);
         setLoading(false);
       } catch (err) {
-        setError((err as Error).message || "Failed to load initial data");
+        setError((err as Error).message || 'Failed to load initial data');
         setLoading(false);
       }
     };
@@ -189,8 +189,8 @@ function EditWorkbook(): JSX.Element {
       weekEnd.setDate(weekEnd.getDate() + 6);
       return {
         ...week,
-        start_date: weekStart.toISOString().split("T")[0],
-        end_date: weekEnd.toISOString().split("T")[0]
+        start_date: weekStart.toISOString().split('T')[0],
+        end_date: weekEnd.toISOString().split('T')[0],
       };
     });
 
@@ -208,9 +208,9 @@ function EditWorkbook(): JSX.Element {
 
     const newWeek: Week = {
       number: newWeekNumber,
-      start_date: startDate.toISOString().split("T")[0],
-      end_date: endDate.toISOString().split("T")[0],
-      activities: []
+      start_date: startDate.toISOString().split('T')[0],
+      end_date: endDate.toISOString().split('T')[0],
+      activities: [],
     };
 
     setWeeks((prev) => [...prev, newWeek]);
@@ -218,7 +218,10 @@ function EditWorkbook(): JSX.Element {
       prev
         ? {
             ...prev,
-            workbook: { ...prev.workbook, end_date: endDate.toISOString().split("T")[0] }
+            workbook: {
+              ...prev.workbook,
+              end_date: endDate.toISOString().split('T')[0],
+            },
           }
         : prev
     );
@@ -242,8 +245,8 @@ function EditWorkbook(): JSX.Element {
               end_date:
                 recalculated.length > 0
                   ? recalculated[recalculated.length - 1].end_date
-                  : prev.workbook.start_date
-            }
+                  : prev.workbook.start_date,
+            },
           }
         : prev
     );
@@ -254,11 +257,16 @@ function EditWorkbook(): JSX.Element {
    * Update a field in workbook data.
    */
   const handleWorkbookFieldChange = (field: string, value: string) => {
-    if (field === "learning_platform_id") {
+    if (field === 'learning_platform_id') {
       setWorkbook((prev) =>
-        prev ? { ...prev, learning_platform: { ...prev.learning_platform, id: value } } : prev
+        prev
+          ? {
+              ...prev,
+              learning_platform: { ...prev.learning_platform, id: value },
+            }
+          : prev
       );
-    } else if (field === "course_lead_id" || field === "course_lead") {
+    } else if (field === 'course_lead_id' || field === 'course_lead') {
       setWorkbook((prev) =>
         prev ? { ...prev, course_lead: { ...prev.course_lead, id: value } } : prev
       );
@@ -282,8 +290,8 @@ function EditWorkbook(): JSX.Element {
               ...prev,
               workbook: {
                 ...prev.workbook,
-                end_date: updatedWeeks[updatedWeeks.length - 1].end_date
-              }
+                end_date: updatedWeeks[updatedWeeks.length - 1].end_date,
+              },
             }
           : prev
       );
@@ -295,7 +303,11 @@ function EditWorkbook(): JSX.Element {
    * Open activity modal for editing an activity.
    */
   const handleEditActivity = (activity: Activity, activityIndex: number, weekNumber: number) => {
-    setEditingActivity({ weekNumber, activity: { ...activity }, activityIndex });
+    setEditingActivity({
+      weekNumber,
+      activity: { ...activity },
+      activityIndex,
+    });
     setActivityForm(activity);
     setShowActivityModal(true);
   };
@@ -307,7 +319,10 @@ function EditWorkbook(): JSX.Element {
     setWeeks((prevWeeks) =>
       prevWeeks.map((week) =>
         week.number === weekNumber
-          ? { ...week, activities: week.activities.filter((_, idx) => idx !== activityIndex) }
+          ? {
+              ...week,
+              activities: week.activities.filter((_, idx) => idx !== activityIndex),
+            }
           : week
       )
     );
@@ -318,13 +333,13 @@ function EditWorkbook(): JSX.Element {
    */
   const validateActivity = (activity: Partial<Activity>): string[] => {
     const errors: string[] = [];
-    if (!activity.name) errors.push("Activity name is required");
-    if (!activity.time_estimate_minutes) errors.push("Time estimate is required");
-    if (!activity.location_id) errors.push("Location is required");
-    if (!activity.learning_activity_id) errors.push("Learning activity is required");
-    if (!activity.learning_type_id) errors.push("Learning type is required");
-    if (!activity.task_status_id) errors.push("Task status is required");
-    if (!activity.staff_id) errors.push("Staff member is required");
+    if (!activity.name) errors.push('Activity name is required');
+    if (!activity.time_estimate_minutes) errors.push('Time estimate is required');
+    if (!activity.location_id) errors.push('Location is required');
+    if (!activity.learning_activity_id) errors.push('Learning activity is required');
+    if (!activity.learning_type_id) errors.push('Learning type is required');
+    if (!activity.task_status_id) errors.push('Task status is required');
+    if (!activity.staff_id) errors.push('Staff member is required');
     return errors;
   };
 
@@ -350,7 +365,7 @@ function EditWorkbook(): JSX.Element {
               idx === editingActivity.activityIndex
                 ? ({ ...activityForm, week_number: week.number } as Activity)
                 : act
-            )
+            ),
           };
         }
         return week;
@@ -364,8 +379,8 @@ function EditWorkbook(): JSX.Element {
               ...week,
               activities: [
                 ...week.activities,
-                { ...activityForm, week_number: selectedWeek } as Activity
-              ]
+                { ...activityForm, week_number: selectedWeek } as Activity,
+              ],
             }
           : week
       );
@@ -389,20 +404,20 @@ function EditWorkbook(): JSX.Element {
   const validateWorkbook = (): string[] => {
     const errs: string[] = [];
     if (!workbook) {
-      errs.push("Workbook data is missing");
+      errs.push('Workbook data is missing');
       return errs;
     }
-    if (!workbook.workbook.course_name) errs.push("Course name is required");
-    if (!workbook.learning_platform.id) errs.push("Learning platform is required");
+    if (!workbook.workbook.course_name) errs.push('Course name is required');
+    if (!workbook.learning_platform.id) errs.push('Learning platform is required');
 
     const start = new Date(workbook.workbook.start_date);
     const end = new Date(workbook.workbook.end_date);
-    if (isNaN(start.getTime())) errs.push("Start date is invalid");
-    if (isNaN(end.getTime())) errs.push("End date is invalid");
-    if (start >= end) errs.push("Start date must be earlier than end date");
+    if (isNaN(start.getTime())) errs.push('Start date is invalid');
+    if (isNaN(end.getTime())) errs.push('End date is invalid');
+    if (start >= end) errs.push('Start date must be earlier than end date');
 
     if (weeks.length === 0) {
-      errs.push("At least one week is required");
+      errs.push('At least one week is required');
     } else {
       weeks.forEach((week, idx) => {
         const ws = new Date(week.start_date),
@@ -451,7 +466,7 @@ function EditWorkbook(): JSX.Element {
         course_name: workbook.workbook.course_name,
         learning_platform_id: workbook.learning_platform.id,
         start_date: workbook.workbook.start_date,
-        end_date: workbook.workbook.end_date
+        end_date: workbook.workbook.end_date,
       });
       const workbookId = workbookResponse.data.id;
 
@@ -461,13 +476,16 @@ function EditWorkbook(): JSX.Element {
           workbook_id: workbookId,
           number: week.number,
           start_date: week.start_date,
-          end_date: week.end_date
+          end_date: week.end_date,
         });
 
         // Create activities and link staff
         const activityResponses = await Promise.all(
           week.activities.map((activity) =>
-            axios.post(ENDPOINTS.activities, { ...activity, workbook_id: workbookId })
+            axios.post(ENDPOINTS.activities, {
+              ...activity,
+              workbook_id: workbookId,
+            })
           )
         );
 
@@ -477,16 +495,16 @@ function EditWorkbook(): JSX.Element {
             return activity.staff_id
               ? axios.post(ENDPOINTS.activityStaff, {
                   staff_id: activity.staff_id,
-                  activity_id: response.data.id
+                  activity_id: response.data.id,
                 })
               : Promise.resolve();
           })
         );
       }
-      sessionStorage.removeItem("newWorkbookData");
+      sessionStorage.removeItem('newWorkbookData');
       navigate(`/workbook/${workbookId}`);
     } catch (err) {
-      setError((err as Error).message || "Failed to publish workbook");
+      setError((err as Error).message || 'Failed to publish workbook');
       setPublishing(false);
     }
   };
@@ -497,15 +515,15 @@ function EditWorkbook(): JSX.Element {
   const convertWeekToWeekInfo = (week: Week): WeekInfo => ({
     weekNumber: week.number,
     data: week.activities.map((activity) => ({
-      staff: activity.staff_id ? [users.find((u) => u.id === activity.staff_id)?.name || ""] : [],
+      staff: activity.staff_id ? [users.find((u) => u.id === activity.staff_id)?.name || ''] : [],
       title: activity.name,
       activity:
-        learningActivities.find((a) => a.id === activity.learning_activity_id)?.name || "N/A",
-      type: learningTypes.find((t) => t.id === activity.learning_type_id)?.name || "N/A",
+        learningActivities.find((a) => a.id === activity.learning_activity_id)?.name || 'N/A',
+      type: learningTypes.find((t) => t.id === activity.learning_type_id)?.name || 'N/A',
       time: formatMinutes(activity.time_estimate_minutes),
-      status: taskStatuses.find((ts) => ts.id === activity.task_status_id)?.name || "N/A",
-      location: locations.find((l) => l.id === activity.location_id)?.name || "N/A"
-    }))
+      status: taskStatuses.find((ts) => ts.id === activity.task_status_id)?.name || 'N/A',
+      location: locations.find((l) => l.id === activity.location_id)?.name || 'N/A',
+    })),
   });
 
   // =====================
@@ -577,7 +595,7 @@ function EditWorkbook(): JSX.Element {
             onClick={handlePublish}
             disabled={publishing}
           >
-            {publishing ? "Publishing..." : "Publish Workbook"}
+            {publishing ? 'Publishing...' : 'Publish Workbook'}
           </Button>
         </div>
         <div className="mb-6">

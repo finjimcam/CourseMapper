@@ -1,25 +1,23 @@
 // src/components/pages/workbook.tsx
-import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import axios from "axios";
-import { Tabs, Spinner } from "flowbite-react";
-import CourseHeader from "../components/CourseDetailsHeader";
-import DashboardTab from "../components/DashboardTab";
-import WeekActivityTab from "../components/WeekActivityTab";
+import { useEffect, useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import axios from 'axios';
+import { Tabs, Spinner } from 'flowbite-react';
+import CourseHeader from '../components/CourseDetailsHeader';
+import DashboardTab from '../components/DashboardTab';
+import WeekActivityTab from '../components/WeekActivityTab';
 import {
   Workbook,
   WorkbookDetailsResponse,
   WeekInfo,
   processActivitiesData,
-  prepareDashboardData
-} from "../utils/workbookUtils";
+  prepareDashboardData,
+} from '../utils/workbookUtils';
 
 function WorkbookPage(): JSX.Element {
   const { workbook_id } = useParams<{ workbook_id: string }>();
 
   const [workbookData, setWorkbookData] = useState<Workbook | null>(null);
-  //const [courseLeadData, setCourseLeadData] = useState<User | null>(null);
-  //const [learningPlatformData, setLearningPlatformData] = useState<LearningPlatform | null>(null);
   const [weeksData, setWeeksData] = useState<WeekInfo[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,11 +36,9 @@ function WorkbookPage(): JSX.Element {
           setWorkbookData({
             workbook: workbook,
             course_lead: course_lead,
-            learning_platform: learning_platform
+            learning_platform: learning_platform,
           });
         }
-        //setCourseLeadData(course_lead);
-        //setLearningPlatformData(learning_platform);
         if (activities.length > 0) {
           const weeksDataArray = processActivitiesData(activities);
           setWeeksData(weeksDataArray);
@@ -50,8 +46,8 @@ function WorkbookPage(): JSX.Element {
         setLoading(false);
       } catch (err) {
         const errorObj = err as Error;
-        console.error("Error fetching workbook data:", errorObj);
-        setError(errorObj.message || "An error occurred while fetching workbook data");
+        console.error('Error fetching workbook data:', errorObj);
+        setError(errorObj.message || 'An error occurred while fetching workbook data');
         setLoading(false);
       }
     };
