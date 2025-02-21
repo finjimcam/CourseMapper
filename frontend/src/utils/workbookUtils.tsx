@@ -117,6 +117,32 @@ export const getUsername = async (): Promise<string> => {
     });
 };
 
+export const getUser = async (): Promise<string> => {
+  return axios
+    .get(`${import.meta.env.VITE_API}/session/`, {
+      withCredentials: true,
+    })
+    .then((sessionResponse) => {
+      // Get user details using the user_id from session
+      console.log(sessionResponse);
+      return axios.get(`${import.meta.env.VITE_API}/users/`).then((usersResponse) => ({
+        sessionData: sessionResponse.data,
+        users: usersResponse.data,
+      }));
+    })
+    .then(({ sessionData, users }) => {
+      const currentUser = users.find((user: { id: string }) => user.id === sessionData.user_id);
+      if (currentUser) {
+        return currentUser;
+      }
+      return '';
+    })
+    .catch((error) => {
+      console.error('Error fetching user data:', error);
+      return ''; // Reset username on error
+    });
+};
+
 export const getErrorMessage = (err: unknown) =>
   err instanceof Error ? err.message : 'An error occurred';
 

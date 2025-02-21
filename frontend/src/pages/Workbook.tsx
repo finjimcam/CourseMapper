@@ -12,6 +12,7 @@ import {
   WeekInfo,
   processActivitiesData,
   prepareDashboardData,
+  getUser,
 } from '../utils/workbookUtils';
 
 function WorkbookPage(): JSX.Element {
@@ -22,6 +23,7 @@ function WorkbookPage(): JSX.Element {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [showTable, setShowTable] = useState<boolean>(false);
+  const [isCourseLead, setIsCourseLead] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchWorkbookData = async () => {
@@ -55,6 +57,15 @@ function WorkbookPage(): JSX.Element {
     if (workbook_id) {
       fetchWorkbookData();
     }
+
+    const promise = getUser();
+    promise.then((id) => {
+      if (workbookData?.course_lead.id === id) {
+        setIsCourseLead(true);
+      }
+    });
+    
+
   }, [workbook_id]);
 
   if (loading) {
@@ -80,12 +91,13 @@ function WorkbookPage(): JSX.Element {
       <div className="bg-white p-6 rounded-lg shadow">
         <CourseHeader workbook={workbookData} />
         <div className="flex justify-end mb-4">
+          {!isCourseLead ? null :
           <Link
             to={`/workbook/edit/${workbook_id}`}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
           >
             Edit Workbook
-          </Link>
+          </Link>}
         </div>
         <Tabs aria-label="Workbook Tabs">
           <Tabs.Item title="Dashboard">
