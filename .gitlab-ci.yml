@@ -69,6 +69,7 @@ Type checking with tsc in frontend:
     paths:
       - node_modules/
   before_script:
+    - cd frontend
     - npm i
   script:
     - npx tsc --noEmit
@@ -80,6 +81,7 @@ Linting with eslint in frontend:
   stage: Static Analysis
   image: node:20.17.0-alpine
   before_script:
+    - cd frontend
     - npm i 
   script:
     - npm run lint
