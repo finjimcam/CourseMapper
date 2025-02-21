@@ -64,8 +64,6 @@ function WorkbookPage(): JSX.Element {
         setIsCourseLead(true);
       }
     });
-    
-
   }, [workbook_id]);
 
   if (loading) {
@@ -91,13 +89,14 @@ function WorkbookPage(): JSX.Element {
       <div className="bg-white p-6 rounded-lg shadow">
         <CourseHeader workbook={workbookData} />
         <div className="flex justify-end mb-4">
-          {!isCourseLead ? null :
-          <Link
-            to={`/workbook/edit/${workbook_id}`}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-          >
-            Edit Workbook
-          </Link>}
+          {!isCourseLead ? null : (
+            <Link
+              to={`/workbook/edit/${workbook_id}`}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            >
+              Edit Workbook
+            </Link>
+          )}
         </div>
         <Tabs aria-label="Workbook Tabs">
           <Tabs.Item title="Dashboard">
