@@ -1,11 +1,9 @@
 from typing import Any, Dict, List
-from sqlmodel import select
-from models.models_base import (
-    User,
-    LearningPlatform
-)
+from sqlmodel import select, Session
+from models.models_base import User, LearningPlatform, Workbook
 
-def add_workbook_details(session, workbook) -> Dict[str, Any]:
+
+def add_workbook_details(session: Session, workbook: Workbook) -> Dict[str, Any]:
     # Fetch related data
     course_lead = session.exec(select(User).where(User.id == workbook.course_lead_id)).first()
     learning_platform = session.exec(
