@@ -1347,7 +1347,9 @@ def search_workbooks(
                 continue
         # if workbook lead provided, returned workbooks must match.
         if led_by:
-            if workbook.course_lead is None or not re.search(led_by, workbook.course_lead.name, re.IGNORECASE):
+            if workbook.course_lead is None or not re.search(
+                led_by, workbook.course_lead.name, re.IGNORECASE
+            ):
                 continue
         # if workbook contributor is provided, returned workbooks must match.
         if contributed_by:
@@ -1361,7 +1363,9 @@ def search_workbooks(
                 continue
         # if learning platform is provided, returned workbooks must match.
         if learning_platform:
-            if workbook.learning_platform is None or not re.search(learning_platform, workbook.learning_platform.name, re.IGNORECASE):
+            if workbook.learning_platform is None or not re.search(
+                learning_platform, workbook.learning_platform.name, re.IGNORECASE
+            ):
                 continue
         # if starts_after is provided, returned workbooks must start on or after that date
         if starts_after:
