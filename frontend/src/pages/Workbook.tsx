@@ -45,6 +45,14 @@ function WorkbookPage(): JSX.Element {
           const weeksDataArray = processActivitiesData(activities);
           setWeeksData(weeksDataArray);
         }
+
+        const promise = getUser();
+        promise.then((user) => {
+          if (course_lead.id === user.id) {
+            setIsCourseLead(true);
+          }
+        });
+
         setLoading(false);
       } catch (err) {
         const errorObj = err as Error;
@@ -57,13 +65,6 @@ function WorkbookPage(): JSX.Element {
     if (workbook_id) {
       fetchWorkbookData();
     }
-
-    const promise = getUser();
-    promise.then((id) => {
-      if (workbookData?.course_lead.id === id) {
-        setIsCourseLead(true);
-      }
-    });
   }, [workbook_id]);
 
   if (loading) {
