@@ -1,5 +1,5 @@
 from typing import Any, Dict, List
-from sqlmodel import Session, select
+from sqlmodel import select, Session
 from models.models_base import User, LearningPlatform, Workbook
 
 
