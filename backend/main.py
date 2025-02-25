@@ -9,6 +9,7 @@ from session import BaseVerifier, SessionData
 from sqlmodel import Session, select
 import re
 import uuid
+import datetime
 from helpers import add_workbook_details
 
 from models.database import (
@@ -1321,6 +1322,66 @@ def read_workbooks(
         dict(workbook)
         for workbook in session.exec(select(Workbook).where(Workbook.id == workbook_id))
     ]
+
+
+@app.get("/workbooks/search/", dependencies=[Depends(cookie)])
+def search_workbooks(
+    name: str | None = None,
+    starts_after: datetime.date | None = None,
+    ends_before: datetime.date | None = None,
+    led_by: str | None = None,
+    contributed_by: str | None = None,
+    learning_platform: str | None = None,
+    _: SessionData = Depends(verifier),
+    session: Session = Depends(get_session),
+    peek: bool = Query(False),
+) -> List[Dict[str, Any]] | None:
+    if peek:
+        return None
+
+    workbooks = []
+    for workbook in session.exec(select(Workbook)):
+        # if workbook name provided, returned workbooks must match it.
+        if name is not None:
+            if not re.search(name, workbook.course_name, re.IGNORECASE):
+                continue
+        # if workbook lead provided, returned workbooks must match.
+        if led_by:
+            if workbook.course_lead is None or not re.search(
+                led_by, workbook.course_lead.name, re.IGNORECASE
+            ):
+                continue
+        # if workbook contributor is provided, returned workbooks must match.
+        if contributed_by:
+            matched = False
+            for user in workbook.contributors:
+                print(user.name)
+                if re.search(contributed_by, user.name, re.IGNORECASE):
+                    matched = True
+                    break
+            if not matched:
+                continue
+        # if learning platform is provided, returned workbooks must match.
+        if learning_platform:
+            if workbook.learning_platform is None or not re.search(
+                learning_platform, workbook.learning_platform.name, re.IGNORECASE
+            ):
+                continue
+        # if starts_after is provided, returned workbooks must start on or after that date
+        if starts_after:
+            if workbook.start_date < starts_after:
+                continue
+        # if ends_before is provided, returned workbooks must start on or after that date
+        if ends_before:
+            if workbook.end_date > ends_before:
+                continue
+        workbooks.append(workbook)
+
+    results: List[Dict[str, Any]] = []
+    for workbook in workbooks:
+        results.append(add_workbook_details(session, workbook))
+
+    return results
 
 
 @app.get("/weeks/", dependencies=[Depends(cookie)])
