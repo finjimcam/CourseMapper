@@ -59,8 +59,8 @@ function WorkbookPage(): JSX.Element {
     }
 
     const promise = getUser();
-    promise.then((id) => {
-      if (workbookData?.course_lead.id === id) {
+    promise.then((user) => {
+      if (workbookData?.course_lead.id === user.id) {
         setIsCourseLead(true);
       }
     });

@@ -87,6 +87,12 @@ export interface WorkbookDetailsResponse {
   activities: ActivityData[];
 }
 
+export interface UserExtended {
+  id: string;
+  name: string;
+  permissions_group_id: string;
+}
+
 // =====================
 // Utility Functions
 // =====================
@@ -117,7 +123,7 @@ export const getUsername = async (): Promise<string> => {
     });
 };
 
-export const getUser = async (): Promise<string> => {
+export const getUser = async (): Promise<UserExtended> => {
   return axios
     .get(`${import.meta.env.VITE_API}/session/`, {
       withCredentials: true,
