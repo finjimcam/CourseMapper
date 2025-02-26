@@ -6,6 +6,7 @@ import axios from 'axios';
 import SearchBar from '../components/Searchbar.tsx';
 import Carousel from '../components/Carousel.tsx';
 import { CreateWorkbookModal } from '../components/modals/CreateWorkbookModal.tsx';
+import { getErrorMessage } from '../utils/workbookUtils.tsx';
 
 function MyWorkbooks() {
   const navigate = useNavigate();
@@ -17,13 +18,12 @@ function MyWorkbooks() {
   useEffect(() => {
     const fetchWorkbooks = async () => {
       try {
-        // TODO: specify the user to get workbooks they are involved in 
+        // TODO: specify the user to get workbooks they are involved in
         const response = await axios.get(`${import.meta.env.VITE_API}/workbooks/`);
         setWorkbooks(response.data);
         setLoading(false);
-      } catch (err: any) {
-        const error = err as Error;
-        setError(error.message || 'An error occurred');
+      } catch (err: unknown) {
+        setError(getErrorMessage(err));
         setLoading(false);
       }
     };
@@ -40,7 +40,7 @@ function MyWorkbooks() {
   }) => {
     // Store the workbook data in sessionStorage
     sessionStorage.setItem('newWorkbookData', JSON.stringify(workbookData));
-    
+
     // Navigate to the edit page
     navigate('/workbooks/edit');
   };

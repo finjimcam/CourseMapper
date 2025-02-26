@@ -36,7 +36,7 @@ Checking Rebase:
     # Only run this job for merge requests
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event' && $CI_COMMIT_REF_NAME != "150-implement-users-and-user-permissions"
 
-Linting with black:
+Linting with black in backend:
   stage: Static Analysis
   script:
     - cd backend
@@ -45,7 +45,7 @@ Linting with black:
     - changes:
       - backend/**/*
 
-Type checking with mypy:
+Type checking with mypy in backend:
   stage: Static Analysis
   script:
     - cd backend
@@ -61,3 +61,31 @@ Unit tests on backend:
   rules:
     - changes:
       - backend/**/*
+
+Type checking with tsc in frontend:
+  stage: Static Analysis
+  image: node:20.17.0-alpine
+  cache:
+    paths:
+      - node_modules/
+  before_script:
+    - cd frontend
+    - npm i
+  script:
+    - npx tsc --noEmit
+  only:
+    changes:
+      - frontend/**/*
+
+Linting with eslint in frontend:
+  stage: Static Analysis
+  image: node:20.17.0-alpine
+  before_script:
+    - cd frontend
+    - npm i 
+  script:
+    - npm run lint
+    - npm run prettier
+  only:
+    changes:
+      - frontend/**/*

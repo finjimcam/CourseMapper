@@ -6,13 +6,15 @@ import SearchBar from '../components/Searchbar.tsx';
 import Carousel from '../components/Carousel.tsx';
 import { Link, useNavigate } from 'react-router-dom';
 import { CreateWorkbookModal } from '../components/modals/CreateWorkbookModal.tsx';
+import { getErrorMessage, getUsername } from '../utils/workbookUtils.tsx';
 
 function Home() {
   const navigate = useNavigate();
   const [workbooks, setWorkbooks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [username, setUsername] = useState('');
 
   useEffect(() => {
     const fetchWorkbooks = async () => {
@@ -20,13 +22,16 @@ function Home() {
         const response = await axios.get(`${import.meta.env.VITE_API}/workbooks/`);
         setWorkbooks(response.data);
         setLoading(false);
-      } catch (err: any) {
-        setError(err.message || 'An error occurred');
+      } catch (err) {
+        setError(getErrorMessage(err));
         setLoading(false);
       }
     };
 
     fetchWorkbooks();
+
+    const promise = getUsername();
+    promise.then((name) => setUsername(name));
   }, []);
 
   const handleCreateWorkbook = (workbookData: {
@@ -48,10 +53,10 @@ function Home() {
     <div className="p-8 space-y-8">
       <div className="flex flex-col items-centre space-y-4">
         <div className="space-y-2">
-            <h2 className="text-3xl font-bold text-left">Welcome back, Tim!</h2>
-            <h3 className="text-lg text-left text-gray-600">
-              Explore and manage your courses with ease
-            </h3>
+          <h2 className="text-3xl font-bold text-left">Welcome back, {username}!</h2>
+          <h3 className="text-lg text-left text-gray-600">
+            Explore and manage your courses with ease
+          </h3>
         </div>
 
           <SearchBar />

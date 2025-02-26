@@ -1,13 +1,16 @@
 from typing import Annotated, AsyncGenerator, List, Dict, Any, cast, TypeVar
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException, Response, Query
-from sqlmodel import Session, select, SQLModel
-import uuid
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_sessions.backends.implementations import InMemoryBackend
 from fastapi_sessions.frontends.implementations import SessionCookie, CookieParameters
 
 from session import BaseVerifier, SessionData
+from sqlmodel import Session, select
+import re
+import uuid
+import datetime
+from helpers import add_workbook_details
 
 from models.database import (
     create_db_and_tables,
@@ -1321,6 +1324,66 @@ def read_workbooks(
     ]
 
 
+@app.get("/workbooks/search/", dependencies=[Depends(cookie)])
+def search_workbooks(
+    name: str | None = None,
+    starts_after: datetime.date | None = None,
+    ends_before: datetime.date | None = None,
+    led_by: str | None = None,
+    contributed_by: str | None = None,
+    learning_platform: str | None = None,
+    _: SessionData = Depends(verifier),
+    session: Session = Depends(get_session),
+    peek: bool = Query(False),
+) -> List[Dict[str, Any]] | None:
+    if peek:
+        return None
+
+    workbooks = []
+    for workbook in session.exec(select(Workbook)):
+        # if workbook name provided, returned workbooks must match it.
+        if name is not None:
+            if not re.search(name, workbook.course_name, re.IGNORECASE):
+                continue
+        # if workbook lead provided, returned workbooks must match.
+        if led_by:
+            if workbook.course_lead is None or not re.search(
+                led_by, workbook.course_lead.name, re.IGNORECASE
+            ):
+                continue
+        # if workbook contributor is provided, returned workbooks must match.
+        if contributed_by:
+            matched = False
+            for user in workbook.contributors:
+                print(user.name)
+                if re.search(contributed_by, user.name, re.IGNORECASE):
+                    matched = True
+                    break
+            if not matched:
+                continue
+        # if learning platform is provided, returned workbooks must match.
+        if learning_platform:
+            if workbook.learning_platform is None or not re.search(
+                learning_platform, workbook.learning_platform.name, re.IGNORECASE
+            ):
+                continue
+        # if starts_after is provided, returned workbooks must start on or after that date
+        if starts_after:
+            if workbook.start_date < starts_after:
+                continue
+        # if ends_before is provided, returned workbooks must start on or after that date
+        if ends_before:
+            if workbook.end_date > ends_before:
+                continue
+        workbooks.append(workbook)
+
+    results: List[Dict[str, Any]] = []
+    for workbook in workbooks:
+        results.append(add_workbook_details(session, workbook))
+
+    return results
+
+
 @app.get("/weeks/", dependencies=[Depends(cookie)])
 def read_weeks(
     _: SessionData = Depends(verifier),
@@ -1410,40 +1473,8 @@ def get_workbook_details(
         raise HTTPException(status_code=404, detail="Workbook not found")
 
     # Fetch related data
-    course_lead = session.exec(select(User).where(User.id == workbook.course_lead_id)).first()
-    learning_platform = session.exec(
-        select(LearningPlatform).where(LearningPlatform.id == workbook.learning_platform_id)
-    ).first()
+    response: Dict[str, Any] = add_workbook_details(session, workbook)
     activities = list(session.exec(select(Activity).where(Activity.workbook_id == workbook_id)))
-
-    # Build response
-    response: Dict[str, Any] = {
-        "workbook": {
-            "id": str(workbook.id),
-            "start_date": workbook.start_date.isoformat(),
-            "end_date": workbook.end_date.isoformat(),
-            "course_name": workbook.course_name,
-            "course_lead_id": str(workbook.course_lead_id),
-            "learning_platform_id": str(workbook.learning_platform_id),
-        },
-        "course_lead": (
-            {
-                "id": str(course_lead.id),
-                "name": course_lead.name,
-            }
-            if course_lead
-            else None
-        ),
-        "learning_platform": (
-            {
-                "id": str(learning_platform.id),
-                "name": learning_platform.name,
-            }
-            if learning_platform
-            else None
-        ),
-        "activities": [],
-    }
 
     # Process activities
     activities_list: List[Dict[str, Any]] = []
@@ -1490,3 +1521,23 @@ def get_workbook_details(
     response["activities"] = activities_list
 
     return response
+
+
+@app.get("/search")
+def search(text_input: str, session: Session = Depends(get_session)) -> List[Dict[str, Any]]:
+    workbooks = []
+    for workbook in session.exec(select(Workbook)):
+        if re.search(text_input, workbook.course_name, re.IGNORECASE):
+            workbooks.append(workbook)
+        elif workbook.course_lead:
+            if re.search(text_input, workbook.course_lead.name, re.IGNORECASE):
+                workbooks.append(workbook)
+        elif workbook.learning_platform:
+            if re.search(text_input, workbook.learning_platform.name, re.IGNORECASE):
+                workbooks.append(workbook)
+
+    results: List[Dict[str, Any]] = []
+    for workbook in workbooks:
+        results.append(add_workbook_details(session, workbook))
+
+    return results

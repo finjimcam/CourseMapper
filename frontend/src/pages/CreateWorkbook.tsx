@@ -10,7 +10,15 @@ import WeeksTabs from '../components/WeekActivityTabEdit';
 import ErrorModal from '../components/modals/ErrorModal';
 import WorkbookEditModal from '../components/modals/CourseDetailsEditModal';
 import ActivityModal from '../components/modals/ActivityModal';
-import { formatMinutes, WeekInfo, WorkbookData } from '../utils/workbookUtils';
+import {
+  User,
+  LearningPlatform,
+  formatMinutes,
+  Week,
+  Activity,
+  WeekInfo,
+  Workbook,
+} from '../utils/workbookUtils';
 
 // =====================
 // Constants & Endpoints
@@ -28,7 +36,7 @@ const ENDPOINTS = {
   workbooks: `${API_URL}/workbooks/`,
   weeks: `${API_URL}/weeks/`,
   activities: `${API_URL}/activities/`,
-  activityStaff: `${API_URL}/activity-staff/`
+  activityStaff: `${API_URL}/activity-staff/`,
 };
 
 const initialActivityState: Partial<Activity> = {
@@ -38,40 +46,12 @@ const initialActivityState: Partial<Activity> = {
   learning_activity_id: '',
   learning_type_id: '',
   task_status_id: '',
-  staff_id: ''
+  staff_id: '',
 };
 
 // =====================
 // Type Definitions
 // =====================
-interface LearningPlatform {
-  id: string;
-  name: string;
-}
-
-interface User {
-  id: string;
-  name: string;
-}
-
-interface Activity {
-  id?: string;
-  name: string;
-  time_estimate_minutes: number;
-  week_number: number;
-  location_id: string;
-  learning_activity_id: string;
-  learning_type_id: string;
-  task_status_id: string;
-  staff_id: string;
-}
-
-export interface Week {
-  number: number;
-  start_date: string;
-  end_date: string;
-  activities: Activity[];
-}
 
 interface Location {
   id: string;
@@ -101,7 +81,7 @@ function EditWorkbook(): JSX.Element {
   const navigate = useNavigate();
 
   // Main state
-  const [workbookData, setWorkbookData] = useState<WorkbookData | null>(null);
+  const [workbook, setWorkbook] = useState<Workbook | null>(null);
   const [weeks, setWeeks] = useState<Week[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -145,13 +125,21 @@ function EditWorkbook(): JSX.Element {
         if (!storedData) throw new Error('No workbook data found');
 
         const data = JSON.parse(storedData);
-        setWorkbookData({
-          id: 'temp', // Temporary ID for new workbook
-          course_name: data.courseName,
-          start_date: data.startDate,
-          end_date: data.endDate,
-          learning_platform_id: data.learningPlatformId,
-          course_lead_id: 'temp',
+        setWorkbook({
+          workbook: {
+            id: 'temp', // Temporary ID for new workbook
+            course_name: data.courseName,
+            start_date: data.startDate,
+            end_date: data.endDate,
+          },
+          learning_platform: {
+            id: data.learningPlatformId,
+            name: data.learningPlatform,
+          },
+          course_lead: {
+            id: 'temp',
+            name: data.courseLead,
+          },
         });
 
         const [
@@ -160,14 +148,14 @@ function EditWorkbook(): JSX.Element {
           learningActivitiesRes,
           learningTypesRes,
           taskStatusesRes,
-          usersRes
+          usersRes,
         ] = await Promise.all([
           axios.get(ENDPOINTS.locations),
           axios.get(ENDPOINTS.learningPlatforms),
           axios.get(ENDPOINTS.learningActivities(data.learningPlatformId)),
           axios.get(ENDPOINTS.learningTypes),
           axios.get(ENDPOINTS.taskStatuses),
-          axios.get(ENDPOINTS.users)
+          axios.get(ENDPOINTS.users),
         ]);
 
         setLocations(locationsRes.data);
@@ -202,7 +190,7 @@ function EditWorkbook(): JSX.Element {
       return {
         ...week,
         start_date: weekStart.toISOString().split('T')[0],
-        end_date: weekEnd.toISOString().split('T')[0]
+        end_date: weekEnd.toISOString().split('T')[0],
       };
     });
 
@@ -210,10 +198,10 @@ function EditWorkbook(): JSX.Element {
    * Add a new week based on current weeks and workbook start date.
    */
   const handleAddWeek = () => {
-    if (!workbookData) return;
+    if (!workbook) return;
     const lastWeek = weeks[weeks.length - 1];
     const newWeekNumber = weeks.length + 1;
-    const startDate = new Date(lastWeek ? lastWeek.end_date : workbookData.start_date);
+    const startDate = new Date(lastWeek ? lastWeek.end_date : workbook.workbook.start_date);
     if (lastWeek) startDate.setDate(startDate.getDate() + 1);
     const endDate = new Date(startDate);
     endDate.setDate(endDate.getDate() + 6);
@@ -222,12 +210,20 @@ function EditWorkbook(): JSX.Element {
       number: newWeekNumber,
       start_date: startDate.toISOString().split('T')[0],
       end_date: endDate.toISOString().split('T')[0],
-      activities: []
+      activities: [],
     };
 
-    setWeeks(prev => [...prev, newWeek]);
-    setWorkbookData(prev =>
-      prev ? { ...prev, end_date: endDate.toISOString().split('T')[0] } : prev
+    setWeeks((prev) => [...prev, newWeek]);
+    setWorkbook((prev) =>
+      prev
+        ? {
+            ...prev,
+            workbook: {
+              ...prev.workbook,
+              end_date: endDate.toISOString().split('T')[0],
+            },
+          }
+        : prev
     );
   };
 
@@ -235,17 +231,22 @@ function EditWorkbook(): JSX.Element {
    * Delete a week and recalculate remaining weeks.
    */
   const handleDeleteWeek = (weekNumber: number) => {
-    if (!workbookData) return;
+    if (!workbook) return;
     const updatedWeeks = weeks
-      .filter(w => w.number !== weekNumber)
+      .filter((w) => w.number !== weekNumber)
       .map((w, idx) => ({ ...w, number: idx + 1 }));
-    const recalculated = recalculateWeekDates(workbookData.start_date, updatedWeeks);
-    setWorkbookData(prev =>
+    const recalculated = recalculateWeekDates(workbook.workbook.start_date, updatedWeeks);
+    setWorkbook((prev) =>
       prev
         ? {
             ...prev,
-            end_date:
-              recalculated.length > 0 ? recalculated[recalculated.length - 1].end_date : prev.start_date
+            workbook: {
+              ...prev.workbook,
+              end_date:
+                recalculated.length > 0
+                  ? recalculated[recalculated.length - 1].end_date
+                  : prev.workbook.start_date,
+            },
           }
         : prev
     );
@@ -256,19 +257,42 @@ function EditWorkbook(): JSX.Element {
    * Update a field in workbook data.
    */
   const handleWorkbookFieldChange = (field: string, value: string) => {
-    setWorkbookData(prev => (prev ? { ...prev, [field]: value } : prev));
+    if (field === 'learning_platform_id') {
+      setWorkbook((prev) =>
+        prev
+          ? {
+              ...prev,
+              learning_platform: { ...prev.learning_platform, id: value },
+            }
+          : prev
+      );
+    } else if (field === 'course_lead_id' || field === 'course_lead') {
+      setWorkbook((prev) =>
+        prev ? { ...prev, course_lead: { ...prev.course_lead, id: value } } : prev
+      );
+    } else {
+      setWorkbook((prev) =>
+        prev ? { ...prev, workbook: { ...prev.workbook, [field]: value } } : prev
+      );
+    }
   };
 
   /**
    * Save workbook modal changes and recalc week dates.
    */
   const handleSaveWorkbook = () => {
-    if (workbookData) {
-      const updatedWeeks = recalculateWeekDates(workbookData.start_date, weeks);
+    if (workbook) {
+      const updatedWeeks = recalculateWeekDates(workbook.workbook.start_date, weeks);
       setWeeks(updatedWeeks);
-      setWorkbookData(prev =>
+      setWorkbook((prev) =>
         prev && updatedWeeks.length > 0
-          ? { ...prev, end_date: updatedWeeks[updatedWeeks.length - 1].end_date }
+          ? {
+              ...prev,
+              workbook: {
+                ...prev.workbook,
+                end_date: updatedWeeks[updatedWeeks.length - 1].end_date,
+              },
+            }
           : prev
       );
     }
@@ -279,7 +303,11 @@ function EditWorkbook(): JSX.Element {
    * Open activity modal for editing an activity.
    */
   const handleEditActivity = (activity: Activity, activityIndex: number, weekNumber: number) => {
-    setEditingActivity({ weekNumber, activity: { ...activity }, activityIndex });
+    setEditingActivity({
+      weekNumber,
+      activity: { ...activity },
+      activityIndex,
+    });
     setActivityForm(activity);
     setShowActivityModal(true);
   };
@@ -288,10 +316,13 @@ function EditWorkbook(): JSX.Element {
    * Delete an activity from a given week.
    */
   const handleDeleteActivity = (activityIndex: number, weekNumber: number) => {
-    setWeeks(prevWeeks =>
-      prevWeeks.map(week =>
+    setWeeks((prevWeeks) =>
+      prevWeeks.map((week) =>
         week.number === weekNumber
-          ? { ...week, activities: week.activities.filter((_, idx) => idx !== activityIndex) }
+          ? {
+              ...week,
+              activities: week.activities.filter((_, idx) => idx !== activityIndex),
+            }
           : week
       )
     );
@@ -326,7 +357,7 @@ function EditWorkbook(): JSX.Element {
 
     if (editingActivity) {
       // Update existing activity
-      const updatedWeeks = weeks.map(week => {
+      const updatedWeeks = weeks.map((week) => {
         if (week.number === editingActivity.weekNumber) {
           return {
             ...week,
@@ -334,7 +365,7 @@ function EditWorkbook(): JSX.Element {
               idx === editingActivity.activityIndex
                 ? ({ ...activityForm, week_number: week.number } as Activity)
                 : act
-            )
+            ),
           };
         }
         return week;
@@ -342,11 +373,14 @@ function EditWorkbook(): JSX.Element {
       setWeeks(updatedWeeks);
     } else {
       // Add new activity
-      const updatedWeeks = weeks.map(week =>
+      const updatedWeeks = weeks.map((week) =>
         week.number === selectedWeek
           ? {
               ...week,
-              activities: [...week.activities, { ...activityForm, week_number: selectedWeek } as Activity]
+              activities: [
+                ...week.activities,
+                { ...activityForm, week_number: selectedWeek } as Activity,
+              ],
             }
           : week
       );
@@ -369,15 +403,15 @@ function EditWorkbook(): JSX.Element {
    */
   const validateWorkbook = (): string[] => {
     const errs: string[] = [];
-    if (!workbookData) {
+    if (!workbook) {
       errs.push('Workbook data is missing');
       return errs;
     }
-    if (!workbookData.course_name) errs.push('Course name is required');
-    if (!workbookData.learning_platform_id) errs.push('Learning platform is required');
+    if (!workbook.workbook.course_name) errs.push('Course name is required');
+    if (!workbook.learning_platform.id) errs.push('Learning platform is required');
 
-    const start = new Date(workbookData.start_date);
-    const end = new Date(workbookData.end_date);
+    const start = new Date(workbook.workbook.start_date);
+    const end = new Date(workbook.workbook.end_date);
     if (isNaN(start.getTime())) errs.push('Start date is invalid');
     if (isNaN(end.getTime())) errs.push('End date is invalid');
     if (start >= end) errs.push('Start date must be earlier than end date');
@@ -392,7 +426,8 @@ function EditWorkbook(): JSX.Element {
         if (week.activities.length === 0)
           errs.push(`Week ${idx + 1}: At least one activity is required`);
         week.activities.forEach((activity, actIdx) => {
-          if (!activity.name) errs.push(`Week ${idx + 1}, Activity ${actIdx + 1}: Name is required`);
+          if (!activity.name)
+            errs.push(`Week ${idx + 1}, Activity ${actIdx + 1}: Name is required`);
           if (!activity.time_estimate_minutes)
             errs.push(`Week ${idx + 1}, Activity ${actIdx + 1}: Time estimate is required`);
           if (!activity.location_id)
@@ -415,7 +450,7 @@ function EditWorkbook(): JSX.Element {
    * Publish workbook by sending the workbook, weeks, and activities data to the API.
    */
   const handlePublish = async () => {
-    if (!workbookData) return;
+    if (!workbook) return;
     const errs = validateWorkbook();
     if (errs.length > 0) {
       setValidationErrors(errs);
@@ -428,10 +463,10 @@ function EditWorkbook(): JSX.Element {
 
       // Create workbook
       const workbookResponse = await axios.post(ENDPOINTS.workbooks, {
-        course_name: workbookData.course_name,
-        learning_platform_id: workbookData.learning_platform_id,
-        start_date: workbookData.start_date,
-        end_date: workbookData.end_date
+        course_name: workbook.workbook.course_name,
+        learning_platform_id: workbook.learning_platform.id,
+        start_date: workbook.workbook.start_date,
+        end_date: workbook.workbook.end_date,
       });
       const workbookId = workbookResponse.data.id;
 
@@ -441,13 +476,16 @@ function EditWorkbook(): JSX.Element {
           workbook_id: workbookId,
           number: week.number,
           start_date: week.start_date,
-          end_date: week.end_date
+          end_date: week.end_date,
         });
 
         // Create activities and link staff
         const activityResponses = await Promise.all(
-          week.activities.map(activity =>
-            axios.post(ENDPOINTS.activities, { ...activity, workbook_id: workbookId })
+          week.activities.map((activity) =>
+            axios.post(ENDPOINTS.activities, {
+              ...activity,
+              workbook_id: workbookId,
+            })
           )
         );
 
@@ -457,7 +495,7 @@ function EditWorkbook(): JSX.Element {
             return activity.staff_id
               ? axios.post(ENDPOINTS.activityStaff, {
                   staff_id: activity.staff_id,
-                  activity_id: response.data.id
+                  activity_id: response.data.id,
                 })
               : Promise.resolve();
           })
@@ -476,17 +514,16 @@ function EditWorkbook(): JSX.Element {
    */
   const convertWeekToWeekInfo = (week: Week): WeekInfo => ({
     weekNumber: week.number,
-    data: week.activities.map(activity => ({
-      staff: activity.staff_id
-        ? [users.find(u => u.id === activity.staff_id)?.name || '']
-        : [],
+    data: week.activities.map((activity) => ({
+      staff: activity.staff_id ? [users.find((u) => u.id === activity.staff_id)?.name || ''] : [],
       title: activity.name,
-      activity: learningActivities.find(a => a.id === activity.learning_activity_id)?.name || 'N/A',
-      type: learningTypes.find(t => t.id === activity.learning_type_id)?.name || 'N/A',
+      activity:
+        learningActivities.find((a) => a.id === activity.learning_activity_id)?.name || 'N/A',
+      type: learningTypes.find((t) => t.id === activity.learning_type_id)?.name || 'N/A',
       time: formatMinutes(activity.time_estimate_minutes),
-      status: taskStatuses.find(ts => ts.id === activity.task_status_id)?.name || 'N/A',
-      location: locations.find(l => l.id === activity.location_id)?.name || 'N/A'
-    }))
+      status: taskStatuses.find((ts) => ts.id === activity.task_status_id)?.name || 'N/A',
+      location: locations.find((l) => l.id === activity.location_id)?.name || 'N/A',
+    })),
   });
 
   // =====================
@@ -498,10 +535,8 @@ function EditWorkbook(): JSX.Element {
         <Spinner aria-label="Loading" size="xl" />
       </div>
     );
-  if (error)
-    return <div className="text-center mt-10 text-red-500">Error: {error}</div>;
-  if (!workbookData)
-    return <div className="text-center mt-10">No workbook data available.</div>;
+  if (error) return <div className="text-center mt-10 text-red-500">Error: {error}</div>;
+  if (!workbook) return <div className="text-center mt-10">No workbook data available.</div>;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -524,7 +559,7 @@ function EditWorkbook(): JSX.Element {
       />
       <WorkbookEditModal
         show={showWorkbookModal}
-        workbook={workbookData}
+        workbook={workbook}
         users={users}
         learningPlatforms={learningPlatforms}
         weeksCount={weeks.length}
@@ -543,21 +578,13 @@ function EditWorkbook(): JSX.Element {
         users={users}
         onSave={handleSaveActivity}
         onCancel={closeActivityModal}
-        onFieldChange={(field, value) =>
-          setActivityForm(prev => ({ ...prev, [field]: value }))
-        }
+        onFieldChange={(field, value) => setActivityForm((prev) => ({ ...prev, [field]: value }))}
       />
 
       <div className="bg-white p-6 rounded-lg shadow">
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center gap-2">
-            <CourseHeader
-              workbook={workbookData}
-              courseLead={users.find(u => u.id === workbookData.course_lead_id) || null}
-              learningPlatform={
-                learningPlatforms.find(p => p.id === workbookData.learning_platform_id) || null
-              }
-            />
+            <CourseHeader workbook={workbook} />
             <Button size="xs" color="light" onClick={() => setShowWorkbookModal(true)}>
               <HiPencil className="h-4 w-4" />
             </Button>
@@ -578,7 +605,7 @@ function EditWorkbook(): JSX.Element {
           weeks={weeks}
           convertWeekToWeekInfo={convertWeekToWeekInfo}
           onDeleteWeek={handleDeleteWeek}
-          onAddActivity={weekNumber => {
+          onAddActivity={(weekNumber) => {
             setSelectedWeek(weekNumber);
             setShowActivityModal(true);
           }}

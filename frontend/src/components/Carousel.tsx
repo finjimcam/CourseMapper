@@ -16,12 +16,12 @@ function Carousel({ items }: { items: Array<CarouselItem> }) {
   const [currentPosition, setCurrentPosition] = useState(0);
   const carouselSize = 3;
   const [visibleItems, setVisibleItems] = useState<Array<CarouselItem>>([]);
-  
+
   useEffect(() => {
     if (items.length < carouselSize) {
       setVisibleItems(items);
     } else {
-      let settingItems: CarouselItem[] = [];
+      const settingItems: CarouselItem[] = [];
       for (let i = currentPosition; i < currentPosition + carouselSize; i++) {
         settingItems.push(items[i % items.length]);
       }
@@ -38,19 +38,24 @@ function Carousel({ items }: { items: Array<CarouselItem> }) {
   };
 
   return (
-    <div className="relative w-full max-w-4xl mx-auto" data-carousel="slide">
-  {/* Carousel wrapper */}
-  <div className="relative h-48 overflow-hidden rounded-lg md:h-72">
-    {visibleItems.map((item) => (
-      <div
-        key={item.id}
-        className={`carousel-item ${currentPosition === items.indexOf(item) ? 'block' : 'hidden'} duration-700 ease-in-out`}
-        data-carousel-item>
-        <Link to={`/workbook/${item.id}`} style={{ color: 'inherit', textDecoration: 'inherit' }}>
-          <div className="absolute block w-full h-full bg-gray-100 rounded-lg shadow-lg p-4">
-            <h6 className="text-lg font-bold dark:text-white">{item.course_name}</h6>
-            <p className="text-gray-500 md:text-l dark:text-gray-400">{item.course_lead}</p>
-            <p className="text-gray-500 md:text-l dark:text-gray-400">{item.learning_platform}</p>
+    <div className="carousel-container max-w-3xl mx-auto overflow-hidden">
+      <div className="carousel-inner flex space-x-4">
+        {visibleItems.map((item) => (
+          <div
+            key={item.id}
+            className="carousel-item flex-none w-1/3 p-4 bg-gray-100 rounded-lg shadow-lg"
+          >
+            <Link
+              to={`/workbook/${item.id}`}
+              key={item.id}
+              style={{ color: 'inherit', textDecoration: 'inherit' }}
+            >
+              <h6 className="text-lg font-bold dark:text-white">{item.course_name}</h6>
+              <p className="text-gray-500 md:text-l dark:text-gray-400">{item.course_lead}</p>
+              <p className="text-gray-500 md:text-l dark:text-gray-400">
+                {item.learning_platform}
+              </p>
+            </Link>
           </div>
         </Link>
       </div>

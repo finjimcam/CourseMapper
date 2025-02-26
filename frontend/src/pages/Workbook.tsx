@@ -1,5 +1,5 @@
 // src/components/pages/workbook.tsx
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { Tabs, Spinner } from 'flowbite-react';
@@ -7,25 +7,23 @@ import CourseHeader from '../components/CourseDetailsHeader';
 import DashboardTab from '../components/DashboardTab';
 import WeekActivityTab from '../components/WeekActivityTab';
 import {
-  WorkbookData,
+  Workbook,
   WorkbookDetailsResponse,
   WeekInfo,
   processActivitiesData,
   prepareDashboardData,
-  User,
-  LearningPlatform,
+  getUser,
 } from '../utils/workbookUtils';
 
-function Workbook(): JSX.Element {
+function WorkbookPage(): JSX.Element {
   const { workbook_id } = useParams<{ workbook_id: string }>();
 
-  const [workbookData, setWorkbookData] = useState<WorkbookData | null>(null);
-  const [courseLeadData, setCourseLeadData] = useState<User | null>(null);
-  const [learningPlatformData, setLearningPlatformData] = useState<LearningPlatform | null>(null);
+  const [workbookData, setWorkbookData] = useState<Workbook | null>(null);
   const [weeksData, setWeeksData] = useState<WeekInfo[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [showTable, setShowTable] = useState<boolean>(false);
+  const [isCourseLead, setIsCourseLead] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchWorkbookData = async () => {
@@ -36,13 +34,25 @@ function Workbook(): JSX.Element {
           `${import.meta.env.VITE_API}/workbooks/${workbook_id}/details`
         );
         const { workbook, course_lead, learning_platform, activities } = response.data;
-        setWorkbookData(workbook);
-        setCourseLeadData(course_lead);
-        setLearningPlatformData(learning_platform);
+        if (course_lead && learning_platform) {
+          setWorkbookData({
+            workbook: workbook,
+            course_lead: course_lead,
+            learning_platform: learning_platform,
+          });
+        }
         if (activities.length > 0) {
           const weeksDataArray = processActivitiesData(activities);
           setWeeksData(weeksDataArray);
         }
+
+        const promise = getUser();
+        promise.then((user) => {
+          if (course_lead.id === user.id) {
+            setIsCourseLead(true);
+          }
+        });
+
         setLoading(false);
       } catch (err) {
         const errorObj = err as Error;
@@ -78,18 +88,16 @@ function Workbook(): JSX.Element {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="bg-white p-6 rounded-lg shadow">
-        <CourseHeader
-          workbook={workbookData}
-          courseLead={courseLeadData}
-          learningPlatform={learningPlatformData}
-        />
+        <CourseHeader workbook={workbookData} />
         <div className="flex justify-end mb-4">
-          <Link
-            to={`/workbook/edit/${workbook_id}`}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-          >
-            Edit Workbook
-          </Link>
+          {!isCourseLead ? null : (
+            <Link
+              to={`/workbook/edit/${workbook_id}`}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            >
+              Edit Workbook
+            </Link>
+          )}
         </div>
         <Tabs aria-label="Workbook Tabs">
           <Tabs.Item title="Dashboard">
@@ -113,4 +121,4 @@ function Workbook(): JSX.Element {
   );
 }
 
-export default Workbook;
+export default WorkbookPage;
