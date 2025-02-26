@@ -153,10 +153,12 @@ export const getUser = async (): Promise<UserExtended> => {
 };
 
 export const getContributors = async (workbook_id: string): Promise<User[]> => {
-  return (await axios.get<User[]>(
+  const r = (await axios.get<User[]>(
       `${import.meta.env.VITE_API}/workbook-contributors/`,
       {params: {workbook_id: workbook_id}},
-  )).data;
+    )).data;
+  console.log(r);
+  return r;
 }
 
 export const isCourseLead = async (workbook_id: string): Promise<boolean> => {
@@ -168,23 +170,6 @@ export const isCourseLead = async (workbook_id: string): Promise<boolean> => {
 
   return getUser().then((user) => {
     if (workbookData.course_lead.id === user.id) {
-      return true;
-    } else {
-      return false;
-    }
-  });
-};
-
-export const canUserEdit = async (workbook_id: string): Promise<boolean> => {
-  const workbookData = (
-    await axios.get<WorkbookDetailsResponse>(
-      `${import.meta.env.VITE_API}/workbooks/${workbook_id}/details`
-    )
-  ).data;
-  const contributors = await getContributors(workbook_id);
-
-  return getUser().then((user) => {
-    if (workbookData.course_lead.id === user.id || contributors.some(con => con.id === user.id)) {
       return true;
     } else {
       return false;

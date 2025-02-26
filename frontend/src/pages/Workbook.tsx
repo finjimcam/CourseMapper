@@ -13,7 +13,7 @@ import {
   WeekInfo,
   processActivitiesData,
   prepareDashboardData,
-  canUserEdit,
+  isCourseLead,
   getContributors,
   User,
 } from '../utils/workbookUtils';
@@ -61,7 +61,7 @@ function WorkbookPage(): JSX.Element {
           setWeeksData(weeksDataArray);
         }
 
-        setIfCourseLead(await canUserEdit(workbook.id));
+        setIfCourseLead(await isCourseLead(workbook.id));
         setContributors(await getContributors(workbook.id));
 
         setLoading(false);
