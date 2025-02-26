@@ -3,7 +3,7 @@ import ReactApexChart from 'react-apexcharts';
 import { ApexOptions } from 'apexcharts';
 import axios from 'axios';
 import { graduateAttributeColors } from './CustomBadge';
-import { FONT_SIZE, getErrorMessage } from '../utils/workbookUtils';
+import { getErrorMessage } from '../utils/workbookUtils';
 
 interface WeekGraduateAttribute {
   week_workbook_id: string;
@@ -109,7 +109,7 @@ const PieChart: React.FC<PieChartProps> = ({ workbook_id }) => {
         text: 'Graduate Attributes Distribution',
         align: 'center',
         style: {
-          fontSize: FONT_SIZE,
+          fontSize: '20px',
         },
       },
       labels: chartData.labels,
@@ -117,7 +117,7 @@ const PieChart: React.FC<PieChartProps> = ({ workbook_id }) => {
       legend: {
         position: 'right',
         height: 600,
-        fontSize: FONT_SIZE,
+        fontSize: '14px',
         // eslint-disable-next-line
         formatter: function (seriesName: string, opts?: any) {
           const value = opts.w.globals.series[opts.seriesIndex];
