@@ -74,8 +74,9 @@ export default function FooterComponent() {
             </Footer.Link>
           </Footer.LinkGroup>
         </div>
-    </footer>
-
-
+        <Footer.Divider />
+        <Footer.Copyright href="#" by="University of Glasgow™" year={2024} />
+      </div>
+    </Footer>
   );
 }
