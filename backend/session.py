@@ -14,6 +14,10 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program at /LICENSE.md. If not, see <https://www.gnu.org/licenses/>.
+
+__-----------------------------------------------------------------------------------__
+
+This module provides functionality required for managing authentication sessions.
 """
 
 import uuid
@@ -25,10 +29,15 @@ from fastapi_sessions.session_verifier import SessionVerifier
 
 # Special session model
 class SessionData(BaseModel):
+    """The data stored in the session cookie.
+    """
     user_id: uuid.UUID
 
 
 class BaseVerifier(SessionVerifier[uuid.UUID, SessionData]):  # type: ignore[misc]
+    """The session verifier used by FastAPI on our sessions.
+    """
+
     def __init__(
         self,
         *,
@@ -58,6 +67,6 @@ class BaseVerifier(SessionVerifier[uuid.UUID, SessionData]):  # type: ignore[mis
     def auth_http_exception(self) -> HTTPException:
         return self._auth_http_exception
 
-    def verify_session(self, model: SessionData) -> bool:
+    def verify_session(self, _: SessionData) -> bool:
         # If the session exists, it is valid
         return True
