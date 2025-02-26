@@ -36,7 +36,7 @@ const GraduateAttributesChart: React.FC<GraduateAttributesChartProps> = ({
     legend: {
       position: 'right',
       height: 600,
-      fontSize: '14px',
+      fontSize: '16px',
       markers: {
         width: 12,
         height: 12,

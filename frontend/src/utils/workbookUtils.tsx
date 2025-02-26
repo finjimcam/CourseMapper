@@ -2,6 +2,9 @@ import { ApexOptions } from 'apexcharts';
 import { learningTypeColors } from '../components/CustomBadge';
 import axios from 'axios';
 
+
+export const FONT_SIZE = '16px';
+
 // =====================
 // Type Definitions
 // =====================
@@ -276,13 +279,20 @@ export const prepareDashboardData = (weeksData: WeekInfo[]) => {
       categories: weekTotals.map((week) => `Week ${week.weekNumber}`),
       axisBorder: { show: true },
       axisTicks: { show: true },
+      labels: {
+        style: {fontSize: FONT_SIZE},
+      },
     },
     yaxis: {
-      title: { text: 'Hours' },
+      title: { 
+        text: 'Hours', 
+        style: {fontSize: FONT_SIZE},
+      },
       min: 0,
       max: yAxisMax,
       tickAmount: yAxisMax / 60,
       labels: {
+        style: {fontSize: FONT_SIZE},
         formatter: (value: number) => {
           const hours = Math.floor(value / 60);
           const minutes = value % 60;
@@ -293,6 +303,7 @@ export const prepareDashboardData = (weeksData: WeekInfo[]) => {
     legend: {
       position: 'bottom',
       horizontalAlign: 'left',
+      fontSize: '16px',
       formatter: (seriesName: string) => {
         const lowercaseSeriesName = seriesName.toLowerCase();
         const isUsed = learningTypeUsage[lowercaseSeriesName];
