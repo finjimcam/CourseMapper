@@ -1178,21 +1178,18 @@ def read_workbook_contributors(
     contributor_id: uuid.UUID | None = None,
     workbook_id: uuid.UUID | None = None,
     peek: bool = Query(False),
-) -> List[Any] | None:
+) -> List[WorkbookContributor] | None:
     if peek:
         return None
 
     if not contributor_id and not workbook_id:
         return list(session.exec(select(WorkbookContributor)).all())
     if not contributor_id:
-        contributors = []
-        for user in session.exec(
+        return list(
+            session.exec(
                 select(WorkbookContributor).where(WorkbookContributor.workbook_id == workbook_id)
-            ):
-            print(user)
-            contributors.append(session.exec(select(User).where(User.id == user.contributor_id)).first())
-        return contributors
-        
+            )
+        )
     if not workbook_id:
         return list(
             session.exec(
