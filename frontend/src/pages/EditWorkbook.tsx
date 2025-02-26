@@ -21,6 +21,7 @@ import {
   Week,
   GenericData,
   getErrorMessage,
+  getContributors,
 } from '../utils/workbookUtils';
 
 // --- Type definitions ---
@@ -57,6 +58,7 @@ function EditWorkbook(): JSX.Element {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<boolean>(false);
+  const [contributors, setContributors] = useState<User[]>([]);
 
   // Modal states
   const [showValidationModal, setShowValidationModal] = useState<boolean>(false);
@@ -112,7 +114,7 @@ function EditWorkbook(): JSX.Element {
           },
         });
 
-        console.log(workbookData);
+        setContributors(await getContributors(workbookDetails.workbook.id));
 
         // Fetch weeks, activities and staff-activity relationships
         const [weeksRes, activitiesRes, staffActivitiesRes] = await Promise.all([
@@ -553,7 +555,7 @@ function EditWorkbook(): JSX.Element {
       <div className="bg-white p-6 rounded-lg shadow">
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center gap-2">
-            <CourseHeader workbook={workbookData} />
+            <CourseHeader workbook={workbookData} contributors={contributors} />
             <Button size="xs" color="light" onClick={() => setShowWorkbookModal(true)}>
               <HiPencil className="h-4 w-4" />
             </Button>
