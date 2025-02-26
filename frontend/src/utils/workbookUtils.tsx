@@ -152,6 +152,15 @@ export const getUser = async (): Promise<UserExtended> => {
     });
 };
 
+export const getContributors = async (workbook_id: string): Promise<User[]> => {
+  const r = (await axios.get<User[]>(
+      `${import.meta.env.VITE_API}/workbook-contributors/`,
+      {params: {workbook_id: workbook_id}},
+    )).data;
+  console.log(r);
+  return r;
+}
+
 export const isCourseLead = async (workbook_id: string): Promise<boolean> => {
   const workbookData = (
     await axios.get<WorkbookDetailsResponse>(

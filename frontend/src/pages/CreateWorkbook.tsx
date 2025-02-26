@@ -18,6 +18,7 @@ import {
   Activity,
   WeekInfo,
   Workbook,
+  getContributors,
 } from '../utils/workbookUtils';
 
 // =====================
@@ -584,7 +585,7 @@ function EditWorkbook(): JSX.Element {
       <div className="bg-white p-6 rounded-lg shadow">
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center gap-2">
-            <CourseHeader workbook={workbook} />
+            <CourseHeader workbook={workbook} contributors={[]} />
             <Button size="xs" color="light" onClick={() => setShowWorkbookModal(true)}>
               <HiPencil className="h-4 w-4" />
             </Button>

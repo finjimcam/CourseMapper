@@ -1,8 +1,8 @@
 // src/components/CourseHeader.tsx
 import React from 'react';
-import { Workbook } from '../utils/workbookUtils';
+import { User, Workbook } from '../utils/workbookUtils';
 
-const CourseHeader: React.FC<{ workbook: Workbook }> = ({ workbook }) => (
+const CourseHeader: React.FC<{ workbook: Workbook, contributors: User[] }> = ({ workbook, contributors }) => (
   <div className="mb-6 text-left">
     <h1 className="text-4xl font-bold text-gray-900 mb-2">
       {workbook.workbook.course_name || 'Course Title'}
@@ -27,6 +27,16 @@ const CourseHeader: React.FC<{ workbook: Workbook }> = ({ workbook }) => (
       {workbook.workbook.end_date ? (
         new Date(workbook.workbook.end_date).toLocaleDateString('en-UK')
       ) : (
+        <span className="text-gray-500">N/A</span>
+      )}
+    </p>
+    <p className="text-lg text-gray-600">
+      Contributors:{' '}
+      {contributors ?
+        contributors.map((c: User, index: number) => (
+          <span key={c.id}>{index ? ', ' : ''} {c.name}</span>
+        ))
+       : (
         <span className="text-gray-500">N/A</span>
       )}
     </p>
