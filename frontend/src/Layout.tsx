@@ -3,6 +3,7 @@ import { Outlet, Navigate } from 'react-router-dom';
 import axios from 'axios';
 import { Spinner } from 'flowbite-react';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 
 function Layout() {
   const [loading, setLoading] = useState(true);
@@ -43,9 +44,10 @@ function Layout() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1 p-4">
+      <main className="flex-1 p-4 mt-[80px]">
         <Outlet />
       </main>
+      <Footer />
     </div>
   );
 }

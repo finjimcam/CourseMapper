@@ -50,36 +50,40 @@ function MyWorkbooks() {
 
   return (
     <>
-      <div className="p-8 space-y-8">
-        <h2 className="text-3xl font-bold text-left flex-grow">My Workbooks</h2>
-        {/* row layout with SearchBar and Button */}
-        <div className="flex items-center justify-between">
-          <div className="w-1/3">
-            <SearchBar />
-          </div>
+    <div className="flex">
+    <div className="p-8 space-y-8">
+      <div className="flex flex-col items-centre space-y-4">
+        <div className="space-y-2">
+            <h2 className="text-3xl font-bold text-left">Welcome back, Tim!</h2>
+            <h3 className="text-lg text-left text-gray-600">
+              Explore and manage your courses with ease
+            </h3>
+        </div>
 
-          <div className="w-1/3 text-right">
+          <SearchBar />
+          <div className="flex gap-4">
             <button
               type="button"
-              className="text-white bg-gradient-to-r from-cyan-500 to-blue-500 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-cyan-300 font-medium rounded-lg text-sm px-5 py-2.5"
-              onClick={() => setShowCreateModal(true)}
-            >
-              Create Workbook
+              className="text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2 transition delay-150 duration-150 ease-in-out hover:-translate-y-1 hover:scale-110 hover:bg-indigo-500"
+              onClick={() => setShowCreateModal(true)}>
+                Create Workbook
             </button>
-          </div>
         </div>
 
-        {/* Carousel Section */}
-        <div className="space-y-4">
+        <CreateWorkbookModal
+          show={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onSubmit={handleCreateWorkbook}
+        />
+        
+      </div>
+    </div>
+    <div className="flex flex-col justify-center items-center w-1/2 min-w-[400px]">
+          <h1 className="text-2xl font-semibold text-left">Recent Workbooks</h1>
           <Carousel items={workbooks} />
         </div>
-      </div>
 
-      <CreateWorkbookModal
-        show={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onSubmit={handleCreateWorkbook}
-      />
+        </div>
     </>
   );
 }
