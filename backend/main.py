@@ -962,6 +962,30 @@ def create_activity_staff(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> ActivityStaff | None:
+    """Adds an activity-staff row to the database.
+
+    The activity-staff table is a link table between users and activities, and
+    represents the users responsible for the activity as its staff.
+
+    Args:
+        activity_staff: The data of the new activity staff.
+        session_data: The session object stored by the browser as a cookie.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The successfully created activity-staff, or None if peek=True.
+    
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     # check ActivityStaff validity
     activity_staff_dict = activity_staff.model_dump()
     activity_staff_dict["session"] = session
@@ -1018,6 +1042,30 @@ def create_activity(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> Activity | None:
+    """Adds an activity row to the database.
+
+    The activity is automatically given the number n+1 where there exist n activities
+    in its week.
+
+    Args:
+        activity: The data of the new activity.
+        session_data: The session object stored by the browser as a cookie.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The successfully created activity, or None if peek=True.
+    
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     # check Activity validity
     activity_dict = activity.model_dump()
     activity_dict["session"] = session
@@ -1089,6 +1137,27 @@ def create_workbook(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> Workbook | None:
+    """Adds a workbook row to the database.
+
+    Args:
+        workbook: The data of the new workbook.
+        session_data: The session object stored by the browser as a cookie.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The successfully created workbook, or None if peek=True.
+    
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     workbook_dict = workbook.model_dump()
     workbook_dict["course_lead_id"] = session_data.user_id
     workbook_dict["session"] = session
@@ -1113,6 +1182,30 @@ def create_week(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> Week | None:
+    """Adds a week row to the database.
+
+    The activity is automatically given the number n+1 where there exist n weeks
+    in its workbook.
+
+    Args:
+        week: The data of the new week.
+        session_data: The session object stored by the browser as a cookie.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The successfully created week, or None if peek=True.
+    
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     # check Week validity
     week_dict = week.model_dump()
     week_dict["session"] = session
@@ -1171,6 +1264,31 @@ def duplicate_workbook(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> Workbook | None:
+    """Creates a copy of a given workbook in the database.
+
+    The owner of the copy will be the user who calls this request, determined by the
+    state in the session cookie.
+    All link models, weeks, and activities are also copied: This is a deepcopy.
+
+    Args:
+        workbook_id: The id of the workbook to copy.
+        session_data: The session object stored by the browser as a cookie.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The successfully created workbook, or None if peek=True.
+    
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     db_user = session.exec(select(User).where(User.id == session_data.user_id)).first()
     # check if user exists
     if not db_user:
@@ -1271,6 +1389,30 @@ def create_workbook_contributor(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> WorkbookContributor | None:
+    """Creates a workbook-contributor in the database.
+
+    The workbook-contributor table is a link table between users and workbooks, and
+    represents the users who can contribute to the workbook by editing it.
+
+    Args:
+        workbook_contributor: The data of the new workbook-contributor link.
+        session_data: The session object stored by the browser as a cookie.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The successfully created workbook-contributor, or None if peek=True.
+    
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     workbook_contributor_dict = workbook_contributor.model_dump()
     workbook_contributor_dict["session"] = session
     try:
@@ -1318,6 +1460,30 @@ def create_week_graduate_attribute(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> WeekGraduateAttribute | None:
+    """Creates a week-graduate-attribute in the database.
+
+    The week-graduate-attribute table is a link table between weeks and graduate
+    attributes, and represents the graduate attributes assigned to a particular week.
+
+    Args:
+        week_graduate_attribute: The data of the new week-graduate-attribute link.
+        session_data: The session object stored by the browser as a cookie.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The successfully created week-graduate-attribute, or None if peek=True.
+    
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     # check WeekGraduateAttribute validity
     week_graduate_attribute_dict = week_graduate_attribute.model_dump()
     week_graduate_attribute_dict["session"] = session
