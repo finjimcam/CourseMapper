@@ -37,23 +37,22 @@ function WorkbookPage(): JSX.Element {
         const response = await axios.get<WorkbookDetailsResponse>(
           `${import.meta.env.VITE_API}/workbooks/${workbook_id}/details`
         );
-        
+
         const { workbook, course_lead, learning_platform, activities } = response.data;
         if (course_lead && learning_platform) {
-
           setWorkbookData({
             workbook: workbook,
             course_lead: course_lead,
             learning_platform: learning_platform,
           });
         }
-          
+
         // Ensure each activity has the workbook_id
-        const activitiesWithWorkbookId = activities.map(activity => ({
+        const activitiesWithWorkbookId = activities.map((activity) => ({
           ...activity,
-          workbook_id: workbook.id
+          workbook_id: workbook.id,
         }));
-        
+
         if (activitiesWithWorkbookId.length > 0) {
           const weeksDataArray = processActivitiesData(activitiesWithWorkbookId);
           setWeeksData(weeksDataArray);
@@ -94,26 +93,26 @@ function WorkbookPage(): JSX.Element {
   const dashboardData = prepareDashboardData(weeksData);
 
   return (
-    
     <div className="container mx-auto px-4 py-8">
       <div className="bg-white p-6 rounded-lg shadow">
         <div className="flex justify-between items-start mb-4">
           <CourseHeader workbook={workbookData} />
 
           <div className="flex flex-col justify-between items-end gap-2">
-            {ifCourseLead ? 
+            {ifCourseLead ? (
               <Link
-              to={`/workbook/edit/${workbook_id}`}
-              className="px-5 py-2.5 text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm text-center"
+                to={`/workbook/edit/${workbook_id}`}
+                className="px-5 py-2.5 text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm text-center"
               >
                 Edit Workbook
               </Link>
-            : null}
-            {!isDashboardTab && <WeeklyAttributes weekNumber={selectedWeek} workbookId={workbook_id} />}
+            ) : null}
+            {!isDashboardTab && (
+              <WeeklyAttributes weekNumber={selectedWeek} workbookId={workbook_id} />
+            )}
           </div>
-          
         </div>
-        <Tabs 
+        <Tabs
           aria-label="Workbook Tabs"
           onActiveTabChange={(tab) => {
             const isOnDashboard = tab === 0;

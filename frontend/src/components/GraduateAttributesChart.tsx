@@ -27,9 +27,9 @@ const GraduateAttributesChart: React.FC<GraduateAttributesChartProps> = ({
       animations: {
         enabled: true,
         dynamicAnimation: {
-          speed: 350
-        }
-      }
+          speed: 350,
+        },
+      },
     },
     labels: data.labels,
     colors: data.colors,
@@ -40,33 +40,35 @@ const GraduateAttributesChart: React.FC<GraduateAttributesChartProps> = ({
       markers: {
         width: 12,
         height: 12,
-        radius: 6
+        radius: 6,
       },
-      formatter: function(seriesName: string, opts?: any) {
+      // eslint-disable-next-line
+      formatter: function (seriesName: string, opts?: any) {
         const value = opts.w.globals.series[opts.seriesIndex];
         const color = data.colors[opts.seriesIndex];
-        const style = value > 0 
-          ? `color: ${color}; font-weight: bold;` 
-          : `color: ${color}; opacity: 0.5; font-style: italic;`;
+        const style =
+          value > 0
+            ? `color: ${color}; font-weight: bold;`
+            : `color: ${color}; opacity: 0.5; font-style: italic;`;
         return `<span style="${style}">${seriesName}${value > 0 ? `: ${value}` : ''}</span>`;
-      }
+      },
     },
     dataLabels: {
-      enabled: false
+      enabled: false,
     },
     responsive: [
       {
         breakpoint: 480,
         options: {
           chart: {
-            width: 600
+            width: 600,
           },
           legend: {
-            position: 'bottom'
-          }
-        }
-      }
-    ]
+            position: 'bottom',
+          },
+        },
+      },
+    ],
   };
 
   return (
@@ -86,7 +88,12 @@ const GraduateAttributesChart: React.FC<GraduateAttributesChartProps> = ({
               {data.labels.map((label, index) => (
                 <Table.Row key={index}>
                   <Table.Cell>
-                    <span style={{ color: data.colors[index], fontWeight: data.series[index] > 0 ? 'bold' : 'normal' }}>
+                    <span
+                      style={{
+                        color: data.colors[index],
+                        fontWeight: data.series[index] > 0 ? 'bold' : 'normal',
+                      }}
+                    >
                       {label}
                     </span>
                   </Table.Cell>
@@ -98,12 +105,7 @@ const GraduateAttributesChart: React.FC<GraduateAttributesChartProps> = ({
         </div>
       ) : (
         <div id="chart">
-          <ReactApexChart
-            options={chartOptions}
-            series={data.series}
-            type="pie"
-            width={600}
-          />
+          <ReactApexChart options={chartOptions} series={data.series} type="pie" width={600} />
         </div>
       )}
       <button

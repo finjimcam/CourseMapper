@@ -6,10 +6,12 @@ import { CustomBadge, learningTypeColors, graduateAttributeColors } from './Cust
 import GraduateAttributesChart from './GraduateAttributesChart';
 import axios from 'axios';
 import { normalizeKey } from '../utils/stringUtils';
+import { ApexOptions } from 'apexcharts';
+import { getErrorMessage } from '../utils/workbookUtils';
 
 interface DashboardTabProps {
-  series: any[];
-  options: any;
+  series: ApexOptions['series'];
+  options: ApexOptions;
   summaryData: { [key: string]: string }[];
   allLearningTypes: string[];
   showTable: boolean;
@@ -53,9 +55,11 @@ const DashboardTab: React.FC<DashboardTabProps> = ({
       try {
         setLoading(true);
         setError(null);
-        
+
         // Get all graduate attributes
-        const gradRes = await axios.get<GraduateAttribute[]>(`${import.meta.env.VITE_API}/graduate_attributes/`);
+        const gradRes = await axios.get<GraduateAttribute[]>(
+          `${import.meta.env.VITE_API}/graduate_attributes/`
+        );
         const gradData = gradRes.data;
 
         // Get graduate attributes for this specific workbook
@@ -66,20 +70,21 @@ const DashboardTab: React.FC<DashboardTabProps> = ({
 
         // Count occurrences of each graduate attribute
         const attributeCounts: { [key: string]: number } = {};
-        gradSelData.forEach(item => {
-          attributeCounts[item.graduate_attribute_id] = (attributeCounts[item.graduate_attribute_id] || 0) + 1;
+        gradSelData.forEach((item) => {
+          attributeCounts[item.graduate_attribute_id] =
+            (attributeCounts[item.graduate_attribute_id] || 0) + 1;
         });
 
         // Track which attributes are used
         const attributeUsage: { [key: string]: boolean } = {};
         const usedAttributes: string[] = [];
         const unusedAttributes: string[] = [];
-        
-        gradData.forEach(attr => {
+
+        gradData.forEach((attr) => {
           const count = attributeCounts[attr.id] || 0;
           const normalizedKey = normalizeKey(attr.name);
           attributeUsage[normalizedKey] = count > 0;
-          
+
           if (count > 0) {
             usedAttributes.push(attr.name);
           } else {
@@ -89,19 +94,19 @@ const DashboardTab: React.FC<DashboardTabProps> = ({
 
         // Combine labels with used attributes first
         const allLabels = [...usedAttributes, ...unusedAttributes];
-        
+
         // Create series data in the same order
-        const series = allLabels.map(label => {
-          const attrId = gradData.find(attr => attr.name === label)?.id;
-          return attrId ? (attributeCounts[attrId] || 0) : 0;
+        const series = allLabels.map((label) => {
+          const attrId = gradData.find((attr) => attr.name === label)?.id;
+          return attrId ? attributeCounts[attrId] || 0 : 0;
         });
 
         // Create colors array
-        const colors = allLabels.map(label => {
+        const colors = allLabels.map((label) => {
           const normalizedKey = normalizeKey(label);
           const isUsed = attributeUsage[normalizedKey];
           const baseColor = graduateAttributeColors[normalizedKey] || '#6c757d';
-          
+
           if (isUsed) {
             return baseColor;
           } else {
@@ -114,8 +119,8 @@ const DashboardTab: React.FC<DashboardTabProps> = ({
 
         setAttributesData({ labels: allLabels, series, colors });
         setLoading(false);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        setError(getErrorMessage(err));
         setLoading(false);
       }
     };

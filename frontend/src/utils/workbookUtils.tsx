@@ -150,18 +150,20 @@ export const getUser = async (): Promise<UserExtended> => {
 };
 
 export const isCourseLead = async (workbook_id: string): Promise<boolean> => {
-  const workbookData = (await axios.get<WorkbookDetailsResponse>(
-    `${import.meta.env.VITE_API}/workbooks/${workbook_id}/details`
-  )).data;
+  const workbookData = (
+    await axios.get<WorkbookDetailsResponse>(
+      `${import.meta.env.VITE_API}/workbooks/${workbook_id}/details`
+    )
+  ).data;
 
   return getUser().then((user) => {
     if (workbookData.course_lead.id === user.id) {
       return true;
     } else {
-      return false
+      return false;
     }
   });
-}
+};
 
 export const getErrorMessage = (err: unknown) =>
   err instanceof Error ? err.message : 'An error occurred';
@@ -197,10 +199,10 @@ export const processActivitiesData = (activities: ActivityData[]): WeekInfo[] =>
   const weeksMap: { [key: number]: WeekInfo } = {};
   activities.forEach((activity) => {
     const weekNumber = activity.week_number || 1;
-    
+
     if (!weeksMap[weekNumber]) {
-      weeksMap[weekNumber] = { 
-        weekNumber, 
+      weeksMap[weekNumber] = {
+        weekNumber,
         data: [],
       };
     }
@@ -217,7 +219,7 @@ export const processActivitiesData = (activities: ActivityData[]): WeekInfo[] =>
     });
   });
   const sortedWeeks = Object.values(weeksMap).sort((a, b) => a.weekNumber - b.weekNumber);
-  
+
   return sortedWeeks;
 };
 

@@ -560,10 +560,10 @@ function EditWorkbook(): JSX.Element {
           </div>
           <div className="flex flex-col items-end gap-2">
             <Button
-            gradientDuoTone="greenToBlue"
-            size="lg"
-            onClick={handleSaveChanges}
-            disabled={saving}
+              gradientDuoTone="greenToBlue"
+              size="lg"
+              onClick={handleSaveChanges}
+              disabled={saving}
             >
               {saving ? 'Saving...' : 'Save Changes'}
             </Button>
@@ -571,12 +571,10 @@ function EditWorkbook(): JSX.Element {
           </div>
         </div>
 
-
         <div className="mb-6">
           <Button onClick={handleAddWeek}>Add Week</Button>
-          
         </div>
-        
+
         <WeeksTabs
           weeks={weeks}
           convertWeekToWeekInfo={convertWeekToWeekInfo}

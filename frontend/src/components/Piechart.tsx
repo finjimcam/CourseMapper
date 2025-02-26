@@ -3,6 +3,7 @@ import ReactApexChart from 'react-apexcharts';
 import { ApexOptions } from 'apexcharts';
 import axios from 'axios';
 import { graduateAttributeColors } from './CustomBadge';
+import { getErrorMessage } from '../utils/workbookUtils';
 
 interface WeekGraduateAttribute {
   week_workbook_id: string;
@@ -32,7 +33,7 @@ const PieChart: React.FC<PieChartProps> = ({ workbook_id }) => {
     const fetchData = async () => {
       try {
         console.log('PieChart - Fetching data for workbook_id:', workbook_id);
-        
+
         // Get all graduate attributes to show in chart (even if not used)
         const gradRes = await axios.get(`${import.meta.env.VITE_API}/graduate_attributes/`);
         const gradData: GraduateAttribute[] = gradRes.data;
@@ -47,16 +48,17 @@ const PieChart: React.FC<PieChartProps> = ({ workbook_id }) => {
 
         // Count occurrences of each graduate attribute
         const attributeCounts: { [key: string]: number } = {};
-        gradSelData.forEach(item => {
-          attributeCounts[item.graduate_attribute_id] = (attributeCounts[item.graduate_attribute_id] || 0) + 1;
+        gradSelData.forEach((item) => {
+          attributeCounts[item.graduate_attribute_id] =
+            (attributeCounts[item.graduate_attribute_id] || 0) + 1;
         });
 
         // Track which attributes are used and separate them
         const attributeUsage: { [key: string]: boolean } = {};
         const usedAttributes: string[] = [];
         const unusedAttributes: string[] = [];
-        
-        gradData.forEach(attr => {
+
+        gradData.forEach((attr) => {
           const count = attributeCounts[attr.id] || 0;
           attributeUsage[attr.name.toLowerCase()] = count > 0;
           if (count > 0) {
@@ -68,15 +70,15 @@ const PieChart: React.FC<PieChartProps> = ({ workbook_id }) => {
 
         // Combine labels with used attributes first
         const allLabels = [...usedAttributes, ...unusedAttributes];
-        
+
         // Create series data in the same order
-        const series = allLabels.map(label => {
-          const attrId = gradData.find(attr => attr.name === label)?.id;
-          return attrId ? (attributeCounts[attrId] || 0) : 0;
+        const series = allLabels.map((label) => {
+          const attrId = gradData.find((attr) => attr.name === label)?.id;
+          return attrId ? attributeCounts[attrId] || 0 : 0;
         });
 
         // Create colors array in the same order
-        const colors = allLabels.map(label => {
+        const colors = allLabels.map((label) => {
           const normalizedKey = label.toLowerCase();
           return attributeUsage[normalizedKey]
             ? graduateAttributeColors[normalizedKey] || '#6c757d'
@@ -86,8 +88,8 @@ const PieChart: React.FC<PieChartProps> = ({ workbook_id }) => {
         setChartData({ series, labels: allLabels });
         setChartColors(colors);
         setLoading(false);
-      } catch (err: any) {
-        setError(err.message);
+      } catch (err: unknown) {
+        setError(getErrorMessage(err));
         setLoading(false);
       }
     };
@@ -101,14 +103,14 @@ const PieChart: React.FC<PieChartProps> = ({ workbook_id }) => {
       chart: {
         width: 600,
         height: 600,
-        type: 'pie'
+        type: 'pie',
       },
       title: {
         text: 'Graduate Attributes Distribution',
         align: 'center',
         style: {
-          fontSize: '20px'
-        }
+          fontSize: '20px',
+        },
       },
       labels: chartData.labels,
       colors: chartColors,
@@ -116,31 +118,34 @@ const PieChart: React.FC<PieChartProps> = ({ workbook_id }) => {
         position: 'right',
         height: 600,
         fontSize: '14px',
-        formatter: function(seriesName: string, opts?: any) {
+        // eslint-disable-next-line
+        formatter: function (seriesName: string, opts?: any) {
           const value = opts.w.globals.series[opts.seriesIndex];
-          return value > 0 
-            ? `${seriesName}: ${value}` 
+          return value > 0
+            ? `${seriesName}: ${value}`
             : `<span style="color: #999">${seriesName}</span>`;
-        }
+        },
       },
       dataLabels: {
         enabled: false,
-        formatter: function() { return ''; }
+        formatter: function () {
+          return '';
+        },
       },
       responsive: [
         {
           breakpoint: 480,
           options: {
             chart: {
-              width: 600
+              width: 600,
             },
             legend: {
-              position: 'bottom'
-            }
-          }
-        }
-      ]
-    }
+              position: 'bottom',
+            },
+          },
+        },
+      ],
+    },
   };
 
   if (loading) {
