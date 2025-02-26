@@ -3,7 +3,7 @@ import React from 'react';
 import { Workbook } from '../utils/workbookUtils';
 
 const CourseHeader: React.FC<{ workbook: Workbook }> = ({ workbook }) => (
-  <div className="mb-6">
+  <div className="mb-6 text-left">
     <h1 className="text-4xl font-bold text-gray-900 mb-2">
       {workbook.workbook.course_name || 'Course Title'}
     </h1>

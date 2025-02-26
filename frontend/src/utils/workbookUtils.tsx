@@ -63,6 +63,7 @@ export interface ActivityData {
   learning_type: string;
   task_status: string;
   staff: User[];
+  workbook_id: string;
 }
 
 export interface WeekData {
@@ -130,7 +131,6 @@ export const getUser = async (): Promise<UserExtended> => {
     })
     .then((sessionResponse) => {
       // Get user details using the user_id from session
-      console.log(sessionResponse);
       return axios.get(`${import.meta.env.VITE_API}/users/`).then((usersResponse) => ({
         sessionData: sessionResponse.data,
         users: usersResponse.data,
@@ -147,6 +147,22 @@ export const getUser = async (): Promise<UserExtended> => {
       console.error('Error fetching user data:', error);
       return ''; // Reset username on error
     });
+};
+
+export const isCourseLead = async (workbook_id: string): Promise<boolean> => {
+  const workbookData = (
+    await axios.get<WorkbookDetailsResponse>(
+      `${import.meta.env.VITE_API}/workbooks/${workbook_id}/details`
+    )
+  ).data;
+
+  return getUser().then((user) => {
+    if (workbookData.course_lead.id === user.id) {
+      return true;
+    } else {
+      return false;
+    }
+  });
 };
 
 export const getErrorMessage = (err: unknown) =>
@@ -183,8 +199,12 @@ export const processActivitiesData = (activities: ActivityData[]): WeekInfo[] =>
   const weeksMap: { [key: number]: WeekInfo } = {};
   activities.forEach((activity) => {
     const weekNumber = activity.week_number || 1;
+
     if (!weeksMap[weekNumber]) {
-      weeksMap[weekNumber] = { weekNumber, data: [] };
+      weeksMap[weekNumber] = {
+        weekNumber,
+        data: [],
+      };
     }
     weeksMap[weekNumber].data.push({
       staff: activity.staff.map((user) => user.name),
@@ -198,7 +218,9 @@ export const processActivitiesData = (activities: ActivityData[]): WeekInfo[] =>
       location: activity.location || 'On Campus',
     });
   });
-  return Object.values(weeksMap).sort((a, b) => a.weekNumber - b.weekNumber);
+  const sortedWeeks = Object.values(weeksMap).sort((a, b) => a.weekNumber - b.weekNumber);
+
+  return sortedWeeks;
 };
 
 export const prepareDashboardData = (weeksData: WeekInfo[]) => {

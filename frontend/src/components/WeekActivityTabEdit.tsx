@@ -12,6 +12,7 @@ interface WeeksTabsProps {
   onAddActivity: (weekNumber: number) => void;
   onEditActivity: (activity: Activity, index: number, weekNumber: number) => void;
   onDeleteActivity: (index: number, weekNumber: number) => void;
+  onWeekChange?: (weekNumber: number) => void;
 }
 
 const WeeksTabs: React.FC<WeeksTabsProps> = ({
@@ -21,32 +22,44 @@ const WeeksTabs: React.FC<WeeksTabsProps> = ({
   onAddActivity,
   onEditActivity,
   onDeleteActivity,
-}) => (
-  <Tabs aria-label="Workbook Tabs">
-    {weeks.map((week) => (
-      <Tabs.Item key={week.number} title={`Week ${week.number}`}>
-        <div className="p-4">
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center gap-2">
-              <h2 className="text-2xl font-bold">Week {week.number} Activities</h2>
-              <Tooltip content="Delete Week">
-                <Button size="xs" color="light" onClick={() => onDeleteWeek(week.number)}>
-                  <HiTrash className="h-4 w-4" />
-                </Button>
-              </Tooltip>
+  onWeekChange,
+}) => {
+  return (
+    <Tabs
+      aria-label="Workbook Tabs"
+      onActiveTabChange={(tab) => {
+        const weekNumber = weeks[tab].number;
+        onWeekChange?.(weekNumber);
+      }}
+    >
+      {weeks.map((week) => (
+        <Tabs.Item key={week.number} title={`Week ${week.number}`}>
+          <div className="p-4">
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center gap-2">
+                <h2 className="text-2xl font-bold">Week {week.number} Activities</h2>
+                <Tooltip content="Delete Week">
+                  <Button size="xs" color="light" onClick={() => onDeleteWeek(week.number)}>
+                    <HiTrash className="h-4 w-4" />
+                  </Button>
+                </Tooltip>
+              </div>
+              <Button onClick={() => onAddActivity(week.number)}>Add Activity</Button>
             </div>
-            <Button onClick={() => onAddActivity(week.number)}>Add Activity</Button>
+            <WeekActivityTab
+              week={(() => {
+                const weekInfo = convertWeekToWeekInfo(week);
+                return weekInfo;
+              })()}
+              originalActivities={week.activities}
+              onEditActivity={onEditActivity}
+              onDeleteActivity={onDeleteActivity}
+            />
           </div>
-          <WeekActivityTab
-            week={convertWeekToWeekInfo(week)}
-            originalActivities={week.activities}
-            onEditActivity={onEditActivity}
-            onDeleteActivity={onDeleteActivity}
-          />
-        </div>
-      </Tabs.Item>
-    ))}
-  </Tabs>
-);
+        </Tabs.Item>
+      ))}
+    </Tabs>
+  );
+};
 
 export default WeeksTabs;

@@ -1523,6 +1523,25 @@ def get_workbook_details(
     return response
 
 
+@app.get("/workbooks/{workbook_id}/week-graduate-attributes", dependencies=[Depends(cookie)])
+def read_workbook_graduate_attributes(
+    workbook_id: uuid.UUID,
+    _: SessionData = Depends(verifier),
+    session: Session = Depends(get_session),
+    peek: bool = Query(False),
+) -> List[WeekGraduateAttribute] | None:
+    if peek:
+        return None
+
+    return list(
+        session.exec(
+            select(WeekGraduateAttribute).where(
+                WeekGraduateAttribute.week_workbook_id == workbook_id
+            )
+        )
+    )
+
+
 @app.get("/search")
 def search(text_input: str, session: Session = Depends(get_session)) -> List[Dict[str, Any]]:
     workbooks = []
