@@ -79,7 +79,6 @@ export interface WeekData {
 export interface WeekInfo {
   weekNumber: number;
   data: WeekData[];
-  workbookId: string;
 }
 
 export interface WorkbookDetailsResponse {
@@ -151,6 +150,16 @@ export const getUser = async (): Promise<UserExtended> => {
     });
 };
 
+export const isCourseLead = async (course_lead_id: string): Promise<boolean> => {
+  const promise = getUser();
+  promise.then((user) => {
+    if (course_lead_id === user.id) {
+      return true;
+    }
+  });
+  return false;
+}
+
 export const getErrorMessage = (err: unknown) =>
   err instanceof Error ? err.message : 'An error occurred';
 
@@ -186,11 +195,6 @@ export const processActivitiesData = (activities: ActivityData[]): WeekInfo[] =>
   const weeksMap: { [key: number]: WeekInfo } = {};
   activities.forEach((activity) => {
     const weekNumber = activity.week_number || 1;
-    console.log('Processing activity:', {
-      weekNumber,
-      workbookId: activity.workbook_id,
-      activity
-    });
     
     if (!weeksMap[weekNumber]) {
       console.log('Creating new week:', {
@@ -200,7 +204,6 @@ export const processActivitiesData = (activities: ActivityData[]): WeekInfo[] =>
       weeksMap[weekNumber] = { 
         weekNumber, 
         data: [],
-        workbookId: activity.workbook_id
       };
     }
     weeksMap[weekNumber].data.push({
@@ -216,12 +219,6 @@ export const processActivitiesData = (activities: ActivityData[]): WeekInfo[] =>
     });
   });
   const sortedWeeks = Object.values(weeksMap).sort((a, b) => a.weekNumber - b.weekNumber);
-  
-  console.log('Processed weeks data:', sortedWeeks.map(week => ({
-    weekNumber: week.weekNumber,
-    workbookId: week.workbookId,
-    dataCount: week.data.length
-  })));
   
   return sortedWeeks;
 };

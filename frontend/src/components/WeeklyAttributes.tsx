@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { graduateAttributeColors } from './CustomBadge';
+import { CustomBadge, graduateAttributeColors } from './CustomBadge';
+import { normalizeKey } from '../utils/stringUtils';
+import { isCourseLead } from '../utils/workbookUtils';
 
 interface GraduateAttribute {
   id: string;
@@ -10,85 +12,120 @@ interface GraduateAttribute {
 interface WeeklyAttributesProps {
   weekNumber: number;
   workbookId?: string; // Make optional for backward compatibility
+  onAttributesChange?: () => void;
 }
 
-const WeeklyAttributes: React.FC<WeeklyAttributesProps> = ({ weekNumber, workbookId }) => {
+const WeeklyAttributes: React.FC<WeeklyAttributesProps> = ({ weekNumber, workbookId, onAttributesChange }) => {
   const [graduateAttributes, setGraduateAttributes] = useState<GraduateAttribute[]>([]);
   const [selectedAttributes, setSelectedAttributes] = useState<GraduateAttribute[]>([]);
+  const [ifCourseLead, setIfCourseLead] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
+  const refreshAttributes = async () => {
+    try {
+      const selectedRes = await axios.get(`${import.meta.env.VITE_API}/week-graduate-attributes/`, {
+        params: { 
+          week_number: weekNumber,
+          week_workbook_id: workbookId
+        },
+      });
+
+      const selectedIds = selectedRes.data.map((item: any) => item.graduate_attribute_id);
+      const selected = graduateAttributes.filter((attr: GraduateAttribute) => 
+        selectedIds.includes(attr.id)
+      );
+      setSelectedAttributes(selected);
+      setError(null);
+    } catch (error: any) {
+      setError('Failed to refresh attributes. Please try again.');
+    }
+  };
+
+  // Effect for handling week changes
   useEffect(() => {
+    setSelectedAttributes([]); // Clear selected attributes immediately on week change
+    refreshAttributes(); // Fetch new attributes for the current week
+  }, [weekNumber]);
+
+  // Effect for fetching graduate attributes
+  useEffect(() => {
+    let mounted = true;
     const fetchGraduateAttributes = async () => {
-      console.log('WeeklyAttributes - workbookId:', workbookId);
-      console.log('WeeklyAttributes - weekNumber:', weekNumber);
-      
-      if (!workbookId) {
-        console.log('No workbookId provided');
-        setGraduateAttributes([]);
-        setSelectedAttributes([]);
-        setLoading(false);
-        return;
-      }
+      if (!mounted) return;
 
-      if (typeof workbookId !== 'string') {
-        console.error('Invalid workbookId type:', typeof workbookId);
-        setLoading(false);
-        return;
-      }
-      
       setLoading(true);
+      setError(null);
+
+      // Input validation
+      if (!workbookId || typeof workbookId !== 'string') {
+        setError('Invalid workbook ID');
+        setLoading(false);
+        return;
+      } else {
+        setIfCourseLead(await isCourseLead(workbookId));
+      }
+
+      if (typeof weekNumber !== 'number' || weekNumber < 1) {
+        setError('Invalid week number');
+        setLoading(false);
+        return;
+      }
+      
       try {
-        console.log('Fetching graduate attributes with params:', {
-          weekNumber,
-          workbookId,
-          url: `${import.meta.env.VITE_API}/graduate_attributes/`
+        // First fetch all graduate attributes if not already loaded
+        if (graduateAttributes.length === 0) {
+          const attributesRes = await axios.get(`${import.meta.env.VITE_API}/graduate_attributes/`);
+          if (!mounted) return;
+          
+          const attributes = attributesRes.data;
+          attributes.forEach((attr: GraduateAttribute) => {
+            const normalizedKey = normalizeKey(attr.name);
+            if (!graduateAttributeColors[normalizedKey]) {
+              console.warn(`No color mapping found for attribute: ${attr.name} (key: ${normalizedKey})`);
+            }
+          });
+          setGraduateAttributes(attributes);
+        }
+
+        // Then fetch selected attributes for the current week
+        const selectedRes = await axios.get(`${import.meta.env.VITE_API}/week-graduate-attributes/`, {
+          params: { 
+            week_number: weekNumber,
+            week_workbook_id: workbookId
+          },
         });
-
-        const [attributesRes, selectedRes] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API}/graduate_attributes/`),
-          axios.get(`${import.meta.env.VITE_API}/week-graduate-attributes/`, {
-            params: { 
-              week_number: weekNumber,
-              week_workbook_id: workbookId
-            },
-          }),
-        ]);
-
-        console.log('Graduate attributes response:', attributesRes.data);
-        console.log('Selected graduate attributes response:', selectedRes.data);
-        console.log('Selected graduate attributes params:', selectedRes.config?.params);
-
-        // Log the normalized names and their colors
-        attributesRes.data.forEach((attr: GraduateAttribute) => {
-          const normalizedKey = attr.name.toLowerCase().replace(/\s+/g, '');
-          console.log('Weekly Attributes - Attribute:', attr.name);
-          console.log('Weekly Attributes - Normalized key:', normalizedKey);
-          console.log('Weekly Attributes - Color:', graduateAttributeColors[normalizedKey]);
-        });
-
-        setGraduateAttributes(attributesRes.data);
         
+        if (!mounted) return;
+
         const selectedIds = selectedRes.data.map((item: any) => item.graduate_attribute_id);
-        const selected = attributesRes.data.filter((attr: GraduateAttribute) => 
+        const selected = graduateAttributes.filter((attr: GraduateAttribute) => 
           selectedIds.includes(attr.id)
         );
+        
         setSelectedAttributes(selected);
-      } catch (error: any) {
-        console.error('Error fetching graduate attributes:', {
-          error: error.message,
-          response: error.response?.data,
-          config: error.config
-        });
+        setError(null);
+      } catch (error) {
+        if (!mounted) return;
+        setError('Failed to fetch graduate attributes');
+        setSelectedAttributes([]);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
-      setLoading(false);
     };
 
     fetchGraduateAttributes();
-  }, [weekNumber, workbookId]);
+    return () => {
+      mounted = false;
+    };
+  }, [weekNumber, workbookId, graduateAttributes]); // Include graduateAttributes in dependencies
 
   const saveAttributes = async (newAttribute: GraduateAttribute, position: number) => {
     setSaving(true);
+    setError(null);
     try {
       console.log('Saving attributes with:', {
         weekNumber,
@@ -113,8 +150,6 @@ const WeeklyAttributes: React.FC<WeeklyAttributesProps> = ({ weekNumber, workboo
         }
       });
       
-      console.log('Current attributes:', currentAttributes.data);
-      
       // Find if there's an existing attribute at this position
       const existingAttrAtPosition = currentAttributes.data[position];
       
@@ -130,13 +165,6 @@ const WeeklyAttributes: React.FC<WeeklyAttributesProps> = ({ weekNumber, workboo
         });
       }
 
-      // Save the new attribute
-      console.log('Saving new attribute:', {
-        week_number: weekNumber,
-        week_workbook_id: workbookId,
-        graduate_attribute_id: newAttribute.id
-      });
-
       await axios.post(`${import.meta.env.VITE_API}/week-graduate-attributes/`, {
         week_number: weekNumber,
         week_workbook_id: workbookId,
@@ -148,19 +176,9 @@ const WeeklyAttributes: React.FC<WeeklyAttributesProps> = ({ weekNumber, workboo
       updatedAttributes[position] = newAttribute;
       setSelectedAttributes(updatedAttributes);
 
-      // Then refresh from server to ensure consistency
-      const selectedRes = await axios.get(`${import.meta.env.VITE_API}/week-graduate-attributes/`, {
-        params: { 
-          week_number: weekNumber,
-          week_workbook_id: workbookId
-        },
-      });
-
-      const selectedIds = selectedRes.data.map((item: any) => item.graduate_attribute_id);
-      const selected = graduateAttributes.filter((attr: GraduateAttribute) => 
-        selectedIds.includes(attr.id)
-      );
-      setSelectedAttributes(selected);
+      // Refresh from server to ensure consistency
+      await refreshAttributes();
+      onAttributesChange?.();
     } catch (error: any) {
       console.error('Error saving graduate attributes:', {
         error: error.message,
@@ -170,24 +188,13 @@ const WeeklyAttributes: React.FC<WeeklyAttributesProps> = ({ weekNumber, workboo
       
       // Handle permission errors
       if (error.response?.status === 403) {
-        alert('Permission denied. You do not have permission to modify graduate attributes.');
+        setError('Permission denied. You do not have permission to modify graduate attributes.');
       } else {
-        alert('Failed to save graduate attribute. Please try again.');
+        setError('Failed to save graduate attribute. Please try again.');
       }
       
-      // Refresh the view to ensure consistency
-      const selectedRes = await axios.get(`${import.meta.env.VITE_API}/week-graduate-attributes/`, {
-        params: { 
-          week_number: weekNumber,
-          week_workbook_id: workbookId
-        },
-      });
-
-      const selectedIds = selectedRes.data.map((item: any) => item.graduate_attribute_id);
-      const selected = graduateAttributes.filter((attr: GraduateAttribute) => 
-        selectedIds.includes(attr.id)
-      );
-      setSelectedAttributes(selected);
+      // Refresh to ensure consistency
+      await refreshAttributes();
     }
     setSaving(false);
   };
@@ -201,23 +208,36 @@ const WeeklyAttributes: React.FC<WeeklyAttributesProps> = ({ weekNumber, workboo
         <p>Loading...</p>
       ) : (
         <div className="space-y-4">
-          <div>
-            <DropdownRadio 
-              options={graduateAttributes}
-              selected={selectedAttributes[0]}
-              disabledOptions={selectedAttributes[1] ? [selectedAttributes[1]] : []}
-              onSelect={(attr) => saveAttributes(attr, 0)}
-            />
-          </div>
-          <div>
-            <DropdownRadio 
-              options={graduateAttributes}
-              selected={selectedAttributes[1]}
-              disabledOptions={selectedAttributes[0] ? [selectedAttributes[0]] : []}
-              onSelect={(attr) => saveAttributes(attr, 1)}
-            />
-          </div>
-          {saving && <p className="text-sm text-gray-500 mt-2">Saving changes...</p>}
+          {error && (
+            <div className="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">
+              {error}
+            </div>
+          )}
+          {ifCourseLead ? 
+            <>
+            <div>
+              <DropdownRadio 
+                options={graduateAttributes}
+                selected={selectedAttributes[0]}
+                disabledOptions={selectedAttributes[1] ? [selectedAttributes[1]] : []}
+                onSelect={(attr) => saveAttributes(attr, 0)}
+              />
+            </div>
+            <div>
+              <DropdownRadio 
+                options={graduateAttributes}
+                selected={selectedAttributes[1]}
+                disabledOptions={selectedAttributes[0] ? [selectedAttributes[0]] : []}
+                onSelect={(attr) => saveAttributes(attr, 1)}
+              />
+            </div>
+            {saving && <p className="text-sm text-gray-500 mt-2">Saving changes...</p>}
+            </> :
+            <>
+            {selectedAttributes[0] ? <CustomBadge label={selectedAttributes[0].name} colorMapping={graduateAttributeColors} /> : null}
+            {selectedAttributes[1] ? <CustomBadge label={selectedAttributes[1].name} colorMapping={graduateAttributeColors} /> : null}
+          </> 
+          }
         </div>
       )}
     </div>
@@ -250,12 +270,12 @@ const DropdownRadio: React.FC<DropdownRadioProps> = ({ options, selected, disabl
       <button
         onClick={() => setIsOpen(!isOpen)}
         style={{
-          backgroundColor: selected ? graduateAttributeColors[selected.name.toLowerCase()] : '#6c757d',
-          color: '#000000'
+          backgroundColor: selected ? graduateAttributeColors[normalizeKey(selected.name)] : '#6c757d'
         }}
-        className="w-full text-left focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 flex items-center justify-between"
+        className="w-full text-left focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm flex items-center justify-between"
       >
-        {selected ? selected.name : "Select an Attribute"}
+        {selected ? <CustomBadge label={selected.name} colorMapping={graduateAttributeColors} /> 
+        : <CustomBadge label={"Select an Attribute"} colorMapping={graduateAttributeColors} />}
         <svg className="w-2.5 h-2.5 ml-2" aria-hidden="true" fill="none" viewBox="0 0 10 6">
           <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 4 4 4-4" />
         </svg>
@@ -273,7 +293,7 @@ const DropdownRadio: React.FC<DropdownRadioProps> = ({ options, selected, disabl
                       : 'hover:bg-gray-100 cursor-pointer'
                   }`}
                   style={{
-                    backgroundColor: selected?.id === attr.id ? graduateAttributeColors[attr.name.toLowerCase()] : 'transparent'
+                    backgroundColor: selected?.id === attr.id ? graduateAttributeColors[normalizeKey(attr.name)] : 'transparent'
                   }}
                   onClick={() => {
                     if (!disabledOptions.some(disabled => disabled.id === attr.id)) {

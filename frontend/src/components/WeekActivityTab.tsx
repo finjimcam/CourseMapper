@@ -25,12 +25,6 @@ const WeekActivityTab: React.FC<WeekActivityTabProps> = ({
   onEditActivity,
   onDeleteActivity,
 }) => {
-  console.log('WeekActivityTab props:', {
-    weekNumber: week.weekNumber,
-    workbookId: week.workbookId,
-    week
-  });
-
   return (
     <div className="p-4">
       <div className="mb-4">

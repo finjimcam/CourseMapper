@@ -23,9 +23,7 @@ const WeeksTabs: React.FC<WeeksTabsProps> = ({
   onEditActivity,
   onDeleteActivity,
   onWeekChange,
-}) => {
-  console.log('WeeksTabs - weeks:', weeks);
-  
+}) => {  
   return (
   <Tabs 
     aria-label="Workbook Tabs"

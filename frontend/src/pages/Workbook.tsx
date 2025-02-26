@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
-import { Tabs, Spinner, Button } from 'flowbite-react';
+import { Tabs, Spinner } from 'flowbite-react';
 import CourseHeader from '../components/CourseDetailsHeader';
 import DashboardTab from '../components/DashboardTab';
 import WeekActivityTab from '../components/WeekActivityTab';
@@ -13,7 +13,7 @@ import {
   WeekInfo,
   processActivitiesData,
   prepareDashboardData,
-  getUser,
+  isCourseLead,
 } from '../utils/workbookUtils';
 
 function WorkbookPage(): JSX.Element {
@@ -24,7 +24,7 @@ function WorkbookPage(): JSX.Element {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [showTable, setShowTable] = useState<boolean>(false);
-  const [isCourseLead, setIsCourseLead] = useState<boolean>(false);
+  const [ifCourseLead, setIfCourseLead] = useState<boolean>(false);
   const [selectedWeek, setSelectedWeek] = useState<number>(1);
   const [isDashboardTab, setIsDashboardTab] = useState<boolean>(true);
 
@@ -60,12 +60,7 @@ function WorkbookPage(): JSX.Element {
           setWeeksData(weeksDataArray);
         }
 
-        const promise = getUser();
-        promise.then((user) => {
-          if (course_lead.id === user.id) {
-            setIsCourseLead(true);
-          }
-        });
+        setIfCourseLead(await isCourseLead(course_lead.id));
 
         setLoading(false);
       } catch (err) {
@@ -107,6 +102,7 @@ function WorkbookPage(): JSX.Element {
           <CourseHeader workbook={workbookData} />
 
           <div className="flex flex-col items-end gap-2">
+            {!isDashboardTab && <WeeklyAttributes weekNumber={selectedWeek} workbookId={workbook_id} />}
             {!isCourseLead ? null : (
               <Link
                 to={`/workbook/edit/${workbook_id}`}
@@ -115,7 +111,6 @@ function WorkbookPage(): JSX.Element {
                 Edit Workbook
               </Link>
             )}
-            {!isDashboardTab && <WeeklyAttributes weekNumber={selectedWeek} workbookId={workbook_id} />}
           </div>
         </div>
         <Tabs 
