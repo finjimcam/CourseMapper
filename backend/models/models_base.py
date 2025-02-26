@@ -36,6 +36,10 @@ class WorkbookContributorBase(SQLModel):
     This base model does not include relationships nor validation, only the identities
     that define what it is to be a WorkbookContributor, and is then extended by other
     models. It is also not represented by a table in the database.
+
+    Attributes:
+        contributor_id: The id of the related contributor (user).
+        workbook_id: The id of the related workbook.
     """
 
     contributor_id: uuid.UUID = Field(foreign_key="user.id", primary_key=True)
@@ -134,6 +138,10 @@ class ActivityStaffBase(SQLModel):
     This base model does not include relationships nor validation, only the identities
     that define what it is to be an ActivityStaff, and is then extended by other
     models. It is also not represented by a table in the database.
+
+    Attributes:
+        staff_id: The id of the related staff (user).
+        activity_id: The id of the related activity.
     """
 
     staff_id: uuid.UUID = Field(foreign_key="user.id", primary_key=True)
@@ -228,6 +236,14 @@ class WeekGraduateAttributeBase(SQLModel):
     This base model does not include relationships nor validation, only the identities
     that define what it is to be a WeekGraduateAttributeBase, and is then extended by other
     models. It is also not represented by a table in the database.
+
+    Attributes:
+        week_workbook_id: The id of the related week's workbook. In combination with
+            week_number defines the primary key of the related week 
+        week_number: The number of the related week. In combination with
+            week_workbook_id defines the primary key of the related week 
+        graduate_attribute_id:
+            The id of the related graduate attribute.
     """
 
     week_workbook_id: uuid.UUID = Field(primary_key=True)
