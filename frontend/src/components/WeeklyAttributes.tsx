@@ -121,7 +121,7 @@ const WeeklyAttributes: React.FC<WeeklyAttributesProps> = ({ weekNumber, workboo
     return () => {
       mounted = false;
     };
-  }, [weekNumber, workbookId, graduateAttributes]); // Include graduateAttributes in dependencies
+  }, [weekNumber, workbookId, graduateAttributes, ifCourseLead]); // Include graduateAttributes in dependencies
 
   const saveAttributes = async (newAttribute: GraduateAttribute, position: number) => {
     setSaving(true);
@@ -236,7 +236,7 @@ const WeeklyAttributes: React.FC<WeeklyAttributesProps> = ({ weekNumber, workboo
             <>
             {selectedAttributes[0] ? <CustomBadge label={selectedAttributes[0].name} colorMapping={graduateAttributeColors} /> : null}
             {selectedAttributes[1] ? <CustomBadge label={selectedAttributes[1].name} colorMapping={graduateAttributeColors} /> : null}
-          </> 
+            </> 
           }
         </div>
       )}

@@ -33,11 +33,10 @@ function WorkbookPage(): JSX.Element {
       try {
         setLoading(true);
         setError(null);
-        console.log('Fetching workbook details for ID:', workbook_id);
+
         const response = await axios.get<WorkbookDetailsResponse>(
           `${import.meta.env.VITE_API}/workbooks/${workbook_id}/details`
         );
-        console.log('Workbook details response:', response.data);
         
         const { workbook, course_lead, learning_platform, activities } = response.data;
         if (course_lead && learning_platform) {
@@ -60,7 +59,7 @@ function WorkbookPage(): JSX.Element {
           setWeeksData(weeksDataArray);
         }
 
-        setIfCourseLead(await isCourseLead(course_lead.id));
+        setIfCourseLead(await isCourseLead(workbook.id));
 
         setLoading(false);
       } catch (err) {
@@ -101,17 +100,18 @@ function WorkbookPage(): JSX.Element {
         <div className="flex justify-between items-start mb-4">
           <CourseHeader workbook={workbookData} />
 
-          <div className="flex flex-col items-end gap-2">
-            {!isDashboardTab && <WeeklyAttributes weekNumber={selectedWeek} workbookId={workbook_id} />}
-            {!isCourseLead ? null : (
+          <div className="flex flex-col justify-between items-end gap-2">
+            {ifCourseLead ? 
               <Link
-                to={`/workbook/edit/${workbook_id}`}
-                className="px-5 py-2.5 text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm text-center"
+              to={`/workbook/edit/${workbook_id}`}
+              className="px-5 py-2.5 text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm text-center"
               >
                 Edit Workbook
               </Link>
-            )}
+            : null}
+            {!isDashboardTab && <WeeklyAttributes weekNumber={selectedWeek} workbookId={workbook_id} />}
           </div>
+          
         </div>
         <Tabs 
           aria-label="Workbook Tabs"

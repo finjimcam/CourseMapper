@@ -131,7 +131,6 @@ export const getUser = async (): Promise<UserExtended> => {
     })
     .then((sessionResponse) => {
       // Get user details using the user_id from session
-      console.log(sessionResponse);
       return axios.get(`${import.meta.env.VITE_API}/users/`).then((usersResponse) => ({
         sessionData: sessionResponse.data,
         users: usersResponse.data,
@@ -150,14 +149,18 @@ export const getUser = async (): Promise<UserExtended> => {
     });
 };
 
-export const isCourseLead = async (course_lead_id: string): Promise<boolean> => {
-  const promise = getUser();
-  promise.then((user) => {
-    if (course_lead_id === user.id) {
+export const isCourseLead = async (workbook_id: string): Promise<boolean> => {
+  const workbookData = (await axios.get<WorkbookDetailsResponse>(
+    `${import.meta.env.VITE_API}/workbooks/${workbook_id}/details`
+  )).data;
+
+  return getUser().then((user) => {
+    if (workbookData.course_lead.id === user.id) {
       return true;
+    } else {
+      return false
     }
   });
-  return false;
 }
 
 export const getErrorMessage = (err: unknown) =>
@@ -191,16 +194,11 @@ export const calculateTotalMinutes = (weekData: WeekData[]): number => {
 };
 
 export const processActivitiesData = (activities: ActivityData[]): WeekInfo[] => {
-  console.log('Processing activities:', activities);
   const weeksMap: { [key: number]: WeekInfo } = {};
   activities.forEach((activity) => {
     const weekNumber = activity.week_number || 1;
     
     if (!weeksMap[weekNumber]) {
-      console.log('Creating new week:', {
-        weekNumber,
-        workbookId: activity.workbook_id
-      });
       weeksMap[weekNumber] = { 
         weekNumber, 
         data: [],
