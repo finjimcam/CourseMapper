@@ -36,7 +36,6 @@ import {
   Activity,
   WeekInfo,
   Workbook,
-  getContributors,
 } from '../utils/workbookUtils';
 
 // =====================
