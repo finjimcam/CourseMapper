@@ -31,7 +31,9 @@ import {
   WeekInfo,
   processActivitiesData,
   prepareDashboardData,
-  isCourseLead,
+  canUserEdit,
+  getContributors,
+  User,
 } from '../utils/workbookUtils';
 
 function WorkbookPage(): JSX.Element {
@@ -45,6 +47,7 @@ function WorkbookPage(): JSX.Element {
   const [ifCourseLead, setIfCourseLead] = useState<boolean>(false);
   const [selectedWeek, setSelectedWeek] = useState<number>(1);
   const [isDashboardTab, setIsDashboardTab] = useState<boolean>(true);
+  const [contributors, setContributors] = useState<User[]>([]);
 
   useEffect(() => {
     const fetchWorkbookData = async () => {
@@ -76,7 +79,8 @@ function WorkbookPage(): JSX.Element {
           setWeeksData(weeksDataArray);
         }
 
-        setIfCourseLead(await isCourseLead(workbook.id));
+        setIfCourseLead(await canUserEdit(workbook.id));
+        setContributors(await getContributors(workbook.id));
 
         setLoading(false);
       } catch (err) {
@@ -114,7 +118,7 @@ function WorkbookPage(): JSX.Element {
     <div className="container mx-auto px-4 py-8">
       <div className="bg-white p-6 rounded-lg shadow">
         <div className="flex justify-between items-start mb-4">
-          <CourseHeader workbook={workbookData} />
+          <CourseHeader workbook={workbookData} contributors={contributors}/>
 
           <div className="flex flex-col justify-between items-end gap-2">
             {ifCourseLead ? (
