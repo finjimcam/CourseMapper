@@ -372,6 +372,26 @@ format:
 
 
 class User(SQLModel, table=True):
+    """The data and table model for a user.
+
+    Attributes:
+        id: The UUID of the user, generated at runtime (*NOT* user-specified).
+        name: The name of the user.
+        permission_group_id: The id of the related permissions group.
+    
+    1->N Relationship Attributes:
+        permissions_group: The permissions group specified by the permission_group_id.
+    
+    N->1 Relationship Attributes:
+        workbooks_leading: The workbooks this user is course_lead of.
+    
+    N->M Relationship Attributes:
+        workbooks_contributing_to: The workbooks this user is contributing to, linked
+            by the WorkbookContributor model.
+        responsible_activity: The activities this user is staff of, linked by the
+            ActivityStaff model.
+    """
+
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(index=True)
     permissions_group_id: uuid.UUID = Field(foreign_key="permissionsgroup.id")
@@ -389,6 +409,17 @@ class User(SQLModel, table=True):
 
 
 class PermissionsGroup(SQLModel, table=True):
+    """The data and table model for a permissions group.
+
+    Attributes:
+        id: The UUID of the permissions group, generated at runtime (*NOT*
+            user-specified).
+        name: The name of the permissions group.
+        
+    N->1 Relationship Attributes:
+        users: The users which are part of this permissions group.
+    """
+
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(index=True)
 
@@ -396,6 +427,16 @@ class PermissionsGroup(SQLModel, table=True):
 
 
 class WorkbookBase(SQLModel):
+    """The data model for a workbook.
+
+    Attributes:
+        start_date: The start date of the workbook.
+        end_date: The end date of the workbook.
+        course_name: The name of the workbook.
+        course_lead_id: The user who is this workbook's course lead.
+        learning_platform_id: The learning platform on which this workbook is hosted.
+    """
+
     start_date: datetime.date = Field(nullable=False)
     end_date: datetime.date = Field(nullable=False)
     course_name: str = Field(index=True)
@@ -404,6 +445,26 @@ class WorkbookBase(SQLModel):
 
 
 class Workbook(WorkbookBase, table=True):
+    """The table model for a workbook.
+
+    Attributes:
+        id: The UUID of the workbook, generated at runtime (*NOT* user-specified).
+        number_of_weeks: The number of weeks contained within this workbook,
+            programatically edited (*NOT* exposed to the user).
+    
+    1->N Relationship Attributes:
+        course_lead: The user specified by the course_lead_id.
+        learning_platform: The learning platform specified by the learning_platform_id.
+    
+    N->1 Relationship Attributes:
+        weeks: The weeks contained within this workbook.
+        activities: The activities contained within the weeks contained within this workbook.
+    
+    N->M Relationship Attributes:
+        contributors: The users contributing to this workbook, linked by the
+            WorkbookContributor model.
+    """
+
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     number_of_weeks: int = Field(default=0)
 
@@ -419,6 +480,14 @@ class Workbook(WorkbookBase, table=True):
 
     @model_validator(mode="before")
     def check_foreign_keys(cls: "WorkbookBase", values: dict[str, Any]) -> dict[str, Any]:
+        """Model validation.
+
+        This model validation function runs before any workbook is created.
+
+        raises:
+            ValueError: If the input data is not valid.
+        """
+
         session: Session = cast(Session, values.get("session"))
 
         if session is None:
@@ -454,6 +523,17 @@ class Workbook(WorkbookBase, table=True):
 
 
 class WorkbookCreate(BaseModel):
+    """The data model for creating a workbook.
+
+    The use of this model ensures that sensitive fields are not exposed to the user.
+
+    Attributes:
+        start_date: The start date of the new workbook.
+        end_date: The end date of the new workbook.
+        course_name: The name of the new workbook.
+        learning_platform_id: The id of the learning platform associated with the new
+            workbook.
+    """
     start_date: datetime.date = Field(nullable=False)
     end_date: datetime.date = Field(nullable=False)
     course_name: str = Field(index=True)
@@ -461,6 +541,16 @@ class WorkbookCreate(BaseModel):
 
 
 class WorkbookUpdate(BaseModel):
+    """The data model for updating a workbook.
+
+    The use of this model ensures that sensitive fields are not exposed to the user.
+
+    Attributes:
+        start_date: The new start date of the workbook.
+        end_date: The new end date of the workbook.
+        course_name: The new name of the workbook.
+        course_lead_id: The id of the new course lead of the workbook.
+    """
     start_date: Optional[datetime.date] = None
     end_date: Optional[datetime.date] = None
     course_name: Optional[str] = None
@@ -468,6 +558,19 @@ class WorkbookUpdate(BaseModel):
 
 
 class LearningPlatform(SQLModel, table=True):
+    """The data and table model for a learning platform.
+
+    Attributes:
+        id: The UUID of the learning platform, generated at runtime (*NOT*
+            user-specified).
+        name: The name of the learning platform.
+        
+    N->1 Relationship Attributes:
+        workbooks: The workbooks that are associated with this learning platform.
+        learning_activities: The learning activities available on this learning
+            platform.
+    """
+
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(nullable=False)
 
@@ -478,6 +581,22 @@ class LearningPlatform(SQLModel, table=True):
 
 
 class LearningActivity(SQLModel, table=True):
+    """The data and table model for a learning activity.
+
+    Attributes:
+        id: The UUID of the learning activity, generated at runtime (*NOT*
+            user-specified).
+        name: The name of the learning activity.
+        learning_platform_id: The id of the related learning platform.
+    
+    1->N Relationship Attributes:
+        learning_platform: The learning platform specified by the learning_platform_id.
+    
+    N->1 Relationship Attributes:
+        activities: The specific activities which are categorised as this learning
+            activity.
+    """
+
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(nullable=False)
     learning_platform_id: uuid.UUID = Field(foreign_key="learningplatform.id")
@@ -490,10 +609,33 @@ class LearningActivity(SQLModel, table=True):
 
 
 class WeekBase(SQLModel):
+    """The data model for a week.
+
+    Attributes:
+        workbook_id: The id of the workbook which contains this week.
+    """
+
     workbook_id: uuid.UUID = Field(foreign_key="workbook.id", primary_key=True)
 
 
 class Week(WeekBase, table=True):
+    """The table model for a week.
+
+    Attributes:
+        number: The number of the week, programatically edited (*NOT* exposed to the
+            user). Creates the primary key of the week in combination with workbook_id.
+    
+    1->N Relationship Attributes:
+        workbook: The workbook specified by workbook_id.
+    
+    N->1 Relationship Attributes:
+        activities: The activities contained within this week.
+    
+    N->M Relationship Attributes:
+        graduate_attributes: The graduate attributes associated with this week, linked
+            by the WeekGraduateAttribute.
+    """
+
     number: Optional[int] = Field(primary_key=True, default=0)
 
     workbook: Optional["Workbook"] = Relationship(back_populates="weeks")
@@ -506,6 +648,14 @@ class Week(WeekBase, table=True):
 
     @model_validator(mode="before")
     def check_foreign_keys(cls: "WeekBase", values: dict[str, Any]) -> dict[str, Any]:
+        """Model validation.
+
+        This model validation function runs before any workbook is created.
+
+        raises:
+            ValueError: If the input data is not valid.
+        """
+
         session: Session = cast(Session, values.get("session"))
 
         if session is None:
@@ -520,14 +670,34 @@ class Week(WeekBase, table=True):
 
 
 class WeekCreate(WeekBase):
+    """The data model for creating a week.
+    """
+
     pass
 
 
 class WeekDelete(SQLModel):
+    """The data model for deleting a week.
+
+    Attributes:
+        workbook_id: The id of the workbook containing this week.
+        number: The week's number within it's workbook.
+    """
+
     workbook_id: uuid.UUID
     number: int
 
     def check_primary_keys(cls: "WeekDelete", session: Session) -> "WeekDelete":
+        """Model validation.
+
+        This model validation function is not marked to run automatically, and must be
+        manually called. It expects the session as input in order to validate the keys
+        before attempting deletion.
+
+        raises:
+            ValueError: If the input data is not valid.
+        """
+
         values = cls.model_dump()
 
         # Validate Week row exists
@@ -546,6 +716,17 @@ class WeekDelete(SQLModel):
 
 
 class GraduateAttribute(SQLModel, table=True):
+    """The data and table model for a graduate attribute.
+
+    Attributes:
+        id: The UUID of the graduate attribute, generated at runtime (*NOT* user-specified).
+        name: The name of the graduate attribute.
+    
+    N->M Relationship Attributes:
+        weeks: The weeks which are associated with this graduate attribute, linked by
+            the WeekGraduateAttribute model.
+    """
+
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(nullable=False)
 
@@ -555,6 +736,16 @@ class GraduateAttribute(SQLModel, table=True):
 
 
 class Location(SQLModel, table=True):
+    """The data and table model for a location.
+
+    Attributes:
+        id: The UUID of the location, generated at runtime (*NOT* user-specified).
+        name: The name of the location.
+
+    N->1 Relationship Attributes:
+        activities: The activities that are held at this location.
+    """
+
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(nullable=False)
 
@@ -562,6 +753,19 @@ class Location(SQLModel, table=True):
 
 
 class ActivityBase(SQLModel):
+    """The data model for an activity.
+
+    Attributes:
+        workbook_id: The id of the workbook which contains this activity.
+        week_number: The number of the week which contains this activity.
+        name: The name of the activity.
+        time_estimate_minutes: The amount of minutes this activity should take.
+        location_id: The location in which this activity will take place.
+        learning_activity_id: The related learning activity of this activity.
+        learning_type_id: The related learning type of this activity.
+        task_status_id: The related task status of this activity.
+    """
+
     workbook_id: uuid.UUID = Field(foreign_key="workbook.id")
     week_number: Optional[int] = Field(foreign_key="week.number")
     name: str = Field(nullable=False)
@@ -582,6 +786,26 @@ class ActivityBase(SQLModel):
 
 
 class Activity(ActivityBase, table=True):
+    """The table model for an activity.
+
+    Attributes:
+        id: The UUID of the activity, generated at runtime (*NOT* exposed to the user).
+        number: The number of the activity, programatically edited (*NOT* exposed to
+            the user). Creates the primary key of the week in combination with
+            workbook_id.
+    
+    1->N Relationship Attributes:
+        location: The location specified by location_id.
+        workbook: The workbook specified by workbook_id.
+        week: The week specified by workbook_id and week_number.
+        learning_activity: The learning activity specified by learning_activity_id.
+        learning_type: The learning type specified by learning_type_id.
+        task_status: The task status specified by task_status_id.
+    
+    N->M Relationship Attributes:
+        staff_responsible: The staff which are responsible for this activity, linked by
+            the ActivityStaff model.
+    """
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     number: Optional[int] = Field(default=0)
 
@@ -598,6 +822,14 @@ class Activity(ActivityBase, table=True):
 
     @model_validator(mode="before")
     def check_foreign_keys(cls: "ActivityBase", values: dict[str, Any]) -> dict[str, Any]:
+        """Model validation.
+
+        This model validation function runs before any activity is created.
+
+        raises:
+            ValueError: If the input data is not valid.
+        """
+
         session: Session = cast(Session, values.get("session"))
 
         if session is None:
@@ -643,10 +875,29 @@ class Activity(ActivityBase, table=True):
 
 
 class ActivityCreate(ActivityBase):
+    """The data model for creating an activity.
+    """
+
     pass
 
 
 class ActivityUpdate(BaseModel):
+    """The data model for updating an activity.
+
+    The use of this model ensures that sensitive fields are not exposed to the user.
+
+    Attributes:
+        name: The new name of the activity.
+        number: The new number of the activity.
+        time_estimate_minutes: The new time_estimate_minutes of the activity.
+        location_id: The id of the new location of the activity.
+        learning_activity_id: The id of the new learning activity related to this
+            activity.
+        learning_type_id: The id of the new learning type associated with this
+            activity.
+        task_status_id: The id of the task status associated with this activity.
+    """
+
     name: Optional[str] = None
     number: Optional[int] = None
     time_estimate_minutes: Optional[int] = None
@@ -657,6 +908,16 @@ class ActivityUpdate(BaseModel):
 
 
 class LearningType(SQLModel, table=True):
+    """The data and table model for a learning type.
+
+    Attributes:
+        id: The UUID of the learning type, generated at runtime (*NOT* user-specified).
+        name: The name of the learning type.
+        
+    N->1 Relationship Attributes:
+        activities: The activities that associate with this learning type.
+    """
+
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(nullable=False)
 
@@ -664,6 +925,16 @@ class LearningType(SQLModel, table=True):
 
 
 class TaskStatus(SQLModel, table=True):
+    """The data and table model for a task status.
+
+    Attributes:
+        id: The UUID of the task status, generated at runtime (*NOT* user-specified).
+        name: The name of the task status.
+        
+    N->1 Relationship Attributes:
+        activities: The activities that associate with this task status.
+    """
+
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str = Field(nullable=False)
 
