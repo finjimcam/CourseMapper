@@ -1205,12 +1205,14 @@ def read_workbook_contributors(
     if not contributor_id:
         contributors = []
         for user in session.exec(
-                select(WorkbookContributor).where(WorkbookContributor.workbook_id == workbook_id)
-            ):
+            select(WorkbookContributor).where(WorkbookContributor.workbook_id == workbook_id)
+        ):
             print(user)
-            contributors.append(session.exec(select(User).where(User.id == user.contributor_id)).first())
+            contributors.append(
+                session.exec(select(User).where(User.id == user.contributor_id)).first()
+            )
         return contributors
-        
+
     if not workbook_id:
         return list(
             session.exec(
