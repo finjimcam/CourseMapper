@@ -14,6 +14,13 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program at /LICENSE.md. If not, see <https://www.gnu.org/licenses/>.
+
+  -----------------------------------------------------------------------------------
+
+This module defines the actual API using functionality from the other files in /backend/.
+
+The hooks defined include delete, fetch, patch, and post requests. User authentication
+is also implemented in this file.
 """
 
 from typing import Annotated, AsyncGenerator, List, Dict, Any, cast, TypeVar
@@ -70,6 +77,7 @@ SessionDep = Annotated[Session, Depends(get_session)]
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
+    """Handles startup and shutdown events for the FastAPI application."""
     create_db_and_tables()
     yield
 
@@ -111,6 +119,7 @@ T = TypeVar("T")  # Define a generic type variable
 
 
 def unwrap(model: T | None) -> T:
+    """A helper function to handle None by raising an error. Similar to rust's unwrap()."""
     if model is None:
         raise HTTPException(status_code=500)
     return model
@@ -121,6 +130,19 @@ def unwrap(model: T | None) -> T:
 async def create_session(
     username: str, response: Response, session: Session = Depends(get_session)
 ) -> dict[str, Any]:
+    """ Creates a session for the given authenticated user.
+
+    Currently, authentication isn't handled. This will be integrated with AZURE AD when
+    we are given access to the service. The session is created as a cookie on the
+    host's machine.
+
+    Returns:
+        A dict containing the session ID and "ok": True.
+    
+    Raises:
+        422 if login attempt fails due to database
+        500 if login attempt fails for any other reason
+    """
 
     db_user = session.exec(select(User).where(User.name == username)).first()
     if db_user is None:
@@ -137,6 +159,18 @@ async def create_session(
 
 @app.get("/session/", dependencies=[Depends(cookie)])
 async def read_session(session_data: SessionData = Depends(verifier)) -> SessionData:
+    """ Return the session data of an authenticated user.
+
+    Args:
+        session_data: The session object stored by the browser as a cookie.
+
+    Returns:
+        The sessiondata object, which contains a single field user_id: UUID.
+    
+    Raises:
+        403 if no valid session is provided as a cookie
+        500 if attempt fails for any other reason
+    """
     return session_data
 
 
@@ -144,6 +178,21 @@ async def read_session(session_data: SessionData = Depends(verifier)) -> Session
 async def delete_session(
     response: Response, session_id: uuid.UUID = Depends(cookie)
 ) -> dict[str, bool]:
+    """ Deletes the session data of an authenticated user.
+
+    Useful for logging out to ensure that the login data isn't stored in the user's
+    browser, enabling other users of their computer to access their session.
+
+    Args:
+        session_id: The session object stored by the browser as a cookie.
+
+    Returns:
+        A dict {"ok": True} on successful execution.
+    
+    Raises:
+        403 if no valid session is provided as a cookie
+        500 if attempt fails for any other reason
+    """
     await backend.delete(session_id)
     cookie.delete_from_response(response)
     return {"ok": True}
