@@ -130,7 +130,7 @@ def unwrap(model: T | None) -> T:
 async def create_session(
     username: str, response: Response, session: Session = Depends(get_session)
 ) -> dict[str, Any]:
-    """ Creates a session for the given authenticated user.
+    """Creates a session for the given authenticated user.
 
     Currently, authentication isn't handled. This will be integrated with AZURE AD when
     we are given access to the service. The session is created as a cookie on the
@@ -140,8 +140,8 @@ async def create_session(
         A dict containing the session ID and "ok": True.
     
     Raises:
-        422 if login attempt fails due to database
-        500 if login attempt fails for any other reason
+        HTTPException(422): if login attempt fails due to database
+        HTTPException(500): if login attempt fails for any other reason
     """
 
     db_user = session.exec(select(User).where(User.name == username)).first()
@@ -159,7 +159,7 @@ async def create_session(
 
 @app.get("/session/", dependencies=[Depends(cookie)])
 async def read_session(session_data: SessionData = Depends(verifier)) -> SessionData:
-    """ Return the session data of an authenticated user.
+    """Return the session data of an authenticated user.
 
     Args:
         session_data: The session object stored by the browser as a cookie.
@@ -168,8 +168,8 @@ async def read_session(session_data: SessionData = Depends(verifier)) -> Session
         The sessiondata object, which contains a single field user_id: UUID.
     
     Raises:
-        403 if no valid session is provided as a cookie
-        500 if attempt fails for any other reason
+        HTTPException(403): If no valid session is provided as a cookie
+        HTTPException(500): If attempt fails for any other reason
     """
     return session_data
 
@@ -178,7 +178,7 @@ async def read_session(session_data: SessionData = Depends(verifier)) -> Session
 async def delete_session(
     response: Response, session_id: uuid.UUID = Depends(cookie)
 ) -> dict[str, bool]:
-    """ Deletes the session data of an authenticated user.
+    """Deletes the session data of an authenticated user.
 
     Useful for logging out to ensure that the login data isn't stored in the user's
     browser, enabling other users of their computer to access their session.
@@ -190,8 +190,8 @@ async def delete_session(
         A dict {"ok": True} on successful execution.
     
     Raises:
-        403 if no valid session is provided as a cookie
-        500 if attempt fails for any other reason
+        HTTPException(403): If no valid session is provided as a cookie.
+        HTTPException(500): If attempt fails for any other reason.
     """
     await backend.delete(session_id)
     cookie.delete_from_response(response)
@@ -206,6 +206,30 @@ def delete_activity_staff(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> dict[str, bool]:
+    """Deletes an activity-staff row from the database.
+
+    The activity-staff table is a link table between users and activities, and
+    represents the users responsible for the activity as its staff.
+
+    Args:
+        activity_staff: A model containing the primary keys of the row to delete.
+        session_data: The session object stored by the browser as a cookie.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        A dict {"ok": True} on successful execution.
+    
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     # check ActivityStaff validity
     try:
         activity_staff.check_primary_keys(session)
@@ -261,6 +285,30 @@ def delete_workbook_contributor(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> dict[str, bool]:
+    """Deletes a workbook-contributor row from the database.
+
+    The workbook-contributor table is a link table between users and workbooks, and
+    represents the users who can contribute to the workbook by editing it.
+
+    Args:
+        workbook_contributor: A model containing the primary keys of the row to delete.
+        session_data: The session object stored by the browser as a cookie.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        A dict {"ok": True} on successful execution.
+    
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     # check WorkbookContributor validity
     try:
         workbook_contributor.check_primary_keys(session)
@@ -314,6 +362,32 @@ def delete_week(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> dict[str, bool]:
+    """Deletes a week row from the database.
+
+    Deleting a week may also renumber other weeks in the same workbook in order to
+    maintaing contiguous week numbering in the range [1..n]. Deleting a week also
+    deletes all activities within that week, and all activity-staff relationships
+    pointing to those deleted activities.
+
+    Args:
+        week: A model containing the primary keys of the row to delete.
+        session_data: The session object stored by the browser as a cookie.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        A dict {"ok": True} on successful execution.
+    
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     # check Week validity
     try:
         week.check_primary_keys(session)
@@ -404,6 +478,31 @@ def delete_week_graduate_attribute(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> dict[str, bool]:
+    """Deletes a week-graduate-attribute row from the database.
+
+    The week-graduate-attribute table is a link table between weeks and graduate
+    attributes, and represents the graduate attributes assigned to a particular week.
+
+    Args:
+        week_graduate_attribute: A model containing the primary keys of the row to
+            delete.
+        session_data: The session object stored by the browser as a cookie.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        A dict {"ok": True} on successful execution.
+    
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+    
     # check WeekGraduateAttribute validity
     try:
         week_graduate_attribute.check_primary_keys(session)
@@ -471,6 +570,31 @@ def delete_workbook(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> dict[str, bool]:
+    """Deletes a workbook row from the database.
+
+    Deleting a workbook also deletes all workbook-contributors linked to that workbook,
+    all weeks within that workbook, all activities within those weeks, and all
+    activity-staff relationships pointing to those deleted activities.
+
+    Args:
+        workbook: A model containing the primary keys of the row to delete.
+        session_data: The session object stored by the browser as a cookie.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        A dict {"ok": True} on successful execution.
+    
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     # check Workbook validity
     db_workbook = session.exec(select(Workbook).where(Workbook.id == workbook_id)).first()
     if not db_workbook:
@@ -518,6 +642,31 @@ def delete_activity(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> dict[str, bool]:
+    """Deletes an activity row from the database.
+
+    Deleting an activity may also renumber other activities in the same week in order
+    to maintain contiguous activity numbering in the range [1..n]. It will also delete
+    all related activity_staff.
+
+    Args:
+        activity: A model containing the primary keys of the row to delete.
+        session_data: The session object stored by the browser as a cookie.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        A dict {"ok": True} on successful execution.
+    
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     # check Activity validity
     db_activity = session.exec(select(Activity).where(Activity.id == activity_id)).first()
     if not db_activity:
