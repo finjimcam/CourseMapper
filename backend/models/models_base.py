@@ -14,6 +14,10 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program at /LICENSE.md. If not, see <https://www.gnu.org/licenses/>.
+
+__-----------------------------------------------------------------------------------__
+
+This module defines the models and links of the database.
 """
 
 import datetime
@@ -27,15 +31,38 @@ import uuid
 
 # link models
 class WorkbookContributorBase(SQLModel):
+    """The base model for a workbook contributor.
+
+    This base model does not include relationships nor validation, only the identities
+    that define what it is to be a WorkbookContributor, and is then extended by other
+    models. It is also not represented by a table in the database.
+    """
+
     contributor_id: uuid.UUID = Field(foreign_key="user.id", primary_key=True)
     workbook_id: uuid.UUID = Field(foreign_key="workbook.id", primary_key=True)
 
 
 class WorkbookContributor(WorkbookContributorBase, table=True):
+    """The table model for a workbook contributor.
+
+    This is how workbook contributors are represented in the database.
+
+    A workbook contributor is a link model between workbooks and users, representing
+    uers which contribute to given workbooks.
+    """
+
     @model_validator(mode="before")
     def check_foreign_keys(
         cls: "WorkbookContributorBase", values: dict[str, Any]
     ) -> dict[str, Any]:
+        """Model validation.
+
+        This model validation function runs before any workbook contributor is created.
+
+        raises:
+            ValueError: If the input data is not valid.
+        """
+
         session: Session = cast(Session, values.get("session"))
 
         if session is None:
@@ -55,13 +82,29 @@ class WorkbookContributor(WorkbookContributorBase, table=True):
 
 
 class WorkbookContributorCreate(WorkbookContributorBase):
+    """The data model for creating a workbook contributor.
+    """
+    
     pass
 
 
 class WorkbookContributorDelete(WorkbookContributorBase):
+    """The data model for deleting a workbook contributor.
+    """
+
     def check_primary_keys(
         cls: "WorkbookContributorDelete", session: Session
     ) -> "WorkbookContributorDelete":
+        """Model validation.
+
+        This model validation function is not marked to run automatically, and must be
+        manually called. It expects the session as input in order to validate the keys
+        before attempting deletion.
+
+        raises:
+            ValueError: If the input data is not valid.
+        """
+
         values = cls.model_dump()
 
         # Validate WorkbookContributor row exists
@@ -86,13 +129,36 @@ class WorkbookContributorDelete(WorkbookContributorBase):
 
 
 class ActivityStaffBase(SQLModel):
+    """The base model for an activity staff.
+
+    This base model does not include relationships nor validation, only the identities
+    that define what it is to be an ActivityStaff, and is then extended by other
+    models. It is also not represented by a table in the database.
+    """
+
     staff_id: uuid.UUID = Field(foreign_key="user.id", primary_key=True)
     activity_id: uuid.UUID = Field(foreign_key="activity.id", primary_key=True)
 
 
 class ActivityStaff(ActivityStaffBase, table=True):
+    """The table model for an activity staff.
+
+    This is how activity staff are represented in the database.
+
+    An activity staff is a link model between activities and users, representing
+    uers which are the staff of given activities.
+    """
+
     @model_validator(mode="before")
     def check_foreign_keys(cls: "ActivityStaffBase", values: dict[str, Any]) -> dict[str, Any]:
+        """Model validation.
+
+        This model validation function runs before any activity staff is created.
+
+        raises:
+            ValueError: If the input data is not valid.
+        """
+
         session: Session = cast(Session, values.get("session"))
 
         if session is None:
@@ -112,11 +178,27 @@ class ActivityStaff(ActivityStaffBase, table=True):
 
 
 class ActivityStaffCreate(ActivityStaffBase):
+    """The data model for creating an activity staff.
+    """
+
     pass
 
 
 class ActivityStaffDelete(ActivityStaffBase):
+    """The data model for deleting an activity staff.
+    """
+
     def check_primary_keys(cls: "ActivityStaffDelete", session: Session) -> "ActivityStaffDelete":
+        """Model validation.
+
+        This model validation function is not marked to run automatically, and must be
+        manually called. It expects the session as input in order to validate the keys
+        before attempting deletion.
+
+        raises:
+            ValueError: If the input data is not valid.
+        """
+
         values = cls.model_dump()
 
         # Validate ActivityStaff row exists
@@ -141,12 +223,27 @@ class ActivityStaffDelete(ActivityStaffBase):
 
 
 class WeekGraduateAttributeBase(SQLModel):
+    """The base model for a week graduate attribute.
+
+    This base model does not include relationships nor validation, only the identities
+    that define what it is to be a WeekGraduateAttributeBase, and is then extended by other
+    models. It is also not represented by a table in the database.
+    """
+
     week_workbook_id: uuid.UUID = Field(primary_key=True)
     week_number: int = Field(primary_key=True)
     graduate_attribute_id: uuid.UUID = Field(foreign_key="graduateattribute.id", primary_key=True)
 
 
 class WeekGraduateAttribute(WeekGraduateAttributeBase, table=True):
+    """The table model for a week graduate attribute.
+
+    This is how week graduate attributes are represented in the database.
+
+    A week graduate attribute is a link model between weeks and graduate attributes,
+    representing graduate attributes which are assigned to given weeks.
+    """
+
     __table_args__ = (
         ForeignKeyConstraint(
             ["week_workbook_id", "week_number"],
@@ -158,6 +255,15 @@ class WeekGraduateAttribute(WeekGraduateAttributeBase, table=True):
     def check_foreign_keys(
         cls: "WeekGraduateAttributeBase", values: dict[str, Any]
     ) -> dict[str, Any]:
+        """Model validation.
+
+        This model validation function runs before any week graduate attribute is
+        created.
+
+        raises:
+            ValueError: If the input data is not valid.
+        """
+
         session: Session = cast(Session, values.get("session"))
 
         if session is None:
@@ -189,13 +295,29 @@ class WeekGraduateAttribute(WeekGraduateAttributeBase, table=True):
 
 
 class WeekGraduateAttributeCreate(WeekGraduateAttributeBase):
+    """The data model for creating a week graduate attribute.
+    """
+
     pass
 
 
 class WeekGraduateAttributeDelete(WeekGraduateAttributeBase):
+    """The data model for deleting a week graduate attribute.
+    """
+
     def check_primary_keys(
         cls: "WeekGraduateAttributeDelete", session: Session
     ) -> "WeekGraduateAttributeDelete":
+        """Model validation.
+
+        This model validation function is not marked to run automatically, and must be
+        manually called. It expects the session as input in order to validate the keys
+        before attempting deletion.
+
+        raises:
+            ValueError: If the input data is not valid.
+        """
+
         values = cls.model_dump()
 
         # Validate WeekGraduteAttribute row exists
