@@ -221,7 +221,7 @@ def delete_activity_staff(
             error, without actually executing the request.
 
     Returns:
-        A dict {"ok": True} on successful execution.
+        A dict {"ok": True} on successful execution, or None if peek=True.
     
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
@@ -300,7 +300,7 @@ def delete_workbook_contributor(
             error, without actually executing the request.
 
     Returns:
-        A dict {"ok": True} on successful execution.
+        A dict {"ok": True} on successful execution, or None if peek=True.
     
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
@@ -379,7 +379,7 @@ def delete_week(
             error, without actually executing the request.
 
     Returns:
-        A dict {"ok": True} on successful execution.
+        A dict {"ok": True} on successful execution, or None if peek=True.
     
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
@@ -494,7 +494,7 @@ def delete_week_graduate_attribute(
             error, without actually executing the request.
 
     Returns:
-        A dict {"ok": True} on successful execution.
+        A dict {"ok": True} on successful execution, or None if peek=True.
     
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
@@ -586,7 +586,7 @@ def delete_workbook(
             error, without actually executing the request.
 
     Returns:
-        A dict {"ok": True} on successful execution.
+        A dict {"ok": True} on successful execution, or None if peek=True.
     
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
@@ -658,7 +658,7 @@ def delete_activity(
             error, without actually executing the request.
 
     Returns:
-        A dict {"ok": True} on successful execution.
+        A dict {"ok": True} on successful execution, or None if peek=True.
     
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
@@ -734,6 +734,33 @@ def patch_activity(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> Activity | None:
+    """Edits an activity row in the database.
+
+    If the number of the activity is updated, then the numbers of all other activities
+    in that week are updated in order to maintain a contiguous numbering from [1..n]. 
+    For example, if activities are A:1, B:2, C:3, D:4, then reumbering D:2 would result
+    in the following order: A:1 D:2 B:3 C:4.
+
+    Args:
+        activity_id: The UUID of the activity being edited.
+        activity_update: The data of the activity update request.
+        session_data: The session object stored by the browser as a cookie.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The successfully edited activity, or None if peek=True.
+    
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     # check Activity validity
     db_activity = session.exec(select(Activity).where(Activity.id == activity_id)).first()
     if not db_activity:
@@ -860,6 +887,28 @@ def patch_workbook(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> Workbook | None:
+    """Edits a workbook row in the database.
+
+    Args:
+        workbook_id: The UUID of the workbook being edited.
+        workbook_update: The data of the workbook update request.
+        session_data: The session object stored by the browser as a cookie.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The successfully edited workbook, or None if peek=True.
+    
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     # check Workbook validity
     db_workbook = session.exec(select(Workbook).where(Workbook.id == workbook_id)).first()
     if not db_workbook:
