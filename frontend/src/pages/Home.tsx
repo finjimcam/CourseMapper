@@ -78,10 +78,6 @@ function Home() {
           onSubmit={handleCreateWorkbook}
         />
         
-        {/* <div className="flex flex-col justify-center items-center">
-          <h1 className="text-2xl font-semibold text-left">Recent Workbooks</h1>
-          <Carousel items={workbooks} />
-        </div> */}
       </div>
     </div>
     <div className="flex flex-col justify-center items-center w-1/2 min-w-[400px]">
