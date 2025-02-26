@@ -3,15 +3,14 @@ import React from 'react';
 import { Tabs, Button, Tooltip } from 'flowbite-react';
 import { HiTrash } from 'react-icons/hi';
 import WeekActivityTab from './WeekActivityTab';
-import { WeekInfo } from '../utils/workbookUtils';
-import { Week } from '../pages/EditWorkbook';
+import { Activity, Week, WeekInfo } from '../utils/workbookUtils';
 
 interface WeeksTabsProps {
   weeks: Week[];
   convertWeekToWeekInfo: (week: Week) => WeekInfo;
   onDeleteWeek: (weekNumber: number) => void;
   onAddActivity: (weekNumber: number) => void;
-  onEditActivity: (activity: any, index: number, weekNumber: number) => void;
+  onEditActivity: (activity: Activity, index: number, weekNumber: number) => void;
   onDeleteActivity: (index: number, weekNumber: number) => void;
   onWeekChange?: (weekNumber: number) => void;
 }
@@ -52,11 +51,6 @@ const WeeksTabs: React.FC<WeeksTabsProps> = ({
           <WeekActivityTab
             week={(() => {
               const weekInfo = convertWeekToWeekInfo(week);
-              console.log('WeeksTabs - converted week info:', {
-                weekNumber: weekInfo.weekNumber,
-                workbookId: weekInfo.workbookId,
-                week
-              });
               return weekInfo;
             })()}
             originalActivities={week.activities}

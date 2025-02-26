@@ -3,11 +3,12 @@ import React from 'react';
 import { Table } from 'flowbite-react';
 import ReactApexChart from 'react-apexcharts';
 import { CustomBadge, learningTypeColors } from './CustomBadge';
+import { ApexOptions } from 'apexcharts';
 import Piechart from './Piechart.tsx';
 
 interface DashboardTabProps {
-  series: any[];
-  options: any;
+  series: ApexOptions['series'];
+  options: ApexOptions;
   summaryData: { [key: string]: string }[];
   allLearningTypes: string[];
   showTable: boolean;

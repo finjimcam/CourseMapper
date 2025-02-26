@@ -1,16 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Button, Modal, Label, TextInput, Select } from 'flowbite-react';
 import DatePicker from 'react-datepicker';
-import "react-datepicker/dist/react-datepicker.css";
+import 'react-datepicker/dist/react-datepicker.css';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 interface LearningPlatform {
-  id: string;
-  name: string;
-}
-
-interface User {
   id: string;
   name: string;
 }
@@ -33,7 +28,6 @@ export function CreateWorkbookModal({ show, onClose }: CreateWorkbookModalProps)
   const [learningPlatform, setLearningPlatform] = useState('');
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [learningPlatforms, setLearningPlatforms] = useState<LearningPlatform[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,9 +35,11 @@ export function CreateWorkbookModal({ show, onClose }: CreateWorkbookModalProps)
     const fetchData = async () => {
       try {
         // Fetch and validate learning platforms
-        const platformsResponse = await axios.get(`${import.meta.env.VITE_API}/learning-platforms/`);
+        const platformsResponse = await axios.get(
+          `${import.meta.env.VITE_API}/learning-platforms/`
+        );
         console.log('Raw platforms response:', platformsResponse.data);
-        
+
         let platforms;
         try {
           // Ensure we have valid JSON data
@@ -52,58 +48,24 @@ export function CreateWorkbookModal({ show, onClose }: CreateWorkbookModalProps)
           } else {
             platforms = platformsResponse.data;
           }
-          
+
           // Validate platform structure
           if (!Array.isArray(platforms)) {
             throw new Error('Platforms data is not an array');
           }
-          
+
           // Validate each platform object
-          platforms = platforms.filter(p => p && typeof p === 'object' && p.id && p.name);
-          
+          platforms = platforms.filter((p) => p && typeof p === 'object' && p.id && p.name);
+
           if (platforms.length === 0) {
             throw new Error('No valid learning platforms found');
           }
-          
+
           console.log('Processed platforms:', platforms);
           setLearningPlatforms(platforms);
         } catch (err) {
           console.error('Platform processing error:', err);
           setError('Failed to process learning platforms data');
-          setLoading(false);
-          return;
-        }
-        
-        // Fetch and validate users
-        const usersResponse = await axios.get(`${import.meta.env.VITE_API}/users/`);
-        console.log('Raw users response:', usersResponse.data);
-        
-        let users;
-        try {
-          // Ensure we have valid JSON data
-          if (typeof usersResponse.data === 'string') {
-            users = JSON.parse(usersResponse.data);
-          } else {
-            users = usersResponse.data;
-          }
-          
-          // Validate users structure
-          if (!Array.isArray(users)) {
-            throw new Error('Users data is not an array');
-          }
-          
-          // Validate each user object
-          users = users.filter(u => u && typeof u === 'object' && u.id && u.name);
-          
-          if (users.length === 0) {
-            throw new Error('No valid users found');
-          }
-          
-          console.log('Processed users:', users);
-          setUsers(users);
-        } catch (err) {
-          console.error('Users processing error:', err);
-          setError('Failed to process users data');
           setLoading(false);
           return;
         }
@@ -132,8 +94,8 @@ export function CreateWorkbookModal({ show, onClose }: CreateWorkbookModalProps)
 
     try {
       // Validate selections against existing data
-      const selectedPlatform = learningPlatforms.find(p => p.id === learningPlatform);
-      
+      const selectedPlatform = learningPlatforms.find((p) => p.id === learningPlatform);
+
       if (!selectedPlatform) {
         setError('Invalid learning platform selected');
         return;
@@ -147,9 +109,9 @@ export function CreateWorkbookModal({ show, onClose }: CreateWorkbookModalProps)
         startDate: startDate.toISOString().split('T')[0],
         endDate: startDate.toISOString().split('T')[0], // Initially same as start date, will be updated based on weeks
       };
-      
+
       console.log('Storing workbook data:', workbookData);
-    
+
       // Store in sessionStorage and navigate to EditWorkbook
       sessionStorage.setItem('newWorkbookData', JSON.stringify(workbookData));
       onClose();
@@ -177,10 +139,8 @@ export function CreateWorkbookModal({ show, onClose }: CreateWorkbookModalProps)
           <div className="text-center py-4">Loading data...</div>
         ) : (
           <div className="space-y-6">
-            {error && (
-              <div className="text-red-500 text-sm">{error}</div>
-            )}
-            
+            {error && <div className="text-red-500 text-sm">{error}</div>}
+
             <div>
               <div className="mb-2 block">
                 <Label htmlFor="courseName" value="Course Title" />
@@ -234,13 +194,16 @@ export function CreateWorkbookModal({ show, onClose }: CreateWorkbookModalProps)
                 className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
               />
             </div>
-
           </div>
         )}
       </Modal.Body>
       <Modal.Footer>
-        <Button onClick={handleSubmit} disabled={loading}>Create Workbook</Button>
-        <Button color="gray" onClick={onClose}>Cancel</Button>
+        <Button onClick={handleSubmit} disabled={loading}>
+          Create Workbook
+        </Button>
+        <Button color="gray" onClick={onClose}>
+          Cancel
+        </Button>
       </Modal.Footer>
     </Modal>
   );

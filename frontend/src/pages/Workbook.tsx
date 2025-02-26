@@ -1,5 +1,5 @@
 // src/components/pages/workbook.tsx
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { Tabs, Spinner, Button } from 'flowbite-react';
@@ -8,25 +8,23 @@ import DashboardTab from '../components/DashboardTab';
 import WeekActivityTab from '../components/WeekActivityTab';
 import WeeklyAttributes from '../components/WeeklyAttributes';
 import {
-  WorkbookData,
+  Workbook,
   WorkbookDetailsResponse,
   WeekInfo,
   processActivitiesData,
   prepareDashboardData,
-  User,
-  LearningPlatform,
+  getUser,
 } from '../utils/workbookUtils';
 
-function Workbook(): JSX.Element {
+function WorkbookPage(): JSX.Element {
   const { workbook_id } = useParams<{ workbook_id: string }>();
 
-  const [workbookData, setWorkbookData] = useState<WorkbookData | null>(null);
-  const [courseLeadData, setCourseLeadData] = useState<User | null>(null);
-  const [learningPlatformData, setLearningPlatformData] = useState<LearningPlatform | null>(null);
+  const [workbookData, setWorkbookData] = useState<Workbook | null>(null);
   const [weeksData, setWeeksData] = useState<WeekInfo[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [showTable, setShowTable] = useState<boolean>(false);
+  const [isCourseLead, setIsCourseLead] = useState<boolean>(false);
   const [selectedWeek, setSelectedWeek] = useState<number>(1);
   const [isDashboardTab, setIsDashboardTab] = useState<boolean>(true);
 
@@ -42,30 +40,33 @@ function Workbook(): JSX.Element {
         console.log('Workbook details response:', response.data);
         
         const { workbook, course_lead, learning_platform, activities } = response.data;
-        
+        if (course_lead && learning_platform) {
+
+          setWorkbookData({
+            workbook: workbook,
+            course_lead: course_lead,
+            learning_platform: learning_platform,
+          });
+        }
+          
         // Ensure each activity has the workbook_id
         const activitiesWithWorkbookId = activities.map(activity => ({
           ...activity,
           workbook_id: workbook.id
         }));
         
-        console.log('Activities with workbook_id:', activitiesWithWorkbookId);
-        setWorkbookData(workbook);
-        setCourseLeadData(course_lead);
-        setLearningPlatformData(learning_platform);
         if (activitiesWithWorkbookId.length > 0) {
-          console.log('Activities from API:', activitiesWithWorkbookId);
-          console.log('Current workbook_id:', workbook_id);
           const weeksDataArray = processActivitiesData(activitiesWithWorkbookId);
-          console.log('Processed weeks data:', weeksDataArray);
-          
-          // Verify workbookId is set correctly in each week
-          weeksDataArray.forEach(week => {
-            console.log(`Week ${week.weekNumber} workbookId:`, week.workbookId);
-          });
-          
           setWeeksData(weeksDataArray);
         }
+
+        const promise = getUser();
+        promise.then((user) => {
+          if (course_lead.id === user.id) {
+            setIsCourseLead(true);
+          }
+        });
+
         setLoading(false);
       } catch (err) {
         const errorObj = err as Error;
@@ -103,20 +104,17 @@ function Workbook(): JSX.Element {
     <div className="container mx-auto px-4 py-8">
       <div className="bg-white p-6 rounded-lg shadow">
         <div className="flex justify-between items-start mb-4">
-          <div className="flex items-center gap-2">
-            <CourseHeader
-              workbook={workbookData}
-              courseLead={courseLeadData}
-              learningPlatform={learningPlatformData}
-            />
-          </div>
+          <CourseHeader workbook={workbookData} />
+
           <div className="flex flex-col items-end gap-2">
-            <Link
-              to={`/workbook/edit/${workbook_id}`}
-              className="px-5 py-2.5 text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm text-center"
-            >
-              Edit Workbook
-            </Link>
+            {!isCourseLead ? null : (
+              <Link
+                to={`/workbook/edit/${workbook_id}`}
+                className="px-5 py-2.5 text-white bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm text-center"
+              >
+                Edit Workbook
+              </Link>
+            )}
             {!isDashboardTab && <WeeklyAttributes weekNumber={selectedWeek} workbookId={workbook_id} />}
           </div>
         </div>
@@ -152,4 +150,4 @@ function Workbook(): JSX.Element {
   );
 }
 
-export default Workbook;
+export default WorkbookPage;

@@ -1,14 +1,14 @@
 import { Badge } from 'flowbite-react';
-import fontColorContrast from 'font-color-contrast'
+import fontColorContrast from 'font-color-contrast';
 
 interface CustomBadgeProps {
-    label: string;
-    colorMapping: { [key: string]: string }; // Accept a color mapping
+  label: string;
+  colorMapping: { [key: string]: string }; // Accept a color mapping
 }
 
 const normaliseKey = (status: string): string => {
-    return status.trim().toLowerCase().replace(/\s+/g, ''); // Normalize spaces
-  };
+  return status.trim().toLowerCase().replace(/\s+/g, ''); // Normalize spaces
+};
 
 // Color mappings for statuses
 export const statusColors: { [key: string]: string } = {
@@ -26,6 +26,20 @@ export const learningTypeColors: { [key: string]: string } = {
     production: '#bdea75',      // Green
     investigation: '#f8807f',   // Red
     assessment: '#44546a',      // Navy
+  };
+
+// Color mappings for graduate attributes
+export const graduateAttributeColors: { [key: string]: string } = {
+    'adaptable': '#FABC2A',
+    'effective communication': '#FFCAB1',
+    'reflective learners': '#F38D68',
+    'resourceful and responsible': '#EE6C4D',
+    'subject specialists': '#F76F8E',
+    'confident': '#F2BAC9',
+    'ethically and socially aware': '#7FD8BE',
+    'experienced collaborators': '#A1FCDF',
+    'independent and critical thinkers': '#3B5249',
+    'investigative': '#519872'
 };
 
 // Color mappings for graduate attributes
