@@ -1532,7 +1532,7 @@ def read_workbook_graduate_attributes(
 ) -> List[WeekGraduateAttribute] | None:
     if peek:
         return None
-        
+
     return list(
         session.exec(
             select(WeekGraduateAttribute).where(
