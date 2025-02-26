@@ -14,6 +14,10 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program at /LICENSE.md. If not, see <https://www.gnu.org/licenses/>.
+
+__-----------------------------------------------------------------------------------__
+
+This module defines and links to the backend database.
 """
 
 import sys
@@ -34,10 +38,14 @@ engine = create_engine(sqlite_url, connect_args=connect_args)
 
 
 def create_db_and_tables() -> None:
+    """Creates the database and tables in memory from the database file.
+    """
     SQLModel.metadata.create_all(engine)
 
 
 def get_session() -> Iterator[Session]:
+    """Creates a new database session to manage database transactions.
+    """
     with Session(engine) as session:
         yield session
 
