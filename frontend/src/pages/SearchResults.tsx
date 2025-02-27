@@ -26,23 +26,44 @@ import SearchBar from '../components/Searchbar';
 function SearchResults() {
   const [results, setResults] = useState<Workbook[] | null>(null);
   const [searchParams] = useSearchParams();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchResults = async () => {
+      setIsLoading(true);
       try {
-        console.log(searchParams);
-        const response = await axios.get(`${import.meta.env.VITE_API}/search`, {
+        const response = await axios.get(`${import.meta.env.VITE_API}/workbooks/search/`, {
           params: searchParams,
         });
-        console.log(response);
         setResults(response.data);
       } catch (err: unknown) {
         console.error(getErrorMessage(err));
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchResults();
   }, [searchParams]);
+
+  // Build a description of the current search
+  const buildSearchDescription = () => {
+    const params = Object.fromEntries(searchParams.entries());
+    const descriptions: string[] = [];
+
+    if (params.name) descriptions.push(`name contains "${params.name}"`);
+    if (params.starts_after)
+      descriptions.push(`starts after ${new Date(params.starts_after).toLocaleDateString()}`);
+    if (params.ends_before)
+      descriptions.push(`ends before ${new Date(params.ends_before).toLocaleDateString()}`);
+    if (params.led_by) descriptions.push(`led by "${params.led_by}"`);
+    if (params.contributed_by) descriptions.push(`contributed to by "${params.contributed_by}"`);
+    if (params.learning_platform) descriptions.push(`on platform "${params.learning_platform}"`);
+
+    return descriptions.length
+      ? `Showing workbooks where ${descriptions.join(', ')}`
+      : 'Showing all workbooks';
+  };
 
   return (
     <div className="max-w-6xl mx-auto p-6">
@@ -57,8 +78,17 @@ function SearchResults() {
         <SearchBar />
       </div>
 
+      {/* Search description */}
+      <div className="mb-6">
+        <p className="text-sm text-gray-600">{buildSearchDescription()}</p>
+      </div>
+
       {/* Results */}
-      {results && results.length > 0 ? (
+      {isLoading ? (
+        <div className="flex justify-center mt-10">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      ) : results && results.length > 0 ? (
         <Grid workbooks={results} />
       ) : (
         <p className="text-center text-gray-500 text-lg mt-10">No search results found.</p>
