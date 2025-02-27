@@ -20,7 +20,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios, { AxiosError } from 'axios';
 import { CustomBadge, graduateAttributeColors } from './CustomBadge';
 import { normalizeKey } from '../utils/stringUtils';
-import { getErrorMessage, isCourseLead } from '../utils/workbookUtils';
+import { getErrorMessage, canUserEdit } from '../utils/workbookUtils';
 
 interface GraduateAttribute {
   id: string;
@@ -98,7 +98,7 @@ const WeeklyAttributes: React.FC<WeeklyAttributesProps> = ({
         setLoading(false);
         return;
       } else {
-        setIfCourseLead(await isCourseLead(workbookId));
+        setIfCourseLead(await canUserEdit(workbookId));
       }
 
       if (typeof weekNumber !== 'number' || weekNumber < 1) {
