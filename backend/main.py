@@ -1682,7 +1682,7 @@ def read_workbook_contributors(
     contributor_id: uuid.UUID | None = None,
     workbook_id: uuid.UUID | None = None,
     peek: bool = Query(False),
-) -> List[WorkbookContributor] | None:
+) -> List[Any] | None:
     """Reads workbook-contributors from the database.
 
     The workbook-contributor table is a link table between users and workbooks, and
@@ -1693,6 +1693,9 @@ def read_workbook_contributors(
     contributor_id and workbook_id = workbook_id will be returned, with no constraint
     on each row if the input is None (e.g. a get request with contributor_id=None,
     workbook_id=None, will return all workbook-contributor rows.)
+
+    If only workbook_id is input, then this function returns a list of users, as the
+    workbooks are implied and this saves on extra API calls.
 
     The _: SessionData enables SessionData to be parsed, which will return a 403 if it
     does not exist. This is how authentication is handled when there are no internal
@@ -1727,7 +1730,6 @@ def read_workbook_contributors(
         for user in session.exec(
             select(WorkbookContributor).where(WorkbookContributor.workbook_id == workbook_id)
         ):
-            print(user)
             contributors.append(
                 session.exec(select(User).where(User.id == user.contributor_id)).first()
             )
