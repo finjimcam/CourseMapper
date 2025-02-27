@@ -20,7 +20,10 @@ along with this program at /LICENSE.md. If not, see <https://www.gnu.org/license
 import React from 'react';
 import { User, Workbook } from '../utils/workbookUtils';
 
-const CourseHeader: React.FC<{ workbook: Workbook, contributors: User[] }> = ({ workbook, contributors }) => (
+const CourseHeader: React.FC<{ workbook: Workbook; contributors: User[] }> = ({
+  workbook,
+  contributors,
+}) => (
   <div className="mb-6 text-left">
     <h1 className="text-4xl font-bold text-gray-900 mb-2">
       {workbook.workbook.course_name || 'Course Title'}
@@ -50,11 +53,13 @@ const CourseHeader: React.FC<{ workbook: Workbook, contributors: User[] }> = ({ 
     </p>
     <p className="text-lg text-gray-600">
       Contributors:{' '}
-      {contributors ?
+      {contributors ? (
         contributors.map((c: User, index: number) => (
-          <span key={c.id}>{index ? ', ' : ''} {c.name}</span>
+          <span key={c.id}>
+            {index ? ', ' : ''} {c.name}
+          </span>
         ))
-       : (
+      ) : (
         <span className="text-gray-500">N/A</span>
       )}
     </p>

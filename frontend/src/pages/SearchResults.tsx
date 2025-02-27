@@ -50,15 +50,17 @@ function SearchResults() {
   const buildSearchDescription = () => {
     const params = Object.fromEntries(searchParams.entries());
     const descriptions: string[] = [];
-    
+
     if (params.name) descriptions.push(`name contains "${params.name}"`);
-    if (params.starts_after) descriptions.push(`starts after ${new Date(params.starts_after).toLocaleDateString()}`);
-    if (params.ends_before) descriptions.push(`ends before ${new Date(params.ends_before).toLocaleDateString()}`);
+    if (params.starts_after)
+      descriptions.push(`starts after ${new Date(params.starts_after).toLocaleDateString()}`);
+    if (params.ends_before)
+      descriptions.push(`ends before ${new Date(params.ends_before).toLocaleDateString()}`);
     if (params.led_by) descriptions.push(`led by "${params.led_by}"`);
     if (params.contributed_by) descriptions.push(`contributed to by "${params.contributed_by}"`);
     if (params.learning_platform) descriptions.push(`on platform "${params.learning_platform}"`);
-    
-    return descriptions.length 
+
+    return descriptions.length
       ? `Showing workbooks where ${descriptions.join(', ')}`
       : 'Showing all workbooks';
   };

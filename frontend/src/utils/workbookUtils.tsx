@@ -20,7 +20,6 @@ import { ApexOptions } from 'apexcharts';
 import { learningTypeColors } from '../components/CustomBadge';
 import axios from 'axios';
 
-
 export const FONT_SIZE = '16px';
 
 // =====================
@@ -171,11 +170,12 @@ export const getUser = async (): Promise<UserExtended> => {
 };
 
 export const getContributors = async (workbook_id: string): Promise<User[]> => {
-  return (await axios.get<User[]>(
-      `${import.meta.env.VITE_API}/workbook-contributors/`,
-      {params: {workbook_id: workbook_id}},
-  )).data;
-}
+  return (
+    await axios.get<User[]>(`${import.meta.env.VITE_API}/workbook-contributors/`, {
+      params: { workbook_id: workbook_id },
+    })
+  ).data;
+};
 
 export const isCourseLead = async (workbook_id: string): Promise<boolean> => {
   const workbookData = (
@@ -202,7 +202,10 @@ export const canUserEdit = async (workbook_id: string): Promise<boolean> => {
   const contributors = await getContributors(workbook_id);
 
   return getUser().then((user) => {
-    if (workbookData.course_lead.id === user.id || contributors.some(con => con.id === user.id)) {
+    if (
+      workbookData.course_lead.id === user.id ||
+      contributors.some((con) => con.id === user.id)
+    ) {
       return true;
     } else {
       return false;
@@ -322,19 +325,19 @@ export const prepareDashboardData = (weeksData: WeekInfo[]) => {
       axisBorder: { show: true },
       axisTicks: { show: true },
       labels: {
-        style: {fontSize: FONT_SIZE},
+        style: { fontSize: FONT_SIZE },
       },
     },
     yaxis: {
-      title: { 
-        text: 'Hours', 
-        style: {fontSize: FONT_SIZE},
+      title: {
+        text: 'Hours',
+        style: { fontSize: FONT_SIZE },
       },
       min: 0,
       max: yAxisMax,
       tickAmount: yAxisMax / 60,
       labels: {
-        style: {fontSize: FONT_SIZE},
+        style: { fontSize: FONT_SIZE },
         formatter: (value: number) => {
           const hours = Math.floor(value / 60);
           const minutes = value % 60;
