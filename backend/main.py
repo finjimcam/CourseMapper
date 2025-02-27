@@ -14,6 +14,13 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program at /LICENSE.md. If not, see <https://www.gnu.org/licenses/>.
+
+__-----------------------------------------------------------------------------------__
+
+This module defines the actual API using functionality from the other files in /backend/.
+
+The hooks defined include delete, fetch, patch, and post requests. User authentication
+is also implemented in this file.
 """
 
 from typing import Annotated, AsyncGenerator, List, Dict, Any, cast, TypeVar
@@ -70,6 +77,7 @@ SessionDep = Annotated[Session, Depends(get_session)]
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
+    """Handles startup and shutdown events for the FastAPI application."""
     create_db_and_tables()
     yield
 
@@ -111,6 +119,7 @@ T = TypeVar("T")  # Define a generic type variable
 
 
 def unwrap(model: T | None) -> T:
+    """A helper function to handle None by raising an error. Similar to rust's unwrap()."""
     if model is None:
         raise HTTPException(status_code=500)
     return model
@@ -121,6 +130,19 @@ def unwrap(model: T | None) -> T:
 async def create_session(
     username: str, response: Response, session: Session = Depends(get_session)
 ) -> dict[str, Any]:
+    """Creates a session for the given authenticated user.
+
+    Currently, authentication isn't handled. This will be integrated with AZURE AD when
+    we are given access to the service. The session is created as a cookie on the
+    host's machine.
+
+    Returns:
+        A dict containing the session ID and "ok": True.
+
+    Raises:
+        HTTPException(422): if login attempt fails due to database
+        HTTPException(500): if login attempt fails for any other reason
+    """
 
     db_user = session.exec(select(User).where(User.name == username)).first()
     if db_user is None:
@@ -137,6 +159,18 @@ async def create_session(
 
 @app.get("/session/", dependencies=[Depends(cookie)])
 async def read_session(session_data: SessionData = Depends(verifier)) -> SessionData:
+    """Return the session data of an authenticated user.
+
+    Args:
+        session_data: The session object stored by the browser as a cookie.
+
+    Returns:
+        The sessiondata object, which contains a single field user_id: UUID.
+
+    Raises:
+        HTTPException(403): If no valid session is provided as a cookie
+        HTTPException(500): If attempt fails for any other reason
+    """
     return session_data
 
 
@@ -144,6 +178,21 @@ async def read_session(session_data: SessionData = Depends(verifier)) -> Session
 async def delete_session(
     response: Response, session_id: uuid.UUID = Depends(cookie)
 ) -> dict[str, bool]:
+    """Deletes the session data of an authenticated user.
+
+    Useful for logging out to ensure that the login data isn't stored in the user's
+    browser, enabling other users of their computer to access their session.
+
+    Args:
+        session_id: The session object stored by the browser as a cookie.
+
+    Returns:
+        A dict {"ok": True} on successful execution.
+
+    Raises:
+        HTTPException(403): If no valid session is provided as a cookie.
+        HTTPException(500): If attempt fails for any other reason.
+    """
     await backend.delete(session_id)
     cookie.delete_from_response(response)
     return {"ok": True}
@@ -157,6 +206,30 @@ def delete_activity_staff(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> dict[str, bool]:
+    """Deletes an activity-staff row from the database.
+
+    The activity-staff table is a link table between users and activities, and
+    represents the users responsible for the activity as its staff.
+
+    Args:
+        activity_staff: A model containing the primary keys of the row to delete.
+        session_data: The session object stored by the browser as a cookie.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        A dict {"ok": True} on successful execution, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     # check ActivityStaff validity
     try:
         activity_staff.check_primary_keys(session)
@@ -212,6 +285,30 @@ def delete_workbook_contributor(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> dict[str, bool]:
+    """Deletes a workbook-contributor row from the database.
+
+    The workbook-contributor table is a link table between users and workbooks, and
+    represents the users who can contribute to the workbook by editing it.
+
+    Args:
+        workbook_contributor: A model containing the primary keys of the row to delete.
+        session_data: The session object stored by the browser as a cookie.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        A dict {"ok": True} on successful execution, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     # check WorkbookContributor validity
     try:
         workbook_contributor.check_primary_keys(session)
@@ -265,6 +362,32 @@ def delete_week(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> dict[str, bool]:
+    """Deletes a week row from the database.
+
+    Deleting a week may also renumber other weeks in the same workbook in order to
+    maintaing contiguous week numbering in the range [1..n]. Deleting a week also
+    deletes all activities within that week, and all activity-staff relationships
+    pointing to those deleted activities.
+
+    Args:
+        week: A model containing the primary keys of the row to delete.
+        session_data: The session object stored by the browser as a cookie.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        A dict {"ok": True} on successful execution, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     # check Week validity
     try:
         week.check_primary_keys(session)
@@ -355,6 +478,31 @@ def delete_week_graduate_attribute(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> dict[str, bool]:
+    """Deletes a week-graduate-attribute row from the database.
+
+    The week-graduate-attribute table is a link table between weeks and graduate
+    attributes, and represents the graduate attributes assigned to a particular week.
+
+    Args:
+        week_graduate_attribute: A model containing the primary keys of the row to
+            delete.
+        session_data: The session object stored by the browser as a cookie.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        A dict {"ok": True} on successful execution, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     # check WeekGraduateAttribute validity
     try:
         week_graduate_attribute.check_primary_keys(session)
@@ -422,6 +570,31 @@ def delete_workbook(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> dict[str, bool]:
+    """Deletes a workbook row from the database.
+
+    Deleting a workbook also deletes all workbook-contributors linked to that workbook,
+    all weeks within that workbook, all activities within those weeks, and all
+    activity-staff relationships pointing to those deleted activities.
+
+    Args:
+        workbook: A model containing the primary keys of the row to delete.
+        session_data: The session object stored by the browser as a cookie.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        A dict {"ok": True} on successful execution, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     # check Workbook validity
     db_workbook = session.exec(select(Workbook).where(Workbook.id == workbook_id)).first()
     if not db_workbook:
@@ -469,6 +642,31 @@ def delete_activity(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> dict[str, bool]:
+    """Deletes an activity row from the database.
+
+    Deleting an activity may also renumber other activities in the same week in order
+    to maintain contiguous activity numbering in the range [1..n]. It will also delete
+    all related activity_staff.
+
+    Args:
+        activity: A model containing the primary keys of the row to delete.
+        session_data: The session object stored by the browser as a cookie.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        A dict {"ok": True} on successful execution, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     # check Activity validity
     db_activity = session.exec(select(Activity).where(Activity.id == activity_id)).first()
     if not db_activity:
@@ -536,6 +734,33 @@ def patch_activity(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> Activity | None:
+    """Edits an activity row in the database.
+
+    If the number of the activity is updated, then the numbers of all other activities
+    in that week are updated in order to maintain a contiguous numbering from [1..n].
+    For example, if activities are A:1, B:2, C:3, D:4, then reumbering D:2 would result
+    in the following order: A:1 D:2 B:3 C:4.
+
+    Args:
+        activity_id: The UUID of the activity being edited.
+        activity_update: The data of the activity update request.
+        session_data: The session object stored by the browser as a cookie.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The successfully edited activity, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     # check Activity validity
     db_activity = session.exec(select(Activity).where(Activity.id == activity_id)).first()
     if not db_activity:
@@ -662,6 +887,28 @@ def patch_workbook(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> Workbook | None:
+    """Edits a workbook row in the database.
+
+    Args:
+        workbook_id: The UUID of the workbook being edited.
+        workbook_update: The data of the workbook update request.
+        session_data: The session object stored by the browser as a cookie.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The successfully edited workbook, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     # check Workbook validity
     db_workbook = session.exec(select(Workbook).where(Workbook.id == workbook_id)).first()
     if not db_workbook:
@@ -715,6 +962,30 @@ def create_activity_staff(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> ActivityStaff | None:
+    """Adds an activity-staff row to the database.
+
+    The activity-staff table is a link table between users and activities, and
+    represents the users responsible for the activity as its staff.
+
+    Args:
+        activity_staff: The data of the new activity staff.
+        session_data: The session object stored by the browser as a cookie.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The successfully created activity-staff, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     # check ActivityStaff validity
     activity_staff_dict = activity_staff.model_dump()
     activity_staff_dict["session"] = session
@@ -771,6 +1042,30 @@ def create_activity(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> Activity | None:
+    """Adds an activity row to the database.
+
+    The activity is automatically given the number n+1 where there exist n activities
+    in its week.
+
+    Args:
+        activity: The data of the new activity.
+        session_data: The session object stored by the browser as a cookie.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The successfully created activity, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     # check Activity validity
     activity_dict = activity.model_dump()
     activity_dict["session"] = session
@@ -842,6 +1137,27 @@ def create_workbook(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> Workbook | None:
+    """Adds a workbook row to the database.
+
+    Args:
+        workbook: The data of the new workbook.
+        session_data: The session object stored by the browser as a cookie.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The successfully created workbook, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     workbook_dict = workbook.model_dump()
     workbook_dict["course_lead_id"] = session_data.user_id
     workbook_dict["session"] = session
@@ -866,6 +1182,30 @@ def create_week(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> Week | None:
+    """Adds a week row to the database.
+
+    The activity is automatically given the number n+1 where there exist n weeks
+    in its workbook.
+
+    Args:
+        week: The data of the new week.
+        session_data: The session object stored by the browser as a cookie.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The successfully created week, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     # check Week validity
     week_dict = week.model_dump()
     week_dict["session"] = session
@@ -924,6 +1264,31 @@ def duplicate_workbook(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> Workbook | None:
+    """Creates a copy of a given workbook in the database.
+
+    The owner of the copy will be the user who calls this request, determined by the
+    state in the session cookie.
+    All link models, weeks, and activities are also copied: This is a deepcopy.
+
+    Args:
+        workbook_id: The id of the workbook to copy.
+        session_data: The session object stored by the browser as a cookie.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The successfully created workbook, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     db_user = session.exec(select(User).where(User.id == session_data.user_id)).first()
     # check if user exists
     if not db_user:
@@ -1024,6 +1389,30 @@ def create_workbook_contributor(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> WorkbookContributor | None:
+    """Creates a workbook-contributor in the database.
+
+    The workbook-contributor table is a link table between users and workbooks, and
+    represents the users who can contribute to the workbook by editing it.
+
+    Args:
+        workbook_contributor: The data of the new workbook-contributor link.
+        session_data: The session object stored by the browser as a cookie.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The successfully created workbook-contributor, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     workbook_contributor_dict = workbook_contributor.model_dump()
     workbook_contributor_dict["session"] = session
     try:
@@ -1071,6 +1460,30 @@ def create_week_graduate_attribute(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> WeekGraduateAttribute | None:
+    """Creates a week-graduate-attribute in the database.
+
+    The week-graduate-attribute table is a link table between weeks and graduate
+    attributes, and represents the graduate attributes assigned to a particular week.
+
+    Args:
+        week_graduate_attribute: The data of the new week-graduate-attribute link.
+        session_data: The session object stored by the browser as a cookie.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The successfully created week-graduate-attribute, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     # check WeekGraduateAttribute validity
     week_graduate_attribute_dict = week_graduate_attribute.model_dump()
     week_graduate_attribute_dict["session"] = session
@@ -1130,6 +1543,39 @@ def read_actvity_staff(
     activity_id: uuid.UUID | None = None,
     peek: bool = Query(False),
 ) -> List[ActivityStaff] | None:
+    """Reads activity-staff from the database.
+
+    The activity-staff table is a link table between users and activities, and
+    represents the users responsible for the activity as its staff.
+
+    Depending on the state of staff_id and activity_id, filtering will be applied. The
+    set of all activity_staff which staff_id = staff_id and activity_id = activity_id
+    will be returned, with no constraint on each row if the input is None (e.g. a get
+    request with staff_id=None, activity_id=None, will return all activity-staff rows.)
+
+    The _: SessionData enables SessionData to be parsed, which will return a 403 if it
+    does not exist. This is how authentication is handled when there are no internal
+    restrictions i.e. every user can access this, but only if they are authenticated.
+
+    Args:
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        staff_id: The id of the staff member to filter activity-staff results.
+        activity_id: The id of the activity to filter activity-staff results.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The list of matching activity-staff objects, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     if peek:
         return None
 
@@ -1155,6 +1601,46 @@ def read_week_graduate_attributes(
     graduate_attribute_id: uuid.UUID | None = None,
     peek: bool = Query(False),
 ) -> List[WeekGraduateAttribute] | None:
+    """Reads week-graduate-attributes from the database.
+
+    The week-graduate-attribute table is a link table between weeks and graduate
+    attributes, and represents the graduate attributes assigned to a particular week.
+
+    Depending on the state of week_workbook_id, week_number, and graduate_attribute_id,
+     filtering will beapplied. The set of all week-graduate-attributes
+    which week_workbook_id = week_workbook_id and week_number = week_number,
+    graduate_attribute_id = graduate_attribute_id will be returned, where
+    week_workbook_id and week_number are the primary keys of the week, with no
+    constraint on each row if the input is None (e.g. a get request with
+    week_workbook_id=None, week_number=None, graduate_attribute_id=None, will return
+    all week-graduate-attributes rows.)
+
+    The _: SessionData enables SessionData to be parsed, which will return a 403 if it
+    does not exist. This is how authentication is handled when there are no internal
+    restrictions i.e. every user can access this, but only if they are authenticated.
+
+    Args:
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        week_workbook_id: The id of the workbook part of the week's primary key to
+            filter week-graduate-attributes results.
+        graduate_attribute_id: The id of the graduate attribute to filter
+            week-graduate-attributes results.
+        week_number: The number of the week to filter week-graduate-attributes results.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The list of matching week-graduate-attributes objects, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     if peek:
         return None
 
@@ -1197,6 +1683,43 @@ def read_workbook_contributors(
     workbook_id: uuid.UUID | None = None,
     peek: bool = Query(False),
 ) -> List[Any] | None:
+    """Reads workbook-contributors from the database.
+
+    The workbook-contributor table is a link table between users and workbooks, and
+    represents the users who can contribute to the workbook by editing it.
+
+    Depending on the state of contributor_id and workbook_id, filtering will be
+    applied. The set of all workbook-contributors which contributor_id =
+    contributor_id and workbook_id = workbook_id will be returned, with no constraint
+    on each row if the input is None (e.g. a get request with contributor_id=None,
+    workbook_id=None, will return all workbook-contributor rows.)
+
+    If only workbook_id is input, then this function returns a list of users, as the
+    workbooks are implied and this saves on extra API calls.
+
+    The _: SessionData enables SessionData to be parsed, which will return a 403 if it
+    does not exist. This is how authentication is handled when there are no internal
+    restrictions i.e. every user can access this, but only if they are authenticated.
+
+    Args:
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        contributor_id: The id of the contributor to filter workbook-contributors by.
+        workbook_id: The id of the workbook to filter workbook-contributors by.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The list of matching workbook-contributor objects, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     if peek:
         return None
 
@@ -1207,7 +1730,6 @@ def read_workbook_contributors(
         for user in session.exec(
             select(WorkbookContributor).where(WorkbookContributor.workbook_id == workbook_id)
         ):
-            print(user)
             contributors.append(
                 session.exec(select(User).where(User.id == user.contributor_id)).first()
             )
@@ -1237,6 +1759,29 @@ def read_users(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> List[User] | None:
+    """Reads users from the database.
+
+    The _: SessionData enables SessionData to be parsed, which will return a 403 if it
+    does not exist. This is how authentication is handled when there are no internal
+    restrictions i.e. every user can access this, but only if they are authenticated.
+
+    Args:
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The list of all user objects, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     if peek:
         return None
 
@@ -1249,8 +1794,32 @@ def read_permissions_groups(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> List[PermissionsGroup] | None:
+    """Reads permissions-groups from the database.
+
+    The _: SessionData enables SessionData to be parsed, which will return a 403 if it
+    does not exist. This is how authentication is handled when there are no internal
+    restrictions i.e. every user can access this, but only if they are authenticated.
+
+    Args:
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The list of all permissions-group objects, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     if peek:
         return None
+
     return list(session.exec(select(PermissionsGroup)).all())
 
 
@@ -1260,6 +1829,29 @@ def read_learning_platforms(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> List[LearningPlatform] | None:
+    """Reads learning-platforms from the database.
+
+    The _: SessionData enables SessionData to be parsed, which will return a 403 if it
+    does not exist. This is how authentication is handled when there are no internal
+    restrictions i.e. every user can access this, but only if they are authenticated.
+
+    Args:
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The list of all learning-platform objects, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     if peek:
         return None
 
@@ -1273,6 +1865,33 @@ def read_learning_activities(
     learning_platform_id: uuid.UUID | None = None,
     peek: bool = Query(False),
 ) -> List[LearningActivity] | None:
+    """Reads learning-activities from the database.
+
+    If learning_platform_id is not None, it is used to filter the activities, returning
+    only those related to the given learning platform.
+
+    The _: SessionData enables SessionData to be parsed, which will return a 403 if it
+    does not exist. This is how authentication is handled when there are no internal
+    restrictions i.e. every user can access this, but only if they are authenticated.
+
+    Args:
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        learning_platform_id: The id of the learning-platform to filter by.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The list of matching learning-activities objects, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     if peek:
         return None
 
@@ -1293,6 +1912,29 @@ def read_task_statuses(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> List[TaskStatus] | None:
+    """Reads task-statuses from the database.
+
+    The _: SessionData enables SessionData to be parsed, which will return a 403 if it
+    does not exist. This is how authentication is handled when there are no internal
+    restrictions i.e. every user can access this, but only if they are authenticated.
+
+    Args:
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The list of all task-status objects, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     if peek:
         return None
 
@@ -1305,6 +1947,29 @@ def read_learning_types(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> List[LearningType] | None:
+    """Reads learning-types from the database.
+
+    The _: SessionData enables SessionData to be parsed, which will return a 403 if it
+    does not exist. This is how authentication is handled when there are no internal
+    restrictions i.e. every user can access this, but only if they are authenticated.
+
+    Args:
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The list of all learning-type objects, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     if peek:
         return None
 
@@ -1318,6 +1983,38 @@ def read_workbooks(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> List[Dict[str, Any]] | None:
+    """Reads workbooks from the database.
+
+    If workbook_id is not none, returns the specified workbook.
+
+    This request injects some additional data into the workbook model returned, adding
+    explicitly the course lead and learning platform fields. This reduces the amount of
+    requests made to the backend, as these two fields are used in almost every case
+    when the workbook data is used.
+
+    The _: SessionData enables SessionData to be parsed, which will return a 403 if it
+    does not exist. This is how authentication is handled when there are no internal
+    restrictions i.e. every user can access this, but only if they are authenticated.
+
+    Args:
+        workbook_id: The id of the workbook to return.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The list of all matching workbook objects, model_dumped and with course_lead
+        and learning_platform fields added, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     if peek:
         return None
 
@@ -1359,7 +2056,6 @@ def search_workbooks(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> List[Dict[str, Any]] | None:
-    print(name)
     if peek:
         return None
 
@@ -1416,6 +2112,36 @@ def read_weeks(
     week_number: int | None = None,
     peek: bool = Query(False),
 ) -> List[Week] | None:
+    """Reads weeks from the database.
+
+    If the week's primary key is given in the form of workbook_id and week_number, then
+    the specified week will be returned. Otherwise if workbook_id is not None, then all
+    weeks related to that workbook will be returned. Otherwise all weeks are returned.
+
+    The _: SessionData enables SessionData to be parsed, which will return a 403 if it
+    does not exist. This is how authentication is handled when there are no internal
+    restrictions i.e. every user can access this, but only if they are authenticated.
+
+    Args:
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        workbook_id: The id of the workbook containing the searched-for week(s).
+        week_number: The number of the week searched for, as part of its composite
+            primary key. If number is specified but workbook is not, it has no effect.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The list of all matching week objects, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     if peek:
         return None
 
@@ -1436,6 +2162,29 @@ def read_graduate_attributes(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> List[GraduateAttribute] | None:
+    """Reads graduate-attributes from the database.
+
+    The _: SessionData enables SessionData to be parsed, which will return a 403 if it
+    does not exist. This is how authentication is handled when there are no internal
+    restrictions i.e. every user can access this, but only if they are authenticated.
+
+    Args:
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The list of all graduate-attribute objects, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     if peek:
         return None
 
@@ -1449,6 +2198,29 @@ def read_locations(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> List[Location] | None:
+    """Reads locations from the database.
+
+    The _: SessionData enables SessionData to be parsed, which will return a 403 if it
+    does not exist. This is how authentication is handled when there are no internal
+    restrictions i.e. every user can access this, but only if they are authenticated.
+
+    Args:
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The list of all location objects, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     if peek:
         return None
 
@@ -1464,6 +2236,36 @@ def read_activities(
     week_number: int | None = None,
     peek: bool = Query(False),
 ) -> List[Activity] | None:
+    """Reads activities from the database.
+
+    If workbook_id is not None, then returns all activities from the spcified workbook.
+    If also week_number is not None, then returns all activities from the specified
+    week. If both are None, returns all activities.
+
+    The _: SessionData enables SessionData to be parsed, which will return a 403 if it
+    does not exist. This is how authentication is handled when there are no internal
+    restrictions i.e. every user can access this, but only if they are authenticated.
+
+    Args:
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        workbook_id: The id of the workbook containing the activities.
+        week_number: In conjunction with workbook_id, the id of the week containing
+            the activities.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The list of all matching activity objects, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     if peek:
         return None
 
@@ -1488,6 +2290,35 @@ def get_workbook_details(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> Dict[str, Any] | None:
+    """Reads workbook from the database.
+
+    This request injects some additional data into the workbook model returned,
+    allowing for all relevant information in workbook display to be returned in one
+    request, reducing duplicated work and logic on the frontend.
+
+    The _: SessionData enables SessionData to be parsed, which will return a 403 if it
+    does not exist. This is how authentication is handled when there are no internal
+    restrictions i.e. every user can access this, but only if they are authenticated.
+
+    Args:
+        workbook_id: The id of the workbook to be requested.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The list of all matching workbook objects, model_dumped and with course_lead
+        and learning_platform fields added, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     if peek:
         return None
 
@@ -1554,6 +2385,32 @@ def read_workbook_graduate_attributes(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> List[WeekGraduateAttribute] | None:
+    """Reads week-graduate-attributes from the database.
+
+    Returns all week-graduate-attributes related to the given workbook.
+
+    The _: SessionData enables SessionData to be parsed, which will return a 403 if it
+    does not exist. This is how authentication is handled when there are no internal
+    restrictions i.e. every user can access this, but only if they are authenticated.
+
+    Args:
+        workbook_id: The id of the related workbook.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The list of all matching week-graduate-attribute objects, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
     if peek:
         return None
 

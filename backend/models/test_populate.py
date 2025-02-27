@@ -14,6 +14,13 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program at /LICENSE.md. If not, see <https://www.gnu.org/licenses/>.
+
+__-----------------------------------------------------------------------------------__
+
+This is a test module for populate.py.
+
+It mainly exists to check that the database definition are still working as intended,
+and does not test any application logic.
 """
 
 import unittest

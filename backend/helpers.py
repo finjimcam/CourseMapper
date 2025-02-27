@@ -14,6 +14,13 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program at /LICENSE.md. If not, see <https://www.gnu.org/licenses/>.
+
+__-----------------------------------------------------------------------------------__
+
+This module contains helper functions used by main.py.
+
+It functions as a separation of concerns to ensure main.py stays focused on the API
+definition and implementation.
 """
 
 from typing import Any, Dict, List
@@ -22,6 +29,14 @@ from models.models_base import User, LearningPlatform, Workbook
 
 
 def add_workbook_details(session: Session, workbook: Workbook) -> Dict[str, Any]:
+    """Enriches a workbook model with details hidden in its fields.
+
+    This injects some additional data into the workbook model returned, allowing for
+    all relevant information in workbook display to be returned in one request,
+    reducing duplicated work and logic on the frontend.
+
+    Used in get_workbook_details hook in main.py.
+    """
     # Fetch related data
     course_lead = session.exec(select(User).where(User.id == workbook.course_lead_id)).first()
     learning_platform = session.exec(
