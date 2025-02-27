@@ -38,14 +38,12 @@ engine = create_engine(sqlite_url, connect_args=connect_args)
 
 
 def create_db_and_tables() -> None:
-    """Creates the database and tables in memory from the database file.
-    """
+    """Creates the database and tables in memory from the database file."""
     SQLModel.metadata.create_all(engine)
 
 
 def get_session() -> Iterator[Session]:
-    """Creates a new database session to manage database transactions.
-    """
+    """Creates a new database session to manage database transactions."""
     with Session(engine) as session:
         yield session
 

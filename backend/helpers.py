@@ -34,7 +34,7 @@ def add_workbook_details(session: Session, workbook: Workbook) -> Dict[str, Any]
     This injects some additional data into the workbook model returned, allowing for
     all relevant information in workbook display to be returned in one request,
     reducing duplicated work and logic on the frontend.
-    
+
     Used in get_workbook_details hook in main.py.
     """
     # Fetch related data

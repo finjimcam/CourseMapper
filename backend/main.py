@@ -138,7 +138,7 @@ async def create_session(
 
     Returns:
         A dict containing the session ID and "ok": True.
-    
+
     Raises:
         HTTPException(422): if login attempt fails due to database
         HTTPException(500): if login attempt fails for any other reason
@@ -166,7 +166,7 @@ async def read_session(session_data: SessionData = Depends(verifier)) -> Session
 
     Returns:
         The sessiondata object, which contains a single field user_id: UUID.
-    
+
     Raises:
         HTTPException(403): If no valid session is provided as a cookie
         HTTPException(500): If attempt fails for any other reason
@@ -188,7 +188,7 @@ async def delete_session(
 
     Returns:
         A dict {"ok": True} on successful execution.
-    
+
     Raises:
         HTTPException(403): If no valid session is provided as a cookie.
         HTTPException(500): If attempt fails for any other reason.
@@ -222,7 +222,7 @@ def delete_activity_staff(
 
     Returns:
         A dict {"ok": True} on successful execution, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.
@@ -301,7 +301,7 @@ def delete_workbook_contributor(
 
     Returns:
         A dict {"ok": True} on successful execution, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.
@@ -380,7 +380,7 @@ def delete_week(
 
     Returns:
         A dict {"ok": True} on successful execution, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.
@@ -495,14 +495,14 @@ def delete_week_graduate_attribute(
 
     Returns:
         A dict {"ok": True} on successful execution, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.
         HTTPException(422): if the request fails due to a database error.
         HTTPException(500): if attempt fails for any other reason.
     """
-    
+
     # check WeekGraduateAttribute validity
     try:
         week_graduate_attribute.check_primary_keys(session)
@@ -587,7 +587,7 @@ def delete_workbook(
 
     Returns:
         A dict {"ok": True} on successful execution, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.
@@ -659,7 +659,7 @@ def delete_activity(
 
     Returns:
         A dict {"ok": True} on successful execution, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.
@@ -737,7 +737,7 @@ def patch_activity(
     """Edits an activity row in the database.
 
     If the number of the activity is updated, then the numbers of all other activities
-    in that week are updated in order to maintain a contiguous numbering from [1..n]. 
+    in that week are updated in order to maintain a contiguous numbering from [1..n].
     For example, if activities are A:1, B:2, C:3, D:4, then reumbering D:2 would result
     in the following order: A:1 D:2 B:3 C:4.
 
@@ -753,7 +753,7 @@ def patch_activity(
 
     Returns:
         The successfully edited activity, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.
@@ -901,7 +901,7 @@ def patch_workbook(
 
     Returns:
         The successfully edited workbook, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.
@@ -978,7 +978,7 @@ def create_activity_staff(
 
     Returns:
         The successfully created activity-staff, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.
@@ -1058,7 +1058,7 @@ def create_activity(
 
     Returns:
         The successfully created activity, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.
@@ -1150,7 +1150,7 @@ def create_workbook(
 
     Returns:
         The successfully created workbook, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.
@@ -1198,7 +1198,7 @@ def create_week(
 
     Returns:
         The successfully created week, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.
@@ -1281,7 +1281,7 @@ def duplicate_workbook(
 
     Returns:
         The successfully created workbook, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.
@@ -1405,7 +1405,7 @@ def create_workbook_contributor(
 
     Returns:
         The successfully created workbook-contributor, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.
@@ -1476,7 +1476,7 @@ def create_week_graduate_attribute(
 
     Returns:
         The successfully created week-graduate-attribute, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.
@@ -1568,7 +1568,7 @@ def read_actvity_staff(
 
     Returns:
         The list of matching activity-staff objects, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.
@@ -1633,7 +1633,7 @@ def read_week_graduate_attributes(
 
     Returns:
         The list of matching week-graduate-attributes objects, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.
@@ -1712,7 +1712,7 @@ def read_workbook_contributors(
 
     Returns:
         The list of matching workbook-contributor objects, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.
@@ -1774,7 +1774,7 @@ def read_users(
 
     Returns:
         The list of all user objects, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.
@@ -1809,7 +1809,7 @@ def read_permissions_groups(
 
     Returns:
         The list of all permissions-group objects, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.
@@ -1819,7 +1819,7 @@ def read_permissions_groups(
 
     if peek:
         return None
-    
+
     return list(session.exec(select(PermissionsGroup)).all())
 
 
@@ -1844,7 +1844,7 @@ def read_learning_platforms(
 
     Returns:
         The list of all learning-platform objects, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.
@@ -1884,7 +1884,7 @@ def read_learning_activities(
 
     Returns:
         The list of matching learning-activities objects, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.
@@ -1927,7 +1927,7 @@ def read_task_statuses(
 
     Returns:
         The list of all task-status objects, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.
@@ -1962,7 +1962,7 @@ def read_learning_types(
 
     Returns:
         The list of all learning-type objects, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.
@@ -2007,7 +2007,7 @@ def read_workbooks(
     Returns:
         The list of all matching workbook objects, model_dumped and with course_lead
         and learning_platform fields added, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.
@@ -2134,7 +2134,7 @@ def read_weeks(
 
     Returns:
         The list of all matching week objects, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.
@@ -2177,7 +2177,7 @@ def read_graduate_attributes(
 
     Returns:
         The list of all graduate-attribute objects, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.
@@ -2213,7 +2213,7 @@ def read_locations(
 
     Returns:
         The list of all location objects, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.
@@ -2258,7 +2258,7 @@ def read_activities(
 
     Returns:
         The list of all matching activity objects, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.
@@ -2311,14 +2311,14 @@ def get_workbook_details(
     Returns:
         The list of all matching workbook objects, model_dumped and with course_lead
         and learning_platform fields added, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.
         HTTPException(422): if the request fails due to a database error.
         HTTPException(500): if attempt fails for any other reason.
     """
-    
+
     if peek:
         return None
 
@@ -2403,7 +2403,7 @@ def read_workbook_graduate_attributes(
 
     Returns:
         The list of all matching week-graduate-attribute objects, or None if peek=True.
-    
+
     Raises:
         HTTPException(403): if no valid session is provided as a cookie, or if
             permission is denied due to the user's permissions group.

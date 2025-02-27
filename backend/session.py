@@ -29,14 +29,13 @@ from fastapi_sessions.session_verifier import SessionVerifier
 
 # Special session model
 class SessionData(BaseModel):
-    """The data stored in the session cookie.
-    """
+    """The data stored in the session cookie."""
+
     user_id: uuid.UUID
 
 
 class BaseVerifier(SessionVerifier[uuid.UUID, SessionData]):  # type: ignore[misc]
-    """The session verifier used by FastAPI on our sessions.
-    """
+    """The session verifier used by FastAPI on our sessions."""
 
     def __init__(
         self,

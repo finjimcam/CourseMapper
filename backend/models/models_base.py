@@ -86,15 +86,13 @@ class WorkbookContributor(WorkbookContributorBase, table=True):
 
 
 class WorkbookContributorCreate(WorkbookContributorBase):
-    """The data model for creating a workbook contributor.
-    """
-    
+    """The data model for creating a workbook contributor."""
+
     pass
 
 
 class WorkbookContributorDelete(WorkbookContributorBase):
-    """The data model for deleting a workbook contributor.
-    """
+    """The data model for deleting a workbook contributor."""
 
     def check_primary_keys(
         cls: "WorkbookContributorDelete", session: Session
@@ -186,15 +184,13 @@ class ActivityStaff(ActivityStaffBase, table=True):
 
 
 class ActivityStaffCreate(ActivityStaffBase):
-    """The data model for creating an activity staff.
-    """
+    """The data model for creating an activity staff."""
 
     pass
 
 
 class ActivityStaffDelete(ActivityStaffBase):
-    """The data model for deleting an activity staff.
-    """
+    """The data model for deleting an activity staff."""
 
     def check_primary_keys(cls: "ActivityStaffDelete", session: Session) -> "ActivityStaffDelete":
         """Model validation.
@@ -239,9 +235,9 @@ class WeekGraduateAttributeBase(SQLModel):
 
     Attributes:
         week_workbook_id: The id of the related week's workbook. In combination with
-            week_number defines the primary key of the related week 
+            week_number defines the primary key of the related week
         week_number: The number of the related week. In combination with
-            week_workbook_id defines the primary key of the related week 
+            week_workbook_id defines the primary key of the related week
         graduate_attribute_id:
             The id of the related graduate attribute.
     """
@@ -311,15 +307,13 @@ class WeekGraduateAttribute(WeekGraduateAttributeBase, table=True):
 
 
 class WeekGraduateAttributeCreate(WeekGraduateAttributeBase):
-    """The data model for creating a week graduate attribute.
-    """
+    """The data model for creating a week graduate attribute."""
 
     pass
 
 
 class WeekGraduateAttributeDelete(WeekGraduateAttributeBase):
-    """The data model for deleting a week graduate attribute.
-    """
+    """The data model for deleting a week graduate attribute."""
 
     def check_primary_keys(
         cls: "WeekGraduateAttributeDelete", session: Session
@@ -378,13 +372,13 @@ class User(SQLModel, table=True):
         id: The UUID of the user, generated at runtime (*NOT* user-specified).
         name: The name of the user.
         permission_group_id: The id of the related permissions group.
-    
+
     1->N Relationship Attributes:
         permissions_group: The permissions group specified by the permission_group_id.
-    
+
     N->1 Relationship Attributes:
         workbooks_leading: The workbooks this user is course_lead of.
-    
+
     N->M Relationship Attributes:
         workbooks_contributing_to: The workbooks this user is contributing to, linked
             by the WorkbookContributor model.
@@ -415,7 +409,7 @@ class PermissionsGroup(SQLModel, table=True):
         id: The UUID of the permissions group, generated at runtime (*NOT*
             user-specified).
         name: The name of the permissions group.
-        
+
     N->1 Relationship Attributes:
         users: The users which are part of this permissions group.
     """
@@ -451,15 +445,15 @@ class Workbook(WorkbookBase, table=True):
         id: The UUID of the workbook, generated at runtime (*NOT* user-specified).
         number_of_weeks: The number of weeks contained within this workbook,
             programatically edited (*NOT* exposed to the user).
-    
+
     1->N Relationship Attributes:
         course_lead: The user specified by the course_lead_id.
         learning_platform: The learning platform specified by the learning_platform_id.
-    
+
     N->1 Relationship Attributes:
         weeks: The weeks contained within this workbook.
         activities: The activities contained within the weeks contained within this workbook.
-    
+
     N->M Relationship Attributes:
         contributors: The users contributing to this workbook, linked by the
             WorkbookContributor model.
@@ -534,6 +528,7 @@ class WorkbookCreate(BaseModel):
         learning_platform_id: The id of the learning platform associated with the new
             workbook.
     """
+
     start_date: datetime.date = Field(nullable=False)
     end_date: datetime.date = Field(nullable=False)
     course_name: str = Field(index=True)
@@ -551,6 +546,7 @@ class WorkbookUpdate(BaseModel):
         course_name: The new name of the workbook.
         course_lead_id: The id of the new course lead of the workbook.
     """
+
     start_date: Optional[datetime.date] = None
     end_date: Optional[datetime.date] = None
     course_name: Optional[str] = None
@@ -564,7 +560,7 @@ class LearningPlatform(SQLModel, table=True):
         id: The UUID of the learning platform, generated at runtime (*NOT*
             user-specified).
         name: The name of the learning platform.
-        
+
     N->1 Relationship Attributes:
         workbooks: The workbooks that are associated with this learning platform.
         learning_activities: The learning activities available on this learning
@@ -588,10 +584,10 @@ class LearningActivity(SQLModel, table=True):
             user-specified).
         name: The name of the learning activity.
         learning_platform_id: The id of the related learning platform.
-    
+
     1->N Relationship Attributes:
         learning_platform: The learning platform specified by the learning_platform_id.
-    
+
     N->1 Relationship Attributes:
         activities: The specific activities which are categorised as this learning
             activity.
@@ -624,13 +620,13 @@ class Week(WeekBase, table=True):
     Attributes:
         number: The number of the week, programatically edited (*NOT* exposed to the
             user). Creates the primary key of the week in combination with workbook_id.
-    
+
     1->N Relationship Attributes:
         workbook: The workbook specified by workbook_id.
-    
+
     N->1 Relationship Attributes:
         activities: The activities contained within this week.
-    
+
     N->M Relationship Attributes:
         graduate_attributes: The graduate attributes associated with this week, linked
             by the WeekGraduateAttribute.
@@ -670,8 +666,7 @@ class Week(WeekBase, table=True):
 
 
 class WeekCreate(WeekBase):
-    """The data model for creating a week.
-    """
+    """The data model for creating a week."""
 
     pass
 
@@ -721,7 +716,7 @@ class GraduateAttribute(SQLModel, table=True):
     Attributes:
         id: The UUID of the graduate attribute, generated at runtime (*NOT* user-specified).
         name: The name of the graduate attribute.
-    
+
     N->M Relationship Attributes:
         weeks: The weeks which are associated with this graduate attribute, linked by
             the WeekGraduateAttribute model.
@@ -793,7 +788,7 @@ class Activity(ActivityBase, table=True):
         number: The number of the activity, programatically edited (*NOT* exposed to
             the user). Creates the primary key of the week in combination with
             workbook_id.
-    
+
     1->N Relationship Attributes:
         location: The location specified by location_id.
         workbook: The workbook specified by workbook_id.
@@ -801,11 +796,12 @@ class Activity(ActivityBase, table=True):
         learning_activity: The learning activity specified by learning_activity_id.
         learning_type: The learning type specified by learning_type_id.
         task_status: The task status specified by task_status_id.
-    
+
     N->M Relationship Attributes:
         staff_responsible: The staff which are responsible for this activity, linked by
             the ActivityStaff model.
     """
+
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     number: Optional[int] = Field(default=0)
 
@@ -875,8 +871,7 @@ class Activity(ActivityBase, table=True):
 
 
 class ActivityCreate(ActivityBase):
-    """The data model for creating an activity.
-    """
+    """The data model for creating an activity."""
 
     pass
 
@@ -913,7 +908,7 @@ class LearningType(SQLModel, table=True):
     Attributes:
         id: The UUID of the learning type, generated at runtime (*NOT* user-specified).
         name: The name of the learning type.
-        
+
     N->1 Relationship Attributes:
         activities: The activities that associate with this learning type.
     """
@@ -930,7 +925,7 @@ class TaskStatus(SQLModel, table=True):
     Attributes:
         id: The UUID of the task status, generated at runtime (*NOT* user-specified).
         name: The name of the task status.
-        
+
     N->1 Relationship Attributes:
         activities: The activities that associate with this task status.
     """
