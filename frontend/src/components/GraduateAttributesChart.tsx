@@ -19,8 +19,10 @@ along with this program at /LICENSE.md. If not, see <https://www.gnu.org/license
 import React from 'react';
 import ReactApexChart from 'react-apexcharts';
 import { Table } from 'flowbite-react';
-import { CustomBadge } from './CustomBadge';
+import { CustomBadge, graduateAttributeColors } from './CustomBadge';
 import { ApexOptions } from 'apexcharts';
+import fontColorContrast from 'font-color-contrast';
+import { normalizeKey } from '../utils/stringUtils';
 
 interface GraduateAttributesChartProps {
   data: {
@@ -72,7 +74,21 @@ const GraduateAttributesChart: React.FC<GraduateAttributesChartProps> = ({
       },
     },
     dataLabels: {
-      enabled: false,
+      enabled: false
+    },
+    tooltip: {
+      enabled: true,
+      theme: 'dark',
+      custom: function({ seriesIndex, w }) {
+        const hexColor = w.globals.colors[seriesIndex];
+        const textColor = fontColorContrast(hexColor, 0.7);
+        const label = w.globals.labels[seriesIndex];
+        const value = w.globals.series[seriesIndex];
+        
+        return `<div style="background-color: ${hexColor}; padding: 8px; border-radius: 4px;">` +
+          `<span style="color: ${textColor}; font-size: 14px;">${label} (${value}%)</span>` +
+          '</div>';
+      }
     },
     responsive: [
       {
