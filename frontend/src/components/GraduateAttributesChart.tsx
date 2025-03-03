@@ -83,10 +83,9 @@ const GraduateAttributesChart: React.FC<GraduateAttributesChartProps> = ({
         const hexColor = w.globals.colors[seriesIndex];
         const textColor = fontColorContrast(hexColor, 0.7);
         const label = w.globals.labels[seriesIndex];
-        const value = w.globals.series[seriesIndex];
         
         return `<div style="background-color: ${hexColor}; padding: 8px; border-radius: 4px;">` +
-          `<span style="color: ${textColor}; font-size: 14px;">${label} (${value}%)</span>` +
+          `<span style="color: ${textColor}; font-size: 14px;">${label} </span>` +
           '</div>';
       }
     },
