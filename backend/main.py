@@ -247,8 +247,8 @@ def delete_activity_staff(
     )
 
     """
-    Check user permissions: Staff members may remove themselves. Workbook owners and site admins
-    may remove activity staff.
+    Check user permissions: Staff members may remove themselves. Workbook owners and contributors
+     and site admins may remove activity staff.
     """
     db_activity = unwrap(
         session.exec(select(Activity).where(Activity.id == db_activity_staff.activity_id)).first()
@@ -259,6 +259,12 @@ def delete_activity_staff(
     db_workbook_owner = unwrap(
         session.exec(select(User).where(User.id == db_workbook.course_lead_id)).first()
     )
+    db_workbook_contributor_ids = [
+        unwrap(workbook_contributor).contributor_id
+        for workbook_contributor in session.exec(
+            select(WorkbookContributor).where(WorkbookContributor.workbook_id == db_workbook.id)
+        ).all()
+    ]
     db_user = unwrap(session.exec(select(User).where(User.id == session_data.user_id)).first())
     db_user_permissions_group = unwrap(
         session.exec(
@@ -267,6 +273,7 @@ def delete_activity_staff(
     )
     if (
         session_data.user_id not in [db_activity_staff.staff_id, db_workbook_owner.id]
+        and session_data.user_id not in db_workbook_contributor_ids
         and db_user_permissions_group.name != "Admin"
     ):
         raise HTTPException(status_code=403, detail="Permission denied.")  # deliberately obscure
