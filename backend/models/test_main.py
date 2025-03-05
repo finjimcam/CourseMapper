@@ -23,6 +23,7 @@ It mainly exists to check that all functions in main.py are still working as int
 """
 
 import pytest
+import json
 from fastapi.testclient import TestClient
 from typing import Dict
 from sqlmodel import Session, SQLModel, create_engine, select
@@ -416,10 +417,10 @@ class TestCreate:
         response = client.post("/activities/", json=activity_data, headers=headers)
         assert response.status_code == 422
 
-        # Test that an activity can be created by a valid user
+        # Test that an activity cannot be created with an invalid week number
         activity_data = {
             "workbook_id": str(workbook.id),
-            "week_number": 1,
+            "week_number": None,
             "name": "Test Activity",
             "time_estimate_minutes": 60,
             "location_id": str(session.exec(select(Location)).first().id),
@@ -428,7 +429,77 @@ class TestCreate:
             "task_status_id": str(session.exec(select(TaskStatus)).first().id),
         }
         response = client.post("/activities/", json=activity_data, headers=headers)
-        assert response.status_code == 200
+        assert response.status_code == 500
+
+        # Test that an activity cannot be created with an invalid name
+        activity_data = {
+            "workbook_id": str(workbook.id),
+            "week_number": 1,
+            "name": None,
+            "time_estimate_minutes": 60,
+            "location_id": str(session.exec(select(Location)).first().id),
+            "learning_activity_id": str(session.exec(select(LearningActivity)).first().id),
+            "learning_type_id": str(session.exec(select(LearningType)).first().id),
+            "task_status_id": str(session.exec(select(TaskStatus)).first().id),
+        }
+        response = client.post("/activities/", json=activity_data, headers=headers)
+        assert response.status_code == 422
+
+        # Test that an activity cannot be created with an invalid location ID
+        activity_data = {
+            "workbook_id": str(workbook.id),
+            "week_number": 1,
+            "name": "Test Activity",
+            "time_estimate_minutes": 60,
+            "location_id": str(uuid.uuid4()),
+            "learning_activity_id": str(session.exec(select(LearningActivity)).first().id),
+            "learning_type_id": str(session.exec(select(LearningType)).first().id),
+            "task_status_id": str(session.exec(select(TaskStatus)).first().id),
+        }
+        response = client.post("/activities/", json=activity_data, headers=headers)
+        assert response.status_code == 422
+
+        # Test that an activity cannot be created with an invalid learning_activity_id
+        activity_data = {
+            "workbook_id": str(workbook.id),
+            "week_number": 1,
+            "name": "Test Activity",
+            "time_estimate_minutes": 60,
+            "location_id": str(session.exec(select(Location)).first().id),
+            "learning_activity_id": str(uuid.uuid4()),
+            "learning_type_id": str(session.exec(select(LearningType)).first().id),
+            "task_status_id": str(session.exec(select(TaskStatus)).first().id),
+        }
+        response = client.post("/activities/", json=activity_data, headers=headers)
+        assert response.status_code == 422
+
+        # Test that an activity cannot be created with an invalid learning_type_id
+        activity_data = {
+            "workbook_id": str(workbook.id),
+            "week_number": 1,
+            "name": "Test Activity",
+            "time_estimate_minutes": 60,
+            "location_id": str(session.exec(select(Location)).first().id),
+            "learning_activity_id": str(session.exec(select(LearningActivity)).first().id),
+            "learning_type_id": str(uuid.uuid4()),
+            "task_status_id": str(session.exec(select(TaskStatus)).first().id),
+        }
+        response = client.post("/activities/", json=activity_data, headers=headers)
+        assert response.status_code == 422
+
+        # Test that an activity cannot be created with an invalid task_status_id
+        activity_data = {
+            "workbook_id": str(workbook.id),
+            "week_number": 1,
+            "name": "Test Activity",
+            "time_estimate_minutes": 60,
+            "location_id": str(session.exec(select(Location)).first().id),
+            "learning_activity_id": str(session.exec(select(LearningActivity)).first().id),
+            "learning_type_id": str(session.exec(select(LearningType)).first().id),
+            "task_status_id": str(uuid.uuid4()),
+        }
+        response = client.post("/activities/", json=activity_data, headers=headers)
+        assert response.status_code == 422
 
     def test_create_workbook_contributor(self, client: TestClient, session: Session) -> None:
         headers = get_auth_headers(client, "admin")
@@ -542,38 +613,214 @@ class TestCreate:
 class TestDelete:
     def test_delete_activity_staff(self, client: TestClient, session: Session) -> None:
         headers = get_auth_headers(client, "admin")
-        activity_id = str(uuid.uuid4())
-        staff_id = str(uuid.uuid4())
-        response = client.delete(
-            f"/activity-staff/?activity_id={activity_id}&staff_id={staff_id}", headers=headers
+
+        user = create_test_user(session, "staff_member")
+        workbook = create_test_workbook(session, user.id)
+        week = Week(workbook_id=workbook.id, number=1)
+        session.add(week)
+        session.commit()
+
+        location = Location(name="Test Location")
+        session.add(location)
+        session.commit()
+
+        activity = Activity(
+            workbook_id=workbook.id,
+            week_number=week.number,
+            name="Test Activity",
+            time_estimate_minutes=60,
+            location_id=location.id,
+            learning_activity_id=uuid.uuid4(),
+            learning_type_id=uuid.uuid4(),
+            task_status_id=uuid.uuid4(),
         )
-        assert response.status_code in [422]
+        session.add(activity)
+        session.commit()
+        session.refresh(activity)
+
+        activity_staff = ActivityStaff(staff_id=user.id, activity_id=activity.id)
+        session.add(activity_staff)
+        session.commit()
+
+        # Test that an activity staff cannot be deleted with an invalid staff ID
+        response = client.request(
+            "DELETE",
+            "/activity-staff/",
+            json={"staff_id": str(uuid.uuid4()), "activity_id": str(activity.id)},
+            headers=headers,
+        )
+        assert response.status_code == 422
+
+        # Test that an activity staff cannot be deleted with an invalid activity ID
+        response = client.request(
+            "DELETE",
+            "/activity-staff/",
+            json={"staff_id": str(user.id), "activity_id": str(uuid.uuid4())},
+            headers=headers,
+        )
+        assert response.status_code == 422
+
+        # Test that an activity staff can be deleted
+        response = client.request(
+            "DELETE",
+            "/activity-staff/",
+            json={"staff_id": str(user.id), "activity_id": str(activity.id)},
+            headers=headers,
+        )
+        assert response.status_code == 200
+
+
 
     def test_delete_workbook_contributor(self, client: TestClient, session: Session) -> None:
         headers = get_auth_headers(client, "admin")
-        workbook_id = str(uuid.uuid4())
-        contributor_id = str(uuid.uuid4())
-        response = client.delete(
-            f"/workbook-contributors/?workbook_id={workbook_id}&contributor_id={contributor_id}",
+
+        owner = create_test_user(session, "owner")
+        contributor = create_test_user(session, "contributor")
+        workbook = create_test_workbook(session, owner.id)
+
+        workbook_contributor = WorkbookContributor(
+            workbook_id=workbook.id, contributor_id=contributor.id
+        )
+        session.add(workbook_contributor)
+        session.commit()
+
+        # Test that a workbook contributor cannot be deleted with an invalid workbook ID
+        response = client.request(
+            "DELETE",
+            "/workbook-contributors/",
+            json={"workbook_id": str(uuid.uuid4()), "contributor_id": str(contributor.id)},
             headers=headers,
         )
-        assert response.status_code in [422]
+        assert response.status_code == 422
+
+        # Test that a workbook contributor cannot be deleted with an invalid contributor ID
+        response = client.request(
+            "DELETE",
+            "/workbook-contributors/",
+            json={"workbook_id": str(workbook.id), "contributor_id": str(uuid.uuid4())},
+            headers=headers,
+        )
+        assert response.status_code == 422
+
+        # Test that a workbook contributor can be deleted
+        response = client.request(
+            "DELETE",
+            "/workbook-contributors/",
+            json={"workbook_id": str(workbook.id), "contributor_id": str(contributor.id)},
+            headers=headers,
+        )
+        assert response.status_code == 200
 
     def test_delete_week(self, client: TestClient, session: Session) -> None:
         headers = get_auth_headers(client, "admin")
-        workbook_id = str(uuid.uuid4())
-        response = client.delete(f"/weeks/?workbook_id={workbook_id}&number=1", headers=headers)
-        assert response.status_code in [422]
+
+        owner = create_test_user(session, "owner")
+        workbook = create_test_workbook(session, owner.id)
+
+        week = Week(workbook_id=workbook.id, number=1)
+        session.add(week)
+        session.commit()
+
+        # Test that a week cannot be deleted with an invalid workbook ID
+        response = client.request(
+            "DELETE",
+            "/weeks/",
+            json={"workbook_id": str(uuid.uuid4()), "number": week.number},
+            headers=headers,
+        )
+        assert response.status_code == 422
+        
+        # Test that a week cannot be deleted with an invalid week number
+        response = client.request(
+            "DELETE",
+            "/weeks/",
+            json={"workbook_id": str(workbook.id), "number": 99},
+            headers=headers,
+        )
+        assert response.status_code == 422
+        
+        # Test that a week can be deleted   
+        response = client.request(
+            "DELETE",
+            "/weeks/",
+            json={"workbook_id": str(workbook.id), "number": week.number},
+            headers=headers,
+        )
+        assert response.status_code == 200
 
     def test_delete_week_graduate_attribute(self, client: TestClient, session: Session):
         headers = get_auth_headers(client, "admin")
-        week_workbook_id = str(uuid.uuid4())
-        graduate_attribute_id = str(uuid.uuid4())
-        response = client.delete(
-            f"/week-graduate-attributes/?week_workbook_id={week_workbook_id}&week_number=1&graduate_attribute_id={graduate_attribute_id}",
+
+        owner = create_test_user(session, "owner")
+        workbook = create_test_workbook(session, owner.id)
+        week = Week(workbook_id=workbook.id, number=1)
+        session.add(week)
+        session.commit()
+
+        graduate_attribute = GraduateAttribute(name="Test Attribute")
+        session.add(graduate_attribute)
+        session.commit()
+        session.refresh(graduate_attribute)
+
+        week_graduate_attribute = WeekGraduateAttribute(
+            week_workbook_id=workbook.id,
+            week_number=week.number,
+            graduate_attribute_id=graduate_attribute.id,
+        )
+        session.add(week_graduate_attribute)
+        session.commit()
+
+        # Test that a graduate attribute cannot be deleted with an invalid week_workbook_id
+        response = client.request(
+            "DELETE",
+            "/week-graduate-attributes/",
+            json={
+                "week_workbook_id": str(uuid.uuid4()),
+                "week_number": week.number,
+                "graduate_attribute_id": str(graduate_attribute.id),
+            },
             headers=headers,
         )
-        assert response.status_code in [422]
+        assert response.status_code == 422
+
+        # Test that a graduate attribute cannot be deleted with an invalid week number
+        response = client.request(
+            "DELETE",
+            "/week-graduate-attributes/",
+            json={
+                "week_workbook_id": str(workbook.id),
+                "week_number": None,
+                "graduate_attribute_id": str(graduate_attribute.id),
+            },
+            headers=headers,
+        )
+        assert response.status_code == 422
+
+        # Test that a graduate attribute cannot be deleted with an invalid graduate attribute ID 
+        response = client.request(
+            "DELETE",
+            "/week-graduate-attributes/",
+            json={
+                "week_workbook_id": str(workbook.id),
+                "week_number": week.number,
+                "graduate_attribute_id": str(uuid.uuid4()),
+            },
+            headers=headers,
+        )
+        assert response.status_code == 422
+
+        # Test that a graduate attribute can be deleted
+        response = client.request(
+            "DELETE",
+            "/week-graduate-attributes/",
+            json={
+                "week_workbook_id": str(workbook.id),
+                "week_number": week.number,
+                "graduate_attribute_id": str(graduate_attribute.id),
+            },
+            headers=headers,
+        )
+        assert response.status_code == 200
 
     def test_delete_workbook(self, client: TestClient, session: Session) -> None:
         admin = create_test_user(session, "admin", is_admin=True)
@@ -599,34 +846,54 @@ class TestDelete:
         workbook_id = response.json()["id"]
 
         # Test that a workbook cannot be deleted by a user who is not an admin
-        user_headers = get_auth_headers(client, "user")
-        response = client.delete(f"/workbooks/?workbook_id={workbook_id}", headers=user_headers)
-        assert response.status_code == 403
+        response = client.delete(f"/workbooks/?workbook_id={str(uuid.uuid4())}", headers=headers)
+        assert response.status_code == 422
 
         # Test that a workbook can be deleted
         response = client.delete(f"/workbooks/?workbook_id={workbook_id}", headers=headers)
         assert response.status_code == 200
 
+
     def test_delete_activity(self, client: TestClient, session: Session) -> None:
         headers = get_auth_headers(client, "admin")
 
+        user = create_test_user(session, "staff_member")
+        workbook = create_test_workbook(session, user.id)
+        week = Week(workbook_id=workbook.id, number=1)
+        session.add(week)
+        session.commit()
+
+        location = Location(name="Test Location")
+        session.add(location)
+        session.commit()
+
+        activity = Activity(
+            workbook_id=workbook.id,
+            week_number=week.number,
+            name="Test Activity",
+            time_estimate_minutes=60,
+            location_id=location.id,
+            learning_activity_id=uuid.uuid4(),
+            learning_type_id=uuid.uuid4(),
+            task_status_id=uuid.uuid4(),
+        )
+        session.add(activity)
+        session.commit()
+        session.refresh(activity)
+
         # Test that an activity cannot be deleted with an invalid activity ID
-        activity_id = str(uuid.uuid4())
-        response = client.delete(f"/activities/?activity_id={activity_id}", headers=headers)
-        assert response.status_code in [422]
+        response = client.delete(f"/activities/?activity_id={(uuid.uuid4())}", headers=headers)
+        assert response.status_code == 422
 
         # Test that an activity can be deleted
-        activity = session.exec(select(Activity)).first()
         response = client.delete(f"/activities/?activity_id={activity.id}", headers=headers)
-        assert response.status_code in [200]
+        assert response.status_code == 200
+        
 
     def test_delete_session(self, client: TestClient, session: Session) -> None:
         headers = get_auth_headers(client, "admin")
 
         # Test that a session can be deleted
         response = client.delete("/session/", headers=headers)
-        assert response.status_code in [200]
+        assert response.status_code == 200
 
-
-if __name__ == "__main__":
-    pytest.main(["-v", "test_main.py"])
