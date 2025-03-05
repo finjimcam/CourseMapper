@@ -102,6 +102,10 @@ def session() -> Generator[Session, None, None]:
 
 
 def create_test_user(session: Session, name: str, is_admin: bool = False) -> User:
+    """
+    Create a test user with the given name and admin status.
+    """
+
     group_name = "Admin" if is_admin else "User"
     group = session.exec(
         select(PermissionsGroup).where(PermissionsGroup.name == group_name)
@@ -120,6 +124,10 @@ def create_test_user(session: Session, name: str, is_admin: bool = False) -> Use
 
 
 def create_test_workbook(session: Session, user_id: uuid.UUID) -> Workbook:
+    """
+    Create a test workbook with the given user as the course lead.
+    """
+
     platform = LearningPlatform(name="Test Platform")
     location = Location(name="Test Location")
     task_status = TaskStatus(name="Test Status")
@@ -143,6 +151,10 @@ def create_test_workbook(session: Session, user_id: uuid.UUID) -> Workbook:
 
 
 def get_auth_headers(client: TestClient, username: str) -> Dict[str, str]:
+    """
+    Get the authorization headers for the given username.
+    """
+
     response = client.post(f"/session/{username}")
     assert response.status_code == 200
     cookie = response.headers["set-cookie"]
@@ -150,6 +162,9 @@ def get_auth_headers(client: TestClient, username: str) -> Dict[str, str]:
 
 
 def test_permission_checks(client: TestClient, session: Session) -> None:
+    """
+    Test that the permission checks work as intended.
+    """
 
     owner = create_test_user(session, "owner")
     contributor = create_test_user(session, "contributor")
