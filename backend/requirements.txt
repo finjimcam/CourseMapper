@@ -5,3 +5,4 @@ sqlmodel
 pandas
 pandas-stubs
 fastapi_sessions
+pytest

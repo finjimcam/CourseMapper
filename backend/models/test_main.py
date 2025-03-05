@@ -32,8 +32,8 @@ from typing import Generator, Any
 import uuid
 import datetime
 
-from main import app, get_session
-from models.database import create_db_and_tables
+from main import app
+from models.database import create_db_and_tables, get_session
 from models.models_base import (
     User,
     PermissionsGroup,
