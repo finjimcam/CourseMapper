@@ -18,6 +18,10 @@ along with this program at /LICENSE.md. If not, see <https://www.gnu.org/license
 __-----------------------------------------------------------------------------------__
 
 This module defines the models and links of the database.
+
+It defines both data models (SQLModels) and tables in the database (table=true). The
+former are used to pass information between the front- and backend, and the latter are
+used for storing data in the database.
 """
 
 import datetime

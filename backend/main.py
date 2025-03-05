@@ -20,7 +20,8 @@ __------------------------------------------------------------------------------
 This module defines the actual API using functionality from the other files in /backend/.
 
 The hooks defined include delete, fetch, patch, and post requests. User authentication
-is also implemented in this file.
+is also implemented in this file, as it is tightly coupled with the specific API hook
+being called.
 """
 
 from typing import Annotated, AsyncGenerator, List, Dict, Any, cast, TypeVar
