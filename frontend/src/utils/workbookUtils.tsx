@@ -17,7 +17,7 @@ along with this program at /LICENSE.md. If not, see <https://www.gnu.org/license
 */
 
 import { ApexOptions } from 'apexcharts';
-import { learningTypeColors } from '../components/CustomBadge';
+import { learningTypeColors } from './colorMappings';
 import axios from 'axios';
 
 export const FONT_SIZE = '16px';
@@ -73,6 +73,17 @@ export interface WorkbookData {
   course_name: string;
 }
 
+export interface GraduateAttribute {
+  id: string;
+  name: string;
+}
+
+export interface WeeklyGraduateAttribute {
+  graduate_attribute_id: string;
+  week_workbook_id: string;
+  week_number: number;
+}
+
 export interface ActivityData {
   id: string;
   name: string;
@@ -99,6 +110,17 @@ export interface WeekData {
 export interface WeekInfo {
   weekNumber: number;
   data: WeekData[];
+}
+
+export interface LearningActivity {
+  id: string;
+  name: string;
+  platform_id: string;
+}
+
+export interface ActivityStaff {
+  staff_id: string;
+  activity_id: string;
 }
 
 export interface WorkbookDetailsResponse {
@@ -211,6 +233,44 @@ export const canUserEdit = async (workbook_id: string): Promise<boolean> => {
       return false;
     }
   });
+};
+
+// EditWorkbook specific utilities
+export const defaultActivityForm: Partial<Activity> = {
+  name: '',
+  time_estimate_minutes: 0,
+  location_id: '',
+  learning_activity_id: '',
+  learning_type_id: '',
+  task_status_id: '',
+  staff_id: '',
+};
+
+export const formatISODate = (date: Date) => date.toISOString().split('T')[0];
+
+export const recalcWeeks = (startDate: string, weeksList: Week[]): Week[] =>
+  weeksList.map((week, idx) => {
+    const weekStart = new Date(startDate);
+    weekStart.setDate(weekStart.getDate() + idx * 7);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 6);
+    return {
+      ...week,
+      start_date: formatISODate(weekStart),
+      end_date: formatISODate(weekEnd),
+    };
+  });
+
+export const validateActivity = (activity: Partial<Activity>): string[] => {
+  const errors: string[] = [];
+  if (!activity.name) errors.push('Activity name is required');
+  if (!activity.time_estimate_minutes) errors.push('Time estimate is required');
+  if (!activity.location_id) errors.push('Location is required');
+  if (!activity.learning_activity_id) errors.push('Learning activity is required');
+  if (!activity.learning_type_id) errors.push('Learning type is required');
+  if (!activity.task_status_id) errors.push('Task status is required');
+  if (!activity.staff_id) errors.push('Staff member is required');
+  return errors;
 };
 
 export const getErrorMessage = (err: unknown) =>

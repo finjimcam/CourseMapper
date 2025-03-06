@@ -25,13 +25,12 @@ import { HiPencil } from 'react-icons/hi';
 import CourseHeader from '../components/CourseDetailsHeader';
 import WeeksTabs from '../components/WeekActivityTabEdit';
 import ErrorModal from '../components/modals/ErrorModal';
-import WorkbookEditModal from '../components/modals/CourseDetailsEditModal';
+import CourseDetailsEditModal from '../components/modals/CourseDetailsEditModal';
 import ActivityModal from '../components/modals/ActivityModal';
 import WeeklyAttributes from '../components/WeeklyAttributes';
 import {
   WorkbookDetailsResponse,
   User,
-  LearningPlatform,
   formatMinutes,
   WeekInfo,
   Workbook,
@@ -40,31 +39,14 @@ import {
   GenericData,
   getErrorMessage,
   getContributors,
+  isCourseLead,
+  LearningActivity,
+  ActivityStaff,
+  defaultActivityForm,
+  formatISODate,
+  recalcWeeks,
+  validateActivity,
 } from '../utils/workbookUtils';
-
-// --- Type definitions ---
-interface LearningActivity {
-  id: string;
-  name: string;
-  platform_id: string;
-}
-
-interface ActivityStaff {
-  staff_id: string;
-  activity_id: string;
-}
-
-// --- Helpers & Defaults ---
-const defaultActivityForm: Partial<Activity> = {
-  name: '',
-  time_estimate_minutes: 0,
-  location_id: '',
-  learning_activity_id: '',
-  learning_type_id: '',
-  task_status_id: '',
-  staff_id: '',
-};
-const formatISODate = (date: Date) => date.toISOString().split('T')[0];
 
 function EditWorkbook(): JSX.Element {
   const navigate = useNavigate();
@@ -77,6 +59,7 @@ function EditWorkbook(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<boolean>(false);
   const [contributors, setContributors] = useState<User[]>([]);
+  const [isUserCourseLead, setIsUserCourseLead] = useState<boolean>(false);
 
   // Modal states
   const [showValidationModal, setShowValidationModal] = useState<boolean>(false);
@@ -98,8 +81,8 @@ function EditWorkbook(): JSX.Element {
   });
 
   // Reference data states
-  const [learningPlatforms, setLearningPlatforms] = useState<LearningPlatform[]>([]);
   const [locations, setLocations] = useState<GenericData[]>([]);
+  const [learningPlatforms, setLearningPlatforms] = useState<GenericData[]>([]);
   const [learningActivities, setLearningActivities] = useState<LearningActivity[]>([]);
   const [learningTypes, setLearningTypes] = useState<GenericData[]>([]);
   const [taskStatuses, setTaskStatuses] = useState<GenericData[]>([]);
@@ -133,6 +116,7 @@ function EditWorkbook(): JSX.Element {
         });
 
         setContributors(await getContributors(workbookDetails.workbook.id));
+        setIsUserCourseLead(await isCourseLead(workbookDetails.workbook.id));
 
         // Fetch weeks, activities and staff-activity relationships
         const [weeksRes, activitiesRes, staffActivitiesRes] = await Promise.all([
@@ -164,24 +148,24 @@ function EditWorkbook(): JSX.Element {
         // Fetch reference data
         const [
           locationsRes,
-          learningPlatformsRes,
           learningActivitiesRes,
+          learningPlatformsRes,
           learningTypesRes,
           taskStatusesRes,
           usersRes,
         ] = await Promise.all([
           axios.get(`${import.meta.env.VITE_API}/locations/`),
-          axios.get(`${import.meta.env.VITE_API}/learning-platforms/`),
           axios.get(
             `${import.meta.env.VITE_API}/learning-activities/?learning_platform_id=${workbookDetails.learning_platform.id}`
           ),
+          axios.get(`${import.meta.env.VITE_API}/learning-platforms/`),
           axios.get(`${import.meta.env.VITE_API}/learning-types/`),
           axios.get(`${import.meta.env.VITE_API}/task-statuses/`),
           axios.get(`${import.meta.env.VITE_API}/users/`),
         ]);
         setLocations(locationsRes.data);
-        setLearningPlatforms(learningPlatformsRes.data);
         setLearningActivities(learningActivitiesRes.data);
+        setLearningPlatforms(learningPlatformsRes.data);
         setLearningTypes(learningTypesRes.data);
         setTaskStatuses(taskStatusesRes.data);
         setUsers(usersRes.data);
@@ -193,20 +177,6 @@ function EditWorkbook(): JSX.Element {
     };
     fetchData();
   }, [workbook_id]);
-
-  // Recalculate week dates based on a new start date
-  const recalcWeeks = (startDate: string, weeksList: Week[]): Week[] =>
-    weeksList.map((week, idx) => {
-      const weekStart = new Date(startDate);
-      weekStart.setDate(weekStart.getDate() + idx * 7);
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekEnd.getDate() + 6);
-      return {
-        ...week,
-        start_date: formatISODate(weekStart),
-        end_date: formatISODate(weekEnd),
-      };
-    });
 
   const handleAddWeek = async () => {
     if (!workbookData || !workbook_id) return;
@@ -276,8 +246,10 @@ function EditWorkbook(): JSX.Element {
     }
   };
 
-  const handleWorkbookFieldChange = (field: string, value: string) => {
+  const handleWorkbookFieldChange = async (field: string, value: string) => {
     const field_name = field.split('.');
+
+    // Update state immediately for live display
     if (field_name[0] === 'workbook') {
       setWorkbookData((prev) =>
         prev ? { ...prev, workbook: { ...prev.workbook, [field_name[1]]: value } } : prev
@@ -304,9 +276,8 @@ function EditWorkbook(): JSX.Element {
           : prev
       );
     }
-  };
 
-  const handleSaveWorkbook = async () => {
+    // Save changes to backend
     if (!workbookData || !workbook_id) return;
     try {
       await axios.patch(`${import.meta.env.VITE_API}/workbooks/${workbook_id}`, {
@@ -316,21 +287,14 @@ function EditWorkbook(): JSX.Element {
         course_lead_id: workbookData.course_lead.id,
         learning_platform_id: workbookData.learning_platform.id,
       });
-      const updatedWeeks = recalcWeeks(workbookData.workbook.start_date, weeks);
-      setWeeks(updatedWeeks);
-      setWorkbookData((prev) =>
-        prev
-          ? {
-              ...prev,
-              end_date: updatedWeeks.length
-                ? updatedWeeks[updatedWeeks.length - 1].end_date
-                : prev.workbook.start_date,
-            }
-          : prev
-      );
-      setShowWorkbookModal(false);
+
+      // Handle week dates if start date changed
+      if (field_name[1] === 'start_date') {
+        const updatedWeeks = recalcWeeks(value, weeks);
+        setWeeks(updatedWeeks);
+      }
     } catch (err) {
-      setError(getErrorMessage(err));
+      console.error('Error saving changes:', getErrorMessage(err));
     }
   };
 
@@ -371,18 +335,6 @@ function EditWorkbook(): JSX.Element {
     } catch (err) {
       setError(getErrorMessage(err));
     }
-  };
-
-  const validateActivity = (activity: Partial<Activity>): string[] => {
-    const errors: string[] = [];
-    if (!activity.name) errors.push('Activity name is required');
-    if (!activity.time_estimate_minutes) errors.push('Time estimate is required');
-    if (!activity.location_id) errors.push('Location is required');
-    if (!activity.learning_activity_id) errors.push('Learning activity is required');
-    if (!activity.learning_type_id) errors.push('Learning type is required');
-    if (!activity.task_status_id) errors.push('Task status is required');
-    if (!activity.staff_id) errors.push('Staff member is required');
-    return errors;
   };
 
   const handleSaveActivity = async () => {
@@ -543,14 +495,14 @@ function EditWorkbook(): JSX.Element {
         onClose={() => setShowActivityErrorModal(false)}
         buttonText="OK"
       />
-      <WorkbookEditModal
+      <CourseDetailsEditModal
         show={showWorkbookModal}
         workbook={workbookData}
         users={users}
         learningPlatforms={learningPlatforms}
         weeksCount={weeks.length}
-        onSave={handleSaveWorkbook}
         onCancel={() => setShowWorkbookModal(false)}
+        onSave={() => setShowWorkbookModal(false)}
         onChange={handleWorkbookFieldChange}
       />
       <ActivityModal
@@ -574,9 +526,11 @@ function EditWorkbook(): JSX.Element {
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center gap-2">
             <CourseHeader workbook={workbookData} contributors={contributors} />
-            <Button size="xs" color="light" onClick={() => setShowWorkbookModal(true)}>
-              <HiPencil className="h-4 w-4" />
-            </Button>
+            {isUserCourseLead ? (
+              <Button size="xs" color="light" onClick={() => setShowWorkbookModal(true)}>
+                <HiPencil className="h-4 w-4" />
+              </Button>
+            ) : null}
           </div>
           <div className="flex flex-col items-end gap-2">
             <Button

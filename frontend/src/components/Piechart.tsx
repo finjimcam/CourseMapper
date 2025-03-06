@@ -20,7 +20,7 @@ import React, { useState, useEffect } from 'react';
 import ReactApexChart from 'react-apexcharts';
 import { ApexOptions } from 'apexcharts';
 import axios from 'axios';
-import { graduateAttributeColors } from './CustomBadge';
+import { graduateAttributeColors } from '../utils/colorMappings';
 import { FONT_SIZE, getErrorMessage } from '../utils/workbookUtils';
 
 interface WeekGraduateAttribute {
