@@ -19,10 +19,9 @@ along with this program at /LICENSE.md. If not, see <https://www.gnu.org/license
 import React from 'react';
 import ReactApexChart from 'react-apexcharts';
 import { Table } from 'flowbite-react';
-import { CustomBadge, graduateAttributeColors } from './CustomBadge';
+import { CustomBadge } from './CustomBadge';
 import { ApexOptions } from 'apexcharts';
 import fontColorContrast from 'font-color-contrast';
-import { normalizeKey } from '../utils/stringUtils';
 
 interface GraduateAttributesChartProps {
   data: {
@@ -41,8 +40,8 @@ const GraduateAttributesChart: React.FC<GraduateAttributesChartProps> = ({
 }) => {
   const chartOptions: ApexOptions = {
     chart: {
-      width: 600,
-      height: 600,
+      width: 800,
+      height: 500,
       type: 'pie',
       animations: {
         enabled: true,
@@ -55,46 +54,55 @@ const GraduateAttributesChart: React.FC<GraduateAttributesChartProps> = ({
     colors: data.colors,
     legend: {
       position: 'right',
-      height: 600,
-      fontSize: '16px',
+      fontSize: '14px',
       markers: {
-        width: 12,
-        height: 12,
-        radius: 6,
+        width: 10,
+        height: 10,
+        radius: 5,
+      },
+      itemMargin: {
+        horizontal: 5,
+        vertical: 3,
+      },
+      containerMargin: {
+        left: 0,
+        top: 0,
       },
       // eslint-disable-next-line
       formatter: function (seriesName: string, opts?: any) {
         const value = opts.w.globals.series[opts.seriesIndex];
-        const color = data.colors[opts.seriesIndex];
+        const color = value > 0 ? data.colors[opts.seriesIndex] : '#6c757d';
         const style =
           value > 0
             ? `color: ${color}; font-weight: bold;`
-            : `color: ${color}; opacity: 0.5; font-style: italic;`;
+            : `color: ${color}; font-style: italic;`;
         return `<span style="${style}">${seriesName}${value > 0 ? `: ${value}` : ''}</span>`;
       },
     },
     dataLabels: {
-      enabled: false
+      enabled: false,
     },
     tooltip: {
       enabled: true,
       theme: 'dark',
-      custom: function({ seriesIndex, w }) {
+      custom: function ({ seriesIndex, w }) {
         const hexColor = w.globals.colors[seriesIndex];
         const textColor = fontColorContrast(hexColor, 0.7);
         const label = w.globals.labels[seriesIndex];
-        
-        return `<div style="background-color: ${hexColor}; padding: 8px; border-radius: 4px;">` +
+
+        return (
+          `<div style="background-color: ${hexColor}; padding: 8px; border-radius: 4px;">` +
           `<span style="color: ${textColor}; font-size: 14px;">${label} </span>` +
-          '</div>';
-      }
+          '</div>'
+        );
+      },
     },
     responsive: [
       {
         breakpoint: 480,
         options: {
           chart: {
-            width: 600,
+            width: 400,
           },
           legend: {
             position: 'bottom',

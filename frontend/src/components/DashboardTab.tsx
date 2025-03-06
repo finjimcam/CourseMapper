@@ -20,7 +20,8 @@ along with this program at /LICENSE.md. If not, see <https://www.gnu.org/license
 import React, { useState, useEffect } from 'react';
 import { Table } from 'flowbite-react';
 import ReactApexChart from 'react-apexcharts';
-import { CustomBadge, learningTypeColors, graduateAttributeColors } from './CustomBadge';
+import { CustomBadge } from './CustomBadge';
+import { learningTypeColors, graduateAttributeColors } from '../utils/colorMappings';
 import GraduateAttributesChart from './GraduateAttributesChart';
 import axios from 'axios';
 import { normalizeKey } from '../utils/stringUtils';

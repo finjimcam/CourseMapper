@@ -16,22 +16,14 @@ You should have received a copy of the GNU General Public License
 along with this program at /LICENSE.md. If not, see <https://www.gnu.org/licenses/>.
 */
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios, { AxiosError } from 'axios';
-import { CustomBadge, graduateAttributeColors } from './CustomBadge';
+import { CustomBadge } from './CustomBadge';
+import { graduateAttributeColors } from '../utils/colorMappings';
 import { normalizeKey } from '../utils/stringUtils';
 import { getErrorMessage, canUserEdit } from '../utils/workbookUtils';
 
-interface GraduateAttribute {
-  id: string;
-  name: string;
-}
-
-interface WeeklyGraduateAttribute {
-  graduate_attribute_id: string;
-  week_workbook_id: string;
-  week_number: number;
-}
+import { GraduateAttribute, WeeklyGraduateAttribute } from '../utils/workbookUtils';
 
 interface WeeklyAttributesProps {
   weekNumber: number;
@@ -51,7 +43,7 @@ const WeeklyAttributes: React.FC<WeeklyAttributesProps> = ({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const refreshAttributes = async () => {
+  const refreshAttributes = useCallback(async () => {
     try {
       const selectedRes = await axios.get(
         `${import.meta.env.VITE_API}/week-graduate-attributes/`,
@@ -75,13 +67,13 @@ const WeeklyAttributes: React.FC<WeeklyAttributesProps> = ({
     } catch (error: unknown) {
       setError(`Failed to refresh attributes. Please try again. Error: ${getErrorMessage(error)}`);
     }
-  };
+  }, [weekNumber, workbookId, graduateAttributes]);
 
   // Effect for handling week changes
   useEffect(() => {
     setSelectedAttributes([]); // Clear selected attributes immediately on week change
     refreshAttributes(); // Fetch new attributes for the current week
-  }, [weekNumber]);
+  }, [weekNumber, refreshAttributes]);
 
   // Effect for fetching graduate attributes
   useEffect(() => {

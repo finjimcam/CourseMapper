@@ -19,7 +19,8 @@ along with this program at /LICENSE.md. If not, see <https://www.gnu.org/license
 // src/components/WeekActivityTab.tsx
 import React from 'react';
 import { Table, Button, Tooltip } from 'flowbite-react';
-import { CustomBadge, learningTypeColors, statusColors } from './CustomBadge';
+import { CustomBadge } from './CustomBadge';
+import { learningTypeColors, statusColors } from '../utils/colorMappings';
 import { WeekInfo, WeekData, Activity } from '../utils/workbookUtils';
 import { HiPencil, HiTrash } from 'react-icons/hi';
 

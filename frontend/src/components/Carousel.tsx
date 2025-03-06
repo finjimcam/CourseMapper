@@ -19,8 +19,11 @@ along with this program at /LICENSE.md. If not, see <https://www.gnu.org/license
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
+const MAX_ITEMS = 5; // Maximum number of items to display
+
 interface CarouselItem {
   id: number;
+  workbookId?: string; // Optional field for actual workbook ID
   start_date: string;
   end_date: string;
   course_lead_id: string;
@@ -32,27 +35,34 @@ interface CarouselItem {
 
 function Carousel({ items }: { items: Array<CarouselItem> }) {
   const [currentPosition, setCurrentPosition] = useState(0);
-  const carouselSize = 3;
+  const carouselSize = 5;
   const [visibleItems, setVisibleItems] = useState<Array<CarouselItem>>([]);
 
   useEffect(() => {
-    if (items.length < carouselSize) {
-      setVisibleItems(items);
+    // Limit total items to MAX_ITEMS
+    const limitedItems = items.slice(0, MAX_ITEMS);
+
+    if (limitedItems.length < carouselSize) {
+      setVisibleItems(limitedItems);
     } else {
       const settingItems: CarouselItem[] = [];
       for (let i = currentPosition; i < currentPosition + carouselSize; i++) {
-        settingItems.push(items[i % items.length]);
+        settingItems.push(limitedItems[i % limitedItems.length]);
       }
       setVisibleItems(settingItems);
     }
   }, [currentPosition, items]);
 
+  const limitedItems = items.slice(0, MAX_ITEMS);
+
   const nextSlide = () => {
-    setCurrentPosition((prevPosition) => (prevPosition + 1) % items.length);
+    setCurrentPosition((prevPosition) => (prevPosition + 1) % limitedItems.length);
   };
 
   const prevSlide = () => {
-    setCurrentPosition((prevPosition) => (prevPosition - 1 + items.length) % items.length);
+    setCurrentPosition(
+      (prevPosition) => (prevPosition - 1 + limitedItems.length) % limitedItems.length
+    );
   };
 
   return (
@@ -62,11 +72,11 @@ function Carousel({ items }: { items: Array<CarouselItem> }) {
         {visibleItems.map((item) => (
           <div
             key={item.id}
-            className={`carousel-item ${currentPosition === items.indexOf(item) ? 'block' : 'hidden'} duration-700 ease-in-out`}
+            className={`carousel-item ${currentPosition === limitedItems.indexOf(item) ? 'block' : 'hidden'} duration-700 ease-in-out`}
             data-carousel-item
           >
             <Link
-              to={`/workbook/${item.id}`}
+              to={`/workbook/${item.workbookId || item.id}`}
               style={{ color: 'inherit', textDecoration: 'inherit' }}
             >
               <div className="absolute block w-full h-full bg-gray-100 rounded-lg shadow-lg p-4">
@@ -82,8 +92,8 @@ function Carousel({ items }: { items: Array<CarouselItem> }) {
       </div>
 
       {/* Slider indicators */}
-      <div className="absolute z-30 flex -translate-x-1/2 bottom-5 left-1/2 space-x-3 rtl:space-x-reverse">
-        {visibleItems.map((_, index) => (
+      <div className="absolute z-10 flex -translate-x-1/2 bottom-5 left-1/2 space-x-3 rtl:space-x-reverse">
+        {limitedItems.map((_, index) => (
           <button
             key={index}
             type="button"
@@ -99,7 +109,7 @@ function Carousel({ items }: { items: Array<CarouselItem> }) {
       {/* Slider controls */}
       <button
         type="button"
-        className="absolute top-0 start-0 z-30 flex items-center justify-center h-full px-4 cursor-pointer group focus:outline-none"
+        className="absolute top-0 start-0 z-10 flex items-center justify-center h-full px-4 cursor-pointer group focus:outline-none"
         onClick={prevSlide}
         data-carousel-prev
       >
@@ -124,7 +134,7 @@ function Carousel({ items }: { items: Array<CarouselItem> }) {
 
       <button
         type="button"
-        className="absolute top-0 end-0 z-30 flex items-center justify-center h-full px-4 cursor-pointer group focus:outline-none"
+        className="absolute top-0 end-0 z-10 flex items-center justify-center h-full px-4 cursor-pointer group focus:outline-none"
         onClick={nextSlide}
         data-carousel-next
       >
