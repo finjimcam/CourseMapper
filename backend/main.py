@@ -444,12 +444,28 @@ def delete_week(
         return {"ok": True}
 
     db_workbook.number_of_weeks -= 1
+    # save all other activities
+    erroneously_deleted_activities = list(session.exec(select(Activity).where((Activity.week_number == db_week.number) & (Activity.workbook_id != db_workbook.id))).all())
+    # renumber to sentry
+    for activity in erroneously_deleted_activities:
+        activity.week_number = -1
+        session.add(activity)
+        session.commit()
+        session.refresh(activity)
+    # delete week
     session.add(db_workbook)
     session.delete(db_week)
     session.commit()
-    # delete this week's activities
+    # delete related activities
     for activity in db_week.activities:
         session.delete(activity)
+    session.commit()
+    # recreate activities
+    for activity in erroneously_deleted_activities:
+        activity.week_number = db_week.number
+        session.add(activity)
+        session.commit()
+        session.refresh(activity)
     # loop through weeks of linked_workbook and update their numbers to maintain continuity
     for other_week in db_workbook.weeks:
         if other_week.number is None:
