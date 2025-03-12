@@ -469,6 +469,12 @@ class Workbook(WorkbookBase, table=True):
     course_lead: Optional["User"] = Relationship(back_populates="workbooks_leading")
     learning_platform: Optional["LearningPlatform"] = Relationship(back_populates="workbooks")
 
+    area_id: uuid.UUID = Field(foreign_key="area.id")
+    school_id: Optional[uuid.UUID] = Field(default=None, foreign_key="schools.id")
+
+    area: "Area" = Relationship(back_populates="workbooks")
+    school: Optional["Schools"] = Relationship(back_populates="workbooks")
+
     weeks: list["Week"] = Relationship(back_populates="workbook")
     activities: list["Activity"] = Relationship(back_populates="workbook")
 
@@ -537,6 +543,8 @@ class WorkbookCreate(BaseModel):
     end_date: datetime.date = Field(nullable=False)
     course_name: str = Field(index=True)
     learning_platform_id: uuid.UUID = Field(foreign_key="learningplatform.id")
+    area_id: uuid.UUID = Field(foreign_key="area.id")
+    school_id: Optional[uuid.UUID] = Field(default=None, foreign_key="schools.id")
 
 
 class WorkbookUpdate(BaseModel):
@@ -555,6 +563,8 @@ class WorkbookUpdate(BaseModel):
     end_date: Optional[datetime.date] = None
     course_name: Optional[str] = None
     course_lead_id: Optional[uuid.UUID] = None
+    area_id: Optional[uuid.UUID] = None
+    school_id: Optional[uuid.UUID] = None
 
 
 class LearningPlatform(SQLModel, table=True):
@@ -938,3 +948,41 @@ class TaskStatus(SQLModel, table=True):
     name: str = Field(nullable=False)
 
     activities: list["Activity"] = Relationship(back_populates="task_status")
+
+
+class Area(SQLModel, table=True):
+    """The data and table model for a Area.
+
+    Attributes:
+        id: The UUID of the task status, generated at runtime (*NOT* user-specified).
+        name: The name of the Area.
+
+    N->1 Relationship Attributes:
+        schools: The schools that associate with this area.
+        workbooks: The workbooks that associate with this area
+    """
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    name: str = Field(nullable=False)
+
+    schools: list["Schools"] = Relationship(back_populates="area")
+    workbooks: list["Workbook"] = Relationship(back_populates="area")
+
+
+class Schools(SQLModel, table=True):
+    """The data and table model for a Schools.
+
+    Attributes:
+        id: The UUID of the task status, generated at runtime (*NOT* user-specified).
+        name: The name of the Schools.
+    N->1 Relationship Attributes:
+        area: The area that associate with this school.
+        workbooks: The workbooks that associate with this school
+    """
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    name: str = Field(nullable=False)
+    area_id: uuid.UUID = Field(foreign_key="area.id")
+
+    area: Optional[Area] = Relationship(back_populates="schools")
+    workbooks: list["Workbook"] = Relationship(back_populates="school")
