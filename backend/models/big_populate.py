@@ -220,7 +220,7 @@ def populate_many_workbooks() -> None:
         schools = session.exec(select(Schools)).all()
 
         # Organize Schools by Area
-        schools_by_area = {}
+        schools_by_area: Dict[uuid.UUID, List[Schools]] = {}
         for school in schools:
             if school.area_id not in schools_by_area:
                 schools_by_area[school.area_id] = []
