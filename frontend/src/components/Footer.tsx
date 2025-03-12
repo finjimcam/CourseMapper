@@ -86,12 +86,15 @@ export default function FooterComponent() {
           </ul>
         </div>
         <hr className="my-6 border-gray-200 sm:mx-auto dark:border-gray-700 lg:my-8" />
-        <span className="block text-sm text-gray-500 sm:text-center dark:text-gray-400">
-          © 2025{' '}
-          <a href="https://www.gla.ac.uk/" className="hover:underline">
-            University of Glasgow™
-          </a>
-          . All Rights Reserved.
+        <span className="block text-sm text-gray-500 sm:text-center dark:text-gray-400 sm:flex sm:flex-col sm:items-center">
+          <span>
+            © 2025{' '}
+            <a href="https://www.gla.ac.uk/" className="hover:underline">
+              University of Glasgow™
+            </a>
+            © 2025 Learning Innovation Support Unit. All Rights Reserved.
+          </span>
+          <span>The University of Glasgow is a registered Scottish charity: Registration Number SC004401.</span>
         </span>
       </div>
     </footer>
