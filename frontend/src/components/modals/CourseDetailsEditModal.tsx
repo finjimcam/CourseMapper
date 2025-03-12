@@ -20,6 +20,7 @@ along with this program at /LICENSE.md. If not, see <https://www.gnu.org/license
 import React, { useState, useEffect, useCallback } from 'react';
 import { Modal, Button, Label, TextInput, Select, Tabs, TabItem } from 'flowbite-react';
 import DatePicker from 'react-datepicker';
+import ConfirmModal from './ConfirmModal';
 import 'react-datepicker/dist/react-datepicker.css';
 import axios from 'axios';
 import {
@@ -52,6 +53,8 @@ const CourseDetailsEditModal: React.FC<CourseDetailsEditModalProps> = ({
   const [contributors, setContributors] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showLeadChangeModal, setShowLeadChangeModal] = useState(false);
+  const [newLeadId, setNewLeadId] = useState<string>('');
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
 
   const loadContributors = useCallback(async () => {
@@ -122,7 +125,20 @@ const CourseDetailsEditModal: React.FC<CourseDetailsEditModalProps> = ({
   };
 
   return (
-    <Modal show={show} onClose={onCancel}>
+    <>
+      <ConfirmModal
+        show={showLeadChangeModal}
+        title="Change Course Lead"
+        message="Are you sure you want to change the course lead? This will transfer all course lead permissions to the selected user."
+        onConfirm={() => {
+          onChange('course_lead.id', newLeadId);
+          setShowLeadChangeModal(false);
+        }}
+        onCancel={() => {
+          setShowLeadChangeModal(false);
+        }}
+      />
+      <Modal show={show} onClose={onCancel}>
       <Modal.Header>Edit Course Details</Modal.Header>
       <Modal.Body>
         <div className="space-y-4">
@@ -142,7 +158,10 @@ const CourseDetailsEditModal: React.FC<CourseDetailsEditModalProps> = ({
                   <Select
                     id="courseLead"
                     value={workbook.course_lead.id || ''}
-                    onChange={(e) => onChange('course_lead.id', e.target.value)}
+                    onChange={(e) => {
+                      setNewLeadId(e.target.value);
+                      setShowLeadChangeModal(true);
+                    }}
                   >
                     {users.map((user: GenericData) => (
                       <option key={user.id} value={user.id}>
@@ -239,7 +258,8 @@ const CourseDetailsEditModal: React.FC<CourseDetailsEditModalProps> = ({
           Close
         </Button>
       </Modal.Footer>
-    </Modal>
+      </Modal>
+    </>
   );
 };
 
