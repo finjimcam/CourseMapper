@@ -200,38 +200,52 @@ export const getContributors = async (workbook_id: string): Promise<User[]> => {
 };
 
 export const isCourseLead = async (workbook_id: string): Promise<boolean> => {
-  const workbookData = (
-    await axios.get<WorkbookDetailsResponse>(
+  const [workbookData, isAdminUser] = await Promise.all([
+    axios.get<WorkbookDetailsResponse>(
       `${import.meta.env.VITE_API}/workbooks/${workbook_id}/details`
-    )
-  ).data;
+    ).then(res => res.data),
+    isAdmin()
+  ]);
 
   return getUser().then((user) => {
-    if (workbookData.course_lead.id === user.id) {
+    if (workbookData.course_lead.id === user.id || isAdminUser) {
       return true;
-    } else {
-      return false;
     }
+    return false;
+  });
+};
+
+export const isAdmin = async (): Promise<boolean> => {
+  return getUser().then((user) => {
+    return axios.get(`${import.meta.env.VITE_API}/permissions-groups/`)
+      .then((response) => {
+        const permissionsGroups = response.data;
+        const userGroup = permissionsGroups.find(
+          (group: { id: string }) => group.id === user.permissions_group_id
+        );
+        return userGroup?.name === "Admin";
+      });
   });
 };
 
 export const canUserEdit = async (workbook_id: string): Promise<boolean> => {
-  const workbookData = (
-    await axios.get<WorkbookDetailsResponse>(
+  const [workbookData, contributors, isAdminUser] = await Promise.all([
+    axios.get<WorkbookDetailsResponse>(
       `${import.meta.env.VITE_API}/workbooks/${workbook_id}/details`
-    )
-  ).data;
-  const contributors = await getContributors(workbook_id);
+    ).then(res => res.data),
+    getContributors(workbook_id),
+    isAdmin()
+  ]);
 
   return getUser().then((user) => {
     if (
       workbookData.course_lead.id === user.id ||
-      contributors.some((con) => con.id === user.id)
+      contributors.some((con) => con.id === user.id) ||
+      isAdminUser
     ) {
       return true;
-    } else {
-      return false;
     }
+    return false;
   });
 };
 
