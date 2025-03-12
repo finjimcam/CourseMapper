@@ -21,6 +21,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { Spinner, Button } from 'flowbite-react';
 import { HiPencil } from 'react-icons/hi';
+import ConfirmModal from '../components/modals/ConfirmModal';
 
 import CourseHeader from '../components/CourseDetailsHeader';
 import WeeksTabs from '../components/WeekActivityTabEdit';
@@ -59,6 +60,10 @@ function EditWorkbook(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<boolean>(false);
   const [contributors, setContributors] = useState<User[]>([]);
+  const [showDeleteWeekModal, setShowDeleteWeekModal] = useState<boolean>(false);
+  const [weekToDelete, setWeekToDelete] = useState<number | null>(null);
+  const [showDeleteActivityModal, setShowDeleteActivityModal] = useState<boolean>(false);
+  const [activityToDelete, setActivityToDelete] = useState<{weekNumber: number; activityIndex: number} | null>(null);
   const [isUserCourseLead, setIsUserCourseLead] = useState<boolean>(false);
 
   // Modal states
@@ -220,7 +225,13 @@ function EditWorkbook(): JSX.Element {
     }
   };
 
+  const initiateDeleteWeek = (weekNumber: number) => {
+    setWeekToDelete(weekNumber);
+    setShowDeleteWeekModal(true);
+  };
+
   const handleDeleteWeek = async (weekNumber: number) => {
+    setShowDeleteWeekModal(false);
     if (!workbookData || !workbook_id) return;
     try {
       await axios.delete(`${import.meta.env.VITE_API}/weeks/`, {
@@ -310,7 +321,13 @@ function EditWorkbook(): JSX.Element {
     setShowActivityModal(true);
   };
 
+  const initiateDeleteActivity = (activityIndex: number, weekNumber: number) => {
+    setActivityToDelete({ weekNumber, activityIndex });
+    setShowDeleteActivityModal(true);
+  };
+
   const handleDeleteActivity = async (activityIndex: number, weekNumber: number) => {
+    setShowDeleteActivityModal(false);
     const activity = weeks.find((w) => w.number === weekNumber)?.activities[activityIndex];
     if (!activity?.id) return;
     try {
@@ -478,7 +495,24 @@ function EditWorkbook(): JSX.Element {
   if (!workbookData) return <div className="text-center mt-10">No workbook data available.</div>;
 
   return (
-    <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8">
+        <ConfirmModal
+          show={showDeleteWeekModal}
+          title="Delete Week"
+          message="Are you sure you want to delete this week? This action cannot be undone."
+          onConfirm={() => weekToDelete !== null && handleDeleteWeek(weekToDelete)}
+          onCancel={() => setShowDeleteWeekModal(false)}
+        />
+        <ConfirmModal
+          show={showDeleteActivityModal}
+          title="Delete Activity"
+          message="Are you sure you want to delete this activity? This action cannot be undone."
+          onConfirm={() => 
+            activityToDelete !== null && 
+            handleDeleteActivity(activityToDelete.activityIndex, activityToDelete.weekNumber)
+          }
+          onCancel={() => setShowDeleteActivityModal(false)}
+        />
       <ErrorModal
         show={showValidationModal}
         title="Cannot Save Changes"
@@ -552,7 +586,7 @@ function EditWorkbook(): JSX.Element {
         <WeeksTabs
           weeks={weeks}
           convertWeekToWeekInfo={convertWeekToWeekInfo}
-          onDeleteWeek={handleDeleteWeek}
+          onDeleteWeek={initiateDeleteWeek}
           onAddActivity={(weekNumber) => {
             setSelectedWeek(weekNumber);
             setShowActivityModal(true);
@@ -561,7 +595,7 @@ function EditWorkbook(): JSX.Element {
             setSelectedWeek(weekNumber);
             handleEditActivity(activity, index, weekNumber);
           }}
-          onDeleteActivity={handleDeleteActivity}
+          onDeleteActivity={initiateDeleteActivity}
           onWeekChange={(weekNumber) => setSelectedWeek(weekNumber)}
         />
       </div>
