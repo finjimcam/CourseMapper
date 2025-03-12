@@ -36,6 +36,13 @@ interface WeekActivityTabProps {
    * Receives (activityIndex, weekNumber)
    */
   onDeleteActivity?: (activityIndex: number, weekNumber: number) => void;
+  /** (Optional) Current sort configuration */
+  sortConfig?: {
+    key: string;
+    direction: 'asc' | 'desc';
+  };
+  /** (Optional) Callback for when sort changes */
+  onSort?: (key: string, direction: 'asc' | 'desc') => void;
 }
 
 const WeekActivityTab: React.FC<WeekActivityTabProps> = ({
@@ -43,7 +50,46 @@ const WeekActivityTab: React.FC<WeekActivityTabProps> = ({
   originalActivities,
   onEditActivity,
   onDeleteActivity,
+  sortConfig,
+  onSort,
 }) => {
+  // Local sort state
+  const [localSortConfig, setLocalSortConfig] = React.useState<{
+    key: string;
+    direction: 'asc' | 'desc';
+  } | null>(null);
+
+  // Get effective sort config (prop or local)
+  const effectiveSortConfig = sortConfig || localSortConfig;
+
+  // Sort the data if needed
+  const sortedData = React.useMemo(() => {
+    if (!effectiveSortConfig) return week.data;
+
+    return [...week.data].sort((a, b) => {
+      if (effectiveSortConfig.key === 'title') {
+        const result = a.title.localeCompare(b.title);
+        return effectiveSortConfig.direction === 'asc' ? result : -result;
+      }
+      return 0;
+    });
+  }, [week.data, effectiveSortConfig]);
+
+  // Handle sort click
+  const handleSort = (key: string) => {
+    const direction: 'asc' | 'desc' = 
+      effectiveSortConfig?.key === key && effectiveSortConfig.direction === 'asc' 
+        ? 'desc' 
+        : 'asc';
+    
+    const newConfig = { key, direction };
+    if (onSort) {
+      onSort(key, direction);
+    } else {
+      setLocalSortConfig(newConfig);
+    }
+  };
+
   return (
     <div className="p-4">
       <div className="mb-4">
@@ -53,7 +99,21 @@ const WeekActivityTab: React.FC<WeekActivityTabProps> = ({
         <Table striped>
           <Table.Head>
             <Table.HeadCell>Staff Responsible</Table.HeadCell>
-            <Table.HeadCell>Title / Name</Table.HeadCell>
+            <Table.HeadCell>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="xs"
+                  color="gray"
+                  onClick={() => handleSort('title')}
+                >
+                  Title / Name {effectiveSortConfig?.key === 'title' && (
+                    <span className="ml-1">
+                      {effectiveSortConfig.direction === 'asc' ? '↑' : '↓'}
+                    </span>
+                  )}
+                </Button>
+              </div>
+            </Table.HeadCell>
             <Table.HeadCell>Learning Activity</Table.HeadCell>
             <Table.HeadCell>Learning Type</Table.HeadCell>
             <Table.HeadCell>Activity Location</Table.HeadCell>
@@ -62,7 +122,7 @@ const WeekActivityTab: React.FC<WeekActivityTabProps> = ({
             {(onEditActivity || onDeleteActivity) && <Table.HeadCell>Actions</Table.HeadCell>}
           </Table.Head>
           <Table.Body>
-            {week.data.map((row: WeekData, index: number) => (
+          {sortedData.map((row: WeekData, index: number) => (
               <Table.Row key={index}>
                 <Table.Cell>{row.staff.length > 0 ? row.staff.join(', ') : 'N/A'}</Table.Cell>
                 <Table.Cell>{row.title}</Table.Cell>
