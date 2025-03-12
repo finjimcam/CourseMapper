@@ -62,18 +62,46 @@ const WeekActivityTab: React.FC<WeekActivityTabProps> = ({
   // Get effective sort config (prop or local)
   const effectiveSortConfig = sortConfig || localSortConfig;
 
+  // Create data with original indices
+  const dataWithIndices = React.useMemo(() => 
+    week.data.map((item, index) => ({
+      ...item,
+      originalIndex: index
+    })),
+    [week.data]
+  );
+
   // Sort the data if needed
   const sortedData = React.useMemo(() => {
-    if (!effectiveSortConfig) return week.data;
+    if (!effectiveSortConfig) return dataWithIndices;
 
-    return [...week.data].sort((a, b) => {
-      if (effectiveSortConfig.key === 'title') {
-        const result = a.title.localeCompare(b.title);
-        return effectiveSortConfig.direction === 'asc' ? result : -result;
+    return [...dataWithIndices].sort((a, b) => {
+      const { key, direction } = effectiveSortConfig;
+      let result = 0;
+
+      switch (key) {
+        case 'staff':
+          // Sort by first staff member's name, or 'N/A' if no staff
+          const aStaff = a.staff.length > 0 ? a.staff[0] : 'N/A';
+          const bStaff = b.staff.length > 0 ? b.staff[0] : 'N/A';
+          result = aStaff.localeCompare(bStaff);
+          break;
+        case 'activity':
+          result = a.activity.localeCompare(b.activity);
+          break;
+        case 'type':
+          result = a.type.localeCompare(b.type);
+          break;
+        case 'status':
+          result = a.status.localeCompare(b.status);
+          break;
+        default:
+          result = 0;
       }
-      return 0;
+      
+      return direction === 'asc' ? result : -result;
     });
-  }, [week.data, effectiveSortConfig]);
+  }, [dataWithIndices, effectiveSortConfig]);
 
   // Handle sort click
   const handleSort = (key: string) => {
@@ -98,32 +126,54 @@ const WeekActivityTab: React.FC<WeekActivityTabProps> = ({
       <div className="overflow-x-auto">
         <Table striped>
           <Table.Head>
-            <Table.HeadCell>Staff Responsible</Table.HeadCell>
-            <Table.HeadCell>
-              <div className="flex items-center gap-2">
-                <Button
-                  size="xs"
-                  color="gray"
-                  onClick={() => handleSort('title')}
-                >
-                  Title / Name {effectiveSortConfig?.key === 'title' && (
-                    <span className="ml-1">
-                      {effectiveSortConfig.direction === 'asc' ? '↑' : '↓'}
-                    </span>
-                  )}
-                </Button>
-              </div>
+            <Table.HeadCell 
+              className="cursor-pointer hover:bg-gray-100"
+              onClick={() => handleSort('staff')}
+            >
+              Staff Responsible {effectiveSortConfig?.key === 'staff' && (
+                <span className="ml-1">
+                  {effectiveSortConfig.direction === 'asc' ? '↑' : '↓'}
+                </span>
+              )}
             </Table.HeadCell>
-            <Table.HeadCell>Learning Activity</Table.HeadCell>
-            <Table.HeadCell>Learning Type</Table.HeadCell>
+            <Table.HeadCell>Title / Name</Table.HeadCell>
+            <Table.HeadCell 
+              className="cursor-pointer hover:bg-gray-100"
+              onClick={() => handleSort('activity')}
+            >
+              Learning Activity {effectiveSortConfig?.key === 'activity' && (
+                <span className="ml-1">
+                  {effectiveSortConfig.direction === 'asc' ? '↑' : '↓'}
+                </span>
+              )}
+            </Table.HeadCell>
+            <Table.HeadCell 
+              className="cursor-pointer hover:bg-gray-100"
+              onClick={() => handleSort('type')}
+            >
+              Learning Type {effectiveSortConfig?.key === 'type' && (
+                <span className="ml-1">
+                  {effectiveSortConfig.direction === 'asc' ? '↑' : '↓'}
+                </span>
+              )}
+            </Table.HeadCell>
             <Table.HeadCell>Activity Location</Table.HeadCell>
-            <Table.HeadCell>Task Status</Table.HeadCell>
+            <Table.HeadCell 
+              className="cursor-pointer hover:bg-gray-100"
+              onClick={() => handleSort('status')}
+            >
+              Task Status {effectiveSortConfig?.key === 'status' && (
+                <span className="ml-1">
+                  {effectiveSortConfig.direction === 'asc' ? '↑' : '↓'}
+                </span>
+              )}
+            </Table.HeadCell>
             <Table.HeadCell>Time</Table.HeadCell>
             {(onEditActivity || onDeleteActivity) && <Table.HeadCell>Actions</Table.HeadCell>}
           </Table.Head>
           <Table.Body>
-          {sortedData.map((row: WeekData, index: number) => (
-              <Table.Row key={index}>
+          {sortedData.map((row) => (
+              <Table.Row key={row.originalIndex}>
                 <Table.Cell>{row.staff.length > 0 ? row.staff.join(', ') : 'N/A'}</Table.Cell>
                 <Table.Cell>{row.title}</Table.Cell>
                 <Table.Cell>{row.activity}</Table.Cell>
@@ -144,7 +194,7 @@ const WeekActivityTab: React.FC<WeekActivityTabProps> = ({
                             size="xs"
                             color="light"
                             onClick={() =>
-                              onEditActivity(originalActivities[index], index, week.weekNumber)
+                              onEditActivity(originalActivities[row.originalIndex], row.originalIndex, week.weekNumber)
                             }
                           >
                             <HiPencil className="h-4 w-4" />
@@ -156,7 +206,7 @@ const WeekActivityTab: React.FC<WeekActivityTabProps> = ({
                           <Button
                             size="xs"
                             color="light"
-                            onClick={() => onDeleteActivity(index, week.weekNumber)}
+                            onClick={() => onDeleteActivity(row.originalIndex, week.weekNumber)}
                           >
                             <HiTrash className="h-4 w-4" />
                           </Button>
