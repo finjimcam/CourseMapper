@@ -41,6 +41,7 @@ import {
   getErrorMessage,
   getContributors,
   isCourseLead,
+  isAdmin,
   LearningActivity,
   ActivityStaff,
   defaultActivityForm,
@@ -64,7 +65,9 @@ function EditWorkbook(): JSX.Element {
   const [weekToDelete, setWeekToDelete] = useState<number | null>(null);
   const [showDeleteActivityModal, setShowDeleteActivityModal] = useState<boolean>(false);
   const [activityToDelete, setActivityToDelete] = useState<{weekNumber: number; activityIndex: number} | null>(null);
+  const [showDeleteWorkbookModal, setShowDeleteWorkbookModal] = useState<boolean>(false);
   const [isUserCourseLead, setIsUserCourseLead] = useState<boolean>(false);
+  const [isUserAdmin, setIsUserAdmin] = useState<boolean>(false);
 
   // Modal states
   const [showValidationModal, setShowValidationModal] = useState<boolean>(false);
@@ -120,8 +123,14 @@ function EditWorkbook(): JSX.Element {
           },
         });
 
-        setContributors(await getContributors(workbookDetails.workbook.id));
-        setIsUserCourseLead(await isCourseLead(workbookDetails.workbook.id));
+        const [contributorsData, isUserCourseLeadData, isUserAdminData] = await Promise.all([
+          getContributors(workbookDetails.workbook.id),
+          isCourseLead(workbookDetails.workbook.id),
+          isAdmin()
+        ]);
+        setContributors(contributorsData);
+        setIsUserCourseLead(isUserCourseLeadData);
+        setIsUserAdmin(isUserAdminData);
 
         // Fetch weeks, activities and staff-activity relationships
         const [weeksRes, activitiesRes, staffActivitiesRes] = await Promise.all([
@@ -228,6 +237,20 @@ function EditWorkbook(): JSX.Element {
   const initiateDeleteWeek = (weekNumber: number) => {
     setWeekToDelete(weekNumber);
     setShowDeleteWeekModal(true);
+  };
+
+  const handleDeleteWorkbook = async () => {
+    setShowDeleteWorkbookModal(false);
+    if (!workbook_id) return;
+
+    try {
+      await axios.delete(`${import.meta.env.VITE_API}/workbooks/`, {
+        params: { workbook_id }
+      });
+      navigate('/my-workbooks');
+    } catch (err) {
+      setError(getErrorMessage(err));
+    }
   };
 
   const handleDeleteWeek = async (weekNumber: number) => {
@@ -504,6 +527,13 @@ function EditWorkbook(): JSX.Element {
           onCancel={() => setShowDeleteWeekModal(false)}
         />
         <ConfirmModal
+          show={showDeleteWorkbookModal}
+          title="Delete Workbook"
+          message="Are you sure you want to delete this workbook? This action cannot be undone and will delete all associated weeks and activities."
+          onConfirm={handleDeleteWorkbook}
+          onCancel={() => setShowDeleteWorkbookModal(false)}
+        />
+        <ConfirmModal
           show={showDeleteActivityModal}
           title="Delete Activity"
           message="Are you sure you want to delete this activity? This action cannot be undone."
@@ -567,14 +597,25 @@ function EditWorkbook(): JSX.Element {
             ) : null}
           </div>
           <div className="flex flex-col items-end gap-2">
-            <Button
-              gradientDuoTone="greenToBlue"
-              size="lg"
-              onClick={handleSaveChanges}
-              disabled={saving}
-            >
-              {saving ? 'Saving...' : 'Save Changes'}
-            </Button>
+            <div className="flex gap-2">
+              {isUserAdmin && (
+                <Button
+                  color="failure"
+                  size="lg"
+                  onClick={() => setShowDeleteWorkbookModal(true)}
+                >
+                  Delete Workbook
+                </Button>
+              )}
+              <Button
+                gradientDuoTone="greenToBlue"
+                size="lg"
+                onClick={handleSaveChanges}
+                disabled={saving}
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </div>
             <WeeklyAttributes weekNumber={selectedWeek} workbookId={workbook_id} />
           </div>
         </div>
