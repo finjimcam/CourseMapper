@@ -43,6 +43,8 @@ from models.models_base import (
     Location,
     LearningType,
     GraduateAttribute,
+    Area,
+    Schools,
 )
 
 _BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -75,6 +77,62 @@ def _populate_initial_data() -> None:
         if session.exec(select(User)).first() is not None:
             print("Initial data already populated.")
             return
+
+        # define the Area and the Schools
+        area_schools = {
+            "College of Arts & Humanities": [
+                "School of Critical Studies",
+                "School of Culture and Creative Arts",
+                "School of Humanities | Sgoil nan Daonnachdan",
+                "School of Modern Languages and Cultures",
+            ],
+            "College of Medical, Veterinary & Life Sciences": [
+                "School of Biodiversity, One Health & Veterinary Medicine",
+                "School of Cancer Sciences",
+                "School of Cardiovascular & Metabolic Health",
+                "School of Health & Wellbeing",
+                "School of Infection & Immunity",
+                "School of Medicine, Dentistry & Nursing",
+                "School of Molecular Biosciences",
+                "School of Psychology & Neuroscience",
+            ],
+            "College of Science & Engineering": [
+                "School of Chemistry",
+                "School of Computing Science",
+                "James Watt School of Engineering",
+                "School of Geographical & Earth Sciences",
+                "School of Mathematics & Statistics",
+                "School of Physics & Astronomy",
+                "Scottish Universities Environmental Research Centre (SUERC)",
+            ],
+            "College of Social Sciences": [
+                "Adam Smith Business School",
+                "School of Education",
+                "School of Law",
+                "School of Social & Environmental Sustainability",
+                "School of Social & Political Sciences",
+                "Graduate School",
+            ],
+            "University Services": [],
+        }
+
+        # Create Area and Schools
+        areas = {}
+        schools = {}
+
+        for area_name, school_list in area_schools.items():
+            area = Area(name=area_name)
+            session.add(area)
+            session.flush()  # Refresh ahead to get the ID
+
+            areas[area_name] = area
+
+            for school_name in school_list:
+                school = Schools(name=school_name, area_id=area.id)
+                session.add(school)
+                schools[school_name] = school
+
+        session.commit()
 
         dataframe = pd.read_csv(_LEGEND_CSV_PATH)
 
@@ -126,12 +184,32 @@ def _populate_initial_data() -> None:
                 name="Jennifer Boyle", permissions_group=permissions_groups["User"]
             ),
         }
+
+        selected_area = session.exec(
+            select(Area).where(Area.name == "College of Science & Engineering")
+        ).first()
+        selected_school = session.exec(
+            select(Schools).where(Schools.name == "School of Computing Science")
+        ).first()
+
+        if not selected_area:
+            raise ValueError(
+                "Error: Area 'College of Science & Engineering' not found in the database."
+            )
+
+        if not selected_school:
+            raise ValueError(
+                "Error: School 'School of Computing Science' not found in the database."
+            )
+
         workbook = Workbook(
             start_date=datetime.date(2024, 9, 23),
             end_date=datetime.date(2024, 9, 23) + datetime.timedelta(weeks=3),
             course_lead=users["Tim Storer"],
             course_name="Professional Software Development",
             learning_platform=learning_platforms["Moodle"],
+            area_id=selected_area.id,
+            school_id=selected_school.id,
             contributors=[users["Jennifer Boyle"], users["Caitlin Diver"]],
         )
         if workbook.learning_platform is None:

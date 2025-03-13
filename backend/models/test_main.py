@@ -49,6 +49,8 @@ from models.models_base import (
     ActivityStaff,
     WeekGraduateAttribute,
     GraduateAttribute,
+    Area,
+    Schools,
 )
 
 
@@ -137,12 +139,28 @@ def create_test_workbook(session: Session, user_id: uuid.UUID) -> Workbook:
     session.add_all([platform, location, task_status, learning_type, learning_activity])
     session.commit()
 
+    area = session.exec(select(Area).where(Area.name == "Test Area")).first()
+    if not area:
+        area = Area(name="Test Area")
+        session.add(area)
+        session.commit()
+        session.refresh(area)
+
+    school = session.exec(select(Schools).where(Schools.name == "Test School")).first()
+    if not school:
+        school = Schools(name="Test School", area_id=area.id)
+        session.add(school)
+        session.commit()
+        session.refresh(school)
+
     workbook = Workbook(
         start_date=datetime.date(2024, 1, 1),
         end_date=datetime.date(2024, 1, 7),
         course_name="Test Course",
         course_lead_id=user_id,
         learning_platform_id=platform.id,
+        area_id=area.id,
+        school_id=school.id,
     )
     session.add(workbook)
     session.commit()
@@ -245,6 +263,18 @@ class TestRead:
         response = client.get("/activities/", headers=headers)
         assert response.status_code == 200
 
+    def test_read_area(self, client: TestClient, session: Session) -> None:
+        # Test that the /area/ endpoint returns a list of all area.
+        headers = get_auth_headers(client, "admin")
+        response = client.get("/area/", headers=headers)
+        assert response.status_code == 200
+
+    def test_read_schools(self, client: TestClient, session: Session) -> None:
+        # Test that the /schools/ endpoint returns a list of all schools.
+        headers = get_auth_headers(client, "admin")
+        response = client.get("/schools/", headers=headers)
+        assert response.status_code == 200
+
 
 class TestCreate:
     def test_create_session(self, client: TestClient, session: Session) -> None:
@@ -268,12 +298,24 @@ class TestCreate:
         session.add(platform)
         session.commit()
 
+        area = Area(name="Test Area")
+        session.add(area)
+        session.commit()
+        session.refresh(area)
+
+        school = Schools(name="Test School", area_id=area.id)
+        session.add(school)
+        session.commit()
+        session.refresh(school)
+
         # Test that a workbook can be created by an admin
         workbook_data = {
             "start_date": "2024-01-01",
             "end_date": "2024-01-07",
             "course_name": "Test Course",
             "learning_platform_id": str(platform.id),
+            "area_id": str(area.id),
+            "school_id": str(school.id),
         }
         response = client.post("/workbooks/", json=workbook_data, headers=headers)
         assert response.status_code == 200
@@ -284,6 +326,8 @@ class TestCreate:
             "end_date": "2024-01-07",
             "course_name": "Test Course",
             "learning_platform_id": str(uuid.uuid4()),
+            "area_id": str(area.id),
+            "school_id": str(school.id),
         }
         response = client.post("/workbooks/", json=workbook_data, headers=headers)
         assert response.status_code == 422
@@ -294,6 +338,8 @@ class TestCreate:
             "end_date": "2024-01-07",
             "course_name": "Test Course",
             "learning_platform_id": str(platform.id),
+            "area_id": str(area.id),
+            "school_id": str(school.id),
         }
         response = client.post("/workbooks/", json=workbook_data, headers=headers)
         assert response.status_code == 422
@@ -304,6 +350,8 @@ class TestCreate:
             "end_date": "2024-02-07",
             "course_name": "Test Course",
             "learning_platform_id": str(platform.id),
+            "area_id": str(area.id),
+            "school_id": str(school.id),
         }
         response = client.post("/workbooks/", json=workbook_data, headers=headers)
         assert response.status_code == 422
@@ -313,6 +361,32 @@ class TestCreate:
             "end_date": "2024-01-47",
             "course_name": "Test Course",
             "learning_platform_id": str(platform.id),
+            "area_id": str(area.id),
+            "school_id": str(school.id),
+        }
+        response = client.post("/workbooks/", json=workbook_data, headers=headers)
+        assert response.status_code == 422
+
+        # Test that a workbook cannot be created with the date as a non-existent area id
+        workbook_data = {
+            "start_date": "2024-01-35",
+            "end_date": "2024-02-07",
+            "course_name": "Test Course",
+            "learning_platform_id": str(platform.id),
+            "area_id": str(uuid.uuid4()),
+            "school_id": str(school.id),
+        }
+        response = client.post("/workbooks/", json=workbook_data, headers=headers)
+        assert response.status_code == 422
+
+        # Test that a workbook cannot be created with the date as a non-existent school id
+        workbook_data = {
+            "start_date": "2024-01-35",
+            "end_date": "2024-02-07",
+            "course_name": "Test Course",
+            "learning_platform_id": str(platform.id),
+            "area_id": str(area.id),
+            "school_id": str(uuid.uuid4()),
         }
         response = client.post("/workbooks/", json=workbook_data, headers=headers)
         assert response.status_code == 422
@@ -748,11 +822,23 @@ class TestDelete:
 
         headers = get_auth_headers(client, "admin")
 
+        area = Area(name="Test Area")
+        session.add(area)
+        session.commit()
+        session.refresh(area)
+
+        school = Schools(name="Test School", area_id=area.id)
+        session.add(school)
+        session.commit()
+        session.refresh(school)
+
         workbook_data = {
             "start_date": "2024-01-01",
             "end_date": "2024-01-07",
             "course_name": "Test Course",
             "learning_platform_id": str(uuid.uuid4()),
+            "area_id": str(area.id),
+            "school_id": str(school.id),
         }
 
         platform = LearningPlatform(name="Test Platform")

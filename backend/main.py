@@ -71,6 +71,8 @@ from models.models_base import (
     WorkbookContributor,
     WorkbookContributorCreate,
     WorkbookContributorDelete,
+    Area,
+    Schools,
 )
 
 SessionDep = Annotated[Session, Depends(get_session)]
@@ -942,7 +944,7 @@ def patch_workbook(
 
     workbook_dict = db_workbook.model_dump()
     for k, v in workbook_update.model_dump().items():
-        if v is not None:
+        if v is not None or k == "school_id":
             workbook_dict[k] = v
     workbook_dict["session"] = session
     try:
@@ -1169,6 +1171,7 @@ def create_workbook(
     workbook_dict = workbook.model_dump()
     workbook_dict["course_lead_id"] = session_data.user_id
     workbook_dict["session"] = session
+
     try:
         db_workbook = Workbook.model_validate(workbook_dict)
     except ValueError as e:
@@ -1326,6 +1329,8 @@ def duplicate_workbook(
             course_lead_id=session_data.user_id,
             learning_platform_id=original_workbook.learning_platform_id,
             number_of_weeks=original_workbook.number_of_weeks,
+            area_id=original_workbook.area_id,
+            school_id=original_workbook.school_id,
         )
         session.add(new_workbook)
         session.commit()
@@ -2429,3 +2434,73 @@ def read_workbook_graduate_attributes(
             )
         )
     )
+
+
+@app.get("/schools/", dependencies=[Depends(cookie)])
+def read_schools(
+    _: SessionData = Depends(verifier),
+    session: Session = Depends(get_session),
+    peek: bool = Query(False),
+) -> List[Schools] | None:
+    """Reads schools from the database.
+
+    The _: SessionData enables SessionData to be parsed, which will return a 403 if it
+    does not exist. This is how authentication is handled when there are no internal
+    restrictions i.e. every user can access this, but only if they are authenticated.
+
+    Args:
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The list of all user objects, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
+    if peek:
+        return None
+
+    return list(session.exec(select(Schools)).all())
+
+
+@app.get("/area/", dependencies=[Depends(cookie)])
+def read_area(
+    _: SessionData = Depends(verifier),
+    session: Session = Depends(get_session),
+    peek: bool = Query(False),
+) -> List[Area] | None:
+    """Reads schools from the database.
+
+    The _: SessionData enables SessionData to be parsed, which will return a 403 if it
+    does not exist. This is how authentication is handled when there are no internal
+    restrictions i.e. every user can access this, but only if they are authenticated.
+
+    Args:
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The list of all user objects, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+
+    if peek:
+        return None
+
+    return list(session.exec(select(Area)).all())

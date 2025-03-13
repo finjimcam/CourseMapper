@@ -20,6 +20,7 @@ import sys
 import os
 import random
 import datetime
+import uuid
 from typing import List, Dict, Any, Sequence
 from sqlmodel import Session, select
 
@@ -39,6 +40,8 @@ from models.models_base import (
     GraduateAttribute,
     WorkbookContributor,
     ActivityStaff,
+    Area,
+    Schools,
 )
 
 # Course names for random generation
@@ -116,8 +119,15 @@ def create_workbook(
     learning_types: Sequence[LearningType],
     task_statuses: Sequence[TaskStatus],
     graduate_attributes: Sequence[GraduateAttribute],
+    areas: Sequence[Area],
+    schools_by_area: Dict[uuid.UUID, List[Schools]],
 ) -> None:
     """Create a single workbook with all its associated data"""
+
+    # Select a random Area and its corresponding School
+    selected_area = random.choice(areas)
+    available_schools = schools_by_area.get(selected_area.id, [])
+    selected_school = random.choice(available_schools) if available_schools else None
 
     # Select random course lead and platform
     course_lead = random.choice(users)
@@ -131,6 +141,8 @@ def create_workbook(
         course_lead_id=course_lead.id,
         learning_platform_id=learning_platform.id,
         number_of_weeks=num_weeks,
+        area_id=selected_area.id,
+        school_id=selected_school.id if selected_school else None,
     )
     session.add(workbook)
     session.commit()
@@ -204,6 +216,15 @@ def populate_many_workbooks() -> None:
         learning_types = session.exec(select(LearningType)).all()
         task_statuses = session.exec(select(TaskStatus)).all()
         graduate_attributes = session.exec(select(GraduateAttribute)).all()
+        areas = session.exec(select(Area)).all()
+        schools = session.exec(select(Schools)).all()
+
+        # Organize Schools by Area
+        schools_by_area: Dict[uuid.UUID, List[Schools]] = {}
+        for school in schools:
+            if school.area_id not in schools_by_area:
+                schools_by_area[school.area_id] = []
+            schools_by_area[school.area_id].append(school)
 
         if not all(
             [
@@ -213,6 +234,7 @@ def populate_many_workbooks() -> None:
                 learning_types,
                 task_statuses,
                 graduate_attributes,
+                areas,
             ]
         ):
             print("Error: Required base data not found in database. Run populate.py first.")
@@ -237,6 +259,8 @@ def populate_many_workbooks() -> None:
                 learning_types=learning_types,
                 task_statuses=task_statuses,
                 graduate_attributes=graduate_attributes,
+                areas=areas,
+                schools_by_area=schools_by_area,
             )
 
         print("Successfully created 40 workbooks with associated data")
