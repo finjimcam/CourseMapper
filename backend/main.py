@@ -445,7 +445,13 @@ def delete_week(
 
     db_workbook.number_of_weeks -= 1
     # save all other activities
-    erroneously_deleted_activities = list(session.exec(select(Activity).where((Activity.week_number == db_week.number) & (Activity.workbook_id != db_workbook.id))).all())
+    erroneously_deleted_activities = list(
+        session.exec(
+            select(Activity).where(
+                (Activity.week_number == db_week.number) & (Activity.workbook_id != db_workbook.id)
+            )
+        ).all()
+    )
     # renumber to sentry
     for activity in erroneously_deleted_activities:
         activity.week_number = -1
