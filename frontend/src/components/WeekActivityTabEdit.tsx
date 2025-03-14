@@ -23,6 +23,11 @@ import { HiTrash } from 'react-icons/hi';
 import WeekActivityTab from './WeekActivityTab';
 import { Activity, Week, WeekInfo } from '../utils/workbookUtils';
 
+interface SortConfig {
+  key: string;
+  direction: 'asc' | 'desc';
+}
+
 interface WeeksTabsProps {
   weeks: Week[];
   convertWeekToWeekInfo: (week: Week) => WeekInfo;
@@ -42,6 +47,18 @@ const WeeksTabs: React.FC<WeeksTabsProps> = ({
   onDeleteActivity,
   onWeekChange,
 }) => {
+  // Maintain sort config for each week
+  const [weekSortConfigs, setWeekSortConfigs] = React.useState<{
+    [weekNumber: number]: SortConfig;
+  }>({});
+
+  const handleSort = (weekNumber: number, key: string, direction: 'asc' | 'desc') => {
+    setWeekSortConfigs(prev => ({
+      ...prev,
+      [weekNumber]: { key, direction }
+    }));
+  };
+
   return (
     <Tabs
       aria-label="Workbook Tabs"
@@ -72,6 +89,8 @@ const WeeksTabs: React.FC<WeeksTabsProps> = ({
               originalActivities={week.activities}
               onEditActivity={onEditActivity}
               onDeleteActivity={onDeleteActivity}
+              sortConfig={weekSortConfigs[week.number]}
+              onSort={(key, direction) => handleSort(week.number, key, direction)}
             />
           </div>
         </Tabs.Item>
