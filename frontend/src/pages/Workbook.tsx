@@ -49,6 +49,18 @@ function WorkbookPage(): JSX.Element {
   const [isDashboardTab, setIsDashboardTab] = useState<boolean>(true);
   const [contributors, setContributors] = useState<User[]>([]);
 
+  const handleDuplicateWorkbook = async () => {
+    if (!workbook_id) return;
+    try {
+      const response = await axios.post(`${import.meta.env.VITE_API}/workbooks/${workbook_id}/duplicate`);
+      alert('Workbook duplicated successfully!');
+      console.log(response.data);
+    } catch (error) {
+      console.error('Error duplicating workbook:', error);
+      alert('Failed to duplicate workbook.');
+    }
+  };
+
   useEffect(() => {
     const fetchWorkbookData = async () => {
       try {
@@ -121,6 +133,14 @@ function WorkbookPage(): JSX.Element {
           <CourseHeader workbook={workbookData} contributors={contributors} />
 
           <div className="flex flex-col justify-between items-end gap-2">
+            <div className="flex gap-2">
+              <button
+                onClick={handleDuplicateWorkbook}
+                className="px-5 py-2.5 text-white bg-gradient-to-r from-green-500 via-green-600 to-green-700 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm text-center"
+              >
+                Duplicate
+              </button>
+            </div>
             {ifCourseLead ? (
               <Link
                 to={`/workbook/edit/${workbook_id}`}
