@@ -106,22 +106,24 @@ function EditWorkbook(): JSX.Element {
         const { data: workbookDetails } = await axios.get<WorkbookDetailsResponse>(
           `${import.meta.env.VITE_API}/workbooks/${workbook_id}/details`
         );
-        setWorkbookData({
-          workbook: {
-            id: workbookDetails.workbook.id,
-            course_name: workbookDetails.workbook.course_name,
-            start_date: workbookDetails.workbook.start_date,
-            end_date: workbookDetails.workbook.end_date,
-          },
-          learning_platform: {
-            id: workbookDetails.learning_platform.id,
-            name: workbookDetails.learning_platform.name,
-          },
-          course_lead: {
-            id: workbookDetails.course_lead.id,
-            name: workbookDetails.course_lead.name,
-          },
-        });
+          setWorkbookData({
+            workbook: {
+              id: workbookDetails.workbook.id,
+              course_name: workbookDetails.workbook.course_name,
+              start_date: workbookDetails.workbook.start_date,
+              end_date: workbookDetails.workbook.end_date,
+              area_id: workbookDetails.workbook.area_id,
+              school_id: workbookDetails.workbook.school_id,
+            },
+            learning_platform: {
+              id: workbookDetails.learning_platform.id,
+              name: workbookDetails.learning_platform.name,
+            },
+            course_lead: {
+              id: workbookDetails.course_lead.id,
+              name: workbookDetails.course_lead.name,
+            },
+          });
 
         const [contributorsData, isUserCourseLeadData, isUserAdminData] = await Promise.all([
           getContributors(workbookDetails.workbook.id),

@@ -106,15 +106,18 @@ function MyWorkbooks() {
   const handleCreateWorkbook = (workbookData: {
     courseName: string;
     learningPlatformId: string;
-    startDate: Date;
-    endDate: Date;
+    startDate: string;
+    endDate: string;
     coordinatorIds: string[];
+    areaId: string;
+    schoolId: string | null;
+    learningPlatform: string;
   }) => {
     // Store the workbook data in sessionStorage
     sessionStorage.setItem('newWorkbookData', JSON.stringify(workbookData));
 
     // Navigate to the edit page
-    navigate('/workbooks/edit');
+    navigate('/workbooks/create');
   };
 
   if (loading) return <div className="text-center mt-10">Loading...</div>;
@@ -163,6 +166,8 @@ function MyWorkbooks() {
               learning_platform_id: wb.learning_platform.id,
               course_lead: wb.course_lead.name,
               learning_platform: wb.learning_platform.name,
+              area_id: wb.workbook.area_id,
+              school_id: wb.workbook.school_id,
             }))}
           />
         </div>
