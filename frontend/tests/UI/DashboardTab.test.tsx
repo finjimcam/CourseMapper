@@ -15,24 +15,24 @@ jest.mock('react-apexcharts', () => ({
 
 jest.mock('../../src/components/GraduateAttributesChart', () => ({
   __esModule: true,
-  default: jest.fn(({ data, showTable, toggleShowTable }) => (
-    <div data-testid="graduate-attributes-chart">
-      <button onClick={toggleShowTable}>
-        {showTable ? 'Show Graph' : 'Show Table'}
-      </button>
-      <div>
-        {data.labels.map((label: string, index: number) => (
-          <div key={label}>
-            {label}: {data.series[index]}
-          </div>
-        ))}
-      </div>
-    </div>
-  ))
+  default: jest.fn(({ data, showTable, toggleShowTable }) => 
+    React.createElement('div', { 'data-testid': 'graduate-attributes-chart' },
+      React.createElement('button', { onClick: toggleShowTable },
+        showTable ? 'Show Graph' : 'Show Table'
+      ),
+      React.createElement('div', null,
+        data.labels.map((label: string, index: number) =>
+          React.createElement('div', { key: label },
+            `${label}: ${data.series[index]}`
+          )
+        )
+      )
+    )
+  )
 }));
 
 jest.mock('../../src/components/CustomBadge', () => ({
-  CustomBadge: ({ label }: { label: string }) => <span data-testid="custom-badge">{label}</span>
+  CustomBadge: ({ label }: { label: string }) => React.createElement('span', { 'data-testid': 'custom-badge' }, label)
 }));
 
 describe('DashboardTab', () => {
@@ -94,13 +94,13 @@ describe('DashboardTab', () => {
 
   describe('Initial Rendering', () => {
     it('should render loading state initially', () => {
-      render(<DashboardTab {...mockProps} />);
+      render(React.createElement(DashboardTab, mockProps));
       expect(screen.getByText('Loading graduate attributes data...')).toBeInTheDocument();
     });
 
     it('should render error state when API fails', async () => {
       mockedAxios.get.mockRejectedValue(new Error('API Error'));
-      render(<DashboardTab {...mockProps} />);
+      render(React.createElement(DashboardTab, mockProps));
       
       await waitFor(() => {
         expect(screen.getByText(/Error loading graduate attributes/)).toBeInTheDocument();
@@ -108,7 +108,7 @@ describe('DashboardTab', () => {
     });
 
     it('should render successfully with data', async () => {
-      render(<DashboardTab {...mockProps} />);
+      render(React.createElement(DashboardTab, mockProps));
       
       await waitFor(() => {
         expect(screen.getByText('Weekly Notional Learning Hours')).toBeInTheDocument();
@@ -119,7 +119,7 @@ describe('DashboardTab', () => {
 
   describe('Learning Hours Section', () => {
     it('should render chart when showTable is false', async () => {
-      render(<DashboardTab {...mockProps} showTable={false} />);
+      render(React.createElement(DashboardTab, { ...mockProps, showTable: false }));
       
       await waitFor(() => {
         const ReactApexChart = require('react-apexcharts').default;
@@ -136,7 +136,7 @@ describe('DashboardTab', () => {
     });
 
     it('should render table when showTable is true', async () => {
-      render(<DashboardTab {...mockProps} showTable={true} />);
+      render(React.createElement(DashboardTab, { ...mockProps, showTable: true }));
       
       await waitFor(() => {
         mockProps.summaryData.forEach(row => {
@@ -147,7 +147,7 @@ describe('DashboardTab', () => {
     });
 
     it('should call toggleShowTable when button is clicked', async () => {
-      render(<DashboardTab {...mockProps} />);
+      render(React.createElement(DashboardTab, mockProps));
       
       await waitFor(() => {
         const toggleButton = screen.getByText(/Show Table|Show Graph/);
@@ -159,7 +159,7 @@ describe('DashboardTab', () => {
 
   describe('Graduate Attributes Section', () => {
     it('should fetch and process graduate attributes data', async () => {
-      render(<DashboardTab {...mockProps} />);
+      render(React.createElement(DashboardTab, mockProps));
       
       await waitFor(() => {
         // Verify API calls
@@ -173,13 +173,13 @@ describe('DashboardTab', () => {
     });
 
     it('should update graduate attributes data when refresh trigger changes', async () => {
-      const { rerender } = render(<DashboardTab {...mockProps} attributesRefreshTrigger={1} />);
+      const { rerender } = render(React.createElement(DashboardTab, { ...mockProps, attributesRefreshTrigger: 1 }));
       
       await waitFor(() => {
         expect(mockedAxios.get).toHaveBeenCalledTimes(2);
       });
 
-      rerender(<DashboardTab {...mockProps} attributesRefreshTrigger={2} />);
+      rerender(React.createElement(DashboardTab, { ...mockProps, attributesRefreshTrigger: 2 }));
       
       await waitFor(() => {
         expect(mockedAxios.get).toHaveBeenCalledTimes(4);
@@ -187,7 +187,7 @@ describe('DashboardTab', () => {
     });
 
     it('should pass correct data to GraduateAttributesChart', async () => {
-      render(<DashboardTab {...mockProps} />);
+      render(React.createElement(DashboardTab, mockProps));
       
       await waitFor(() => {
         const chart = screen.getByTestId('graduate-attributes-chart');

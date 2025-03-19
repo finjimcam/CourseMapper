@@ -6,7 +6,7 @@ import { Activity, WeekInfo } from '../../src/utils/workbookUtils';
 
 // Mock the CustomBadge component
 jest.mock('../../src/components/CustomBadge', () => ({
-  CustomBadge: ({ label }: { label: string }) => <span data-testid="custom-badge">{label}</span>
+  CustomBadge: ({ label }: { label: string }) => React.createElement('span', { 'data-testid': 'custom-badge' }, label)
 }));
 
 // Mock color mappings
@@ -73,12 +73,12 @@ describe('WeekActivityTab', () => {
 
   describe('Basic Rendering', () => {
     it('should render week number correctly', () => {
-      render(<WeekActivityTab week={mockWeekInfo} />);
+      render(React.createElement(WeekActivityTab, { week: mockWeekInfo }));
       expect(screen.getByText('Week 1 Activities')).toBeInTheDocument();
     });
 
     it('should render all table headers', () => {
-      render(<WeekActivityTab week={mockWeekInfo} />);
+      render(React.createElement(WeekActivityTab, { week: mockWeekInfo }));
       expect(screen.getByText('Staff Responsible')).toBeInTheDocument();
       expect(screen.getByText('Title / Name')).toBeInTheDocument();
       expect(screen.getByText('Learning Activity')).toBeInTheDocument();
@@ -93,14 +93,14 @@ describe('WeekActivityTab', () => {
         weekNumber: 1,
         data: []
       };
-      render(<WeekActivityTab week={emptyWeek} />);
+      render(React.createElement(WeekActivityTab, { week: emptyWeek }));
       expect(screen.getByRole('table')).toBeInTheDocument();
     });
   });
 
   describe('Data Display', () => {
     it('should render all activity data correctly', () => {
-      render(<WeekActivityTab week={mockWeekInfo} />);
+      render(React.createElement(WeekActivityTab, { week: mockWeekInfo }));
       
       // Check first activity
       expect(screen.getByText('John Doe')).toBeInTheDocument();
@@ -125,12 +125,12 @@ describe('WeekActivityTab', () => {
           staff: []
         }]
       };
-      render(<WeekActivityTab week={weekWithNoStaff} />);
+      render(React.createElement(WeekActivityTab, { week: weekWithNoStaff }));
       expect(screen.getByText('N/A')).toBeInTheDocument();
     });
 
     it('should render CustomBadge components for type and status', () => {
-      render(<WeekActivityTab week={mockWeekInfo} />);
+      render(React.createElement(WeekActivityTab, { week: mockWeekInfo }));
       const badges = screen.getAllByTestId('custom-badge');
       expect(badges.length).toBe(4); // 2 activities * (1 type + 1 status)
     });
@@ -145,10 +145,10 @@ describe('WeekActivityTab', () => {
 
     it('should handle sorting by staff', () => {
       render(
-        <WeekActivityTab
-          week={mockWeekInfo}
-          onSort={mockOnSort}
-        />
+        React.createElement(WeekActivityTab, {
+          week: mockWeekInfo,
+          onSort: mockOnSort
+        })
       );
       
       const staffHeader = screen.getByText('Staff Responsible');
@@ -159,11 +159,11 @@ describe('WeekActivityTab', () => {
 
     it('should toggle sort direction on second click', () => {
       render(
-        <WeekActivityTab
-          week={mockWeekInfo}
-          sortConfig={{ key: 'staff', direction: 'asc' }}
-          onSort={mockOnSort}
-        />
+        React.createElement(WeekActivityTab, {
+          week: mockWeekInfo,
+          sortConfig: { key: 'staff', direction: 'asc' },
+          onSort: mockOnSort
+        })
       );
       
       const staffHeader = screen.getByText('Staff Responsible');
@@ -174,10 +174,10 @@ describe('WeekActivityTab', () => {
 
     it('should show sort indicators', () => {
       render(
-        <WeekActivityTab
-          week={mockWeekInfo}
-          sortConfig={{ key: 'staff', direction: 'asc' }}
-        />
+        React.createElement(WeekActivityTab, {
+          week: mockWeekInfo,
+          sortConfig: { key: 'staff', direction: 'asc' }
+        })
       );
       
       expect(screen.getByText('↑')).toBeInTheDocument();
@@ -194,12 +194,12 @@ describe('WeekActivityTab', () => {
 
     it('should render edit and delete buttons when callbacks provided', () => {
       render(
-        <WeekActivityTab
-          week={mockWeekInfo}
-          originalActivities={mockOriginalActivities}
-          onEditActivity={mockEditActivity}
-          onDeleteActivity={mockDeleteActivity}
-        />
+        React.createElement(WeekActivityTab, {
+          week: mockWeekInfo,
+          originalActivities: mockOriginalActivities,
+          onEditActivity: mockEditActivity,
+          onDeleteActivity: mockDeleteActivity
+        })
       );
 
       const editButtons = screen.getAllByRole('button', { name: /edit activity/i });
@@ -211,12 +211,12 @@ describe('WeekActivityTab', () => {
 
     it('should call edit callback with correct parameters', () => {
       render(
-        <WeekActivityTab
-          week={mockWeekInfo}
-          originalActivities={mockOriginalActivities}
-          onEditActivity={mockEditActivity}
-          onDeleteActivity={mockDeleteActivity}
-        />
+        React.createElement(WeekActivityTab, {
+          week: mockWeekInfo,
+          originalActivities: mockOriginalActivities,
+          onEditActivity: mockEditActivity,
+          onDeleteActivity: mockDeleteActivity
+        })
       );
 
       const editButtons = screen.getAllByRole('button', { name: /edit activity/i });
@@ -231,12 +231,12 @@ describe('WeekActivityTab', () => {
 
     it('should call delete callback with correct parameters', () => {
       render(
-        <WeekActivityTab
-          week={mockWeekInfo}
-          originalActivities={mockOriginalActivities}
-          onEditActivity={mockEditActivity}
-          onDeleteActivity={mockDeleteActivity}
-        />
+        React.createElement(WeekActivityTab, {
+          week: mockWeekInfo,
+          originalActivities: mockOriginalActivities,
+          onEditActivity: mockEditActivity,
+          onDeleteActivity: mockDeleteActivity
+        })
       );
 
       const deleteButtons = screen.getAllByRole('button', { name: /delete activity/i });
@@ -246,7 +246,7 @@ describe('WeekActivityTab', () => {
     });
 
     it('should not render action buttons when callbacks not provided', () => {
-      render(<WeekActivityTab week={mockWeekInfo} />);
+      render(React.createElement(WeekActivityTab, { week: mockWeekInfo }));
       
       expect(screen.queryByRole('button', { name: /edit activity/i })).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /delete activity/i })).not.toBeInTheDocument();
