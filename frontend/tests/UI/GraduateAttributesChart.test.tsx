@@ -30,11 +30,11 @@ describe('GraduateAttributesChart', () => {
   describe('Props and Initialization', () => {
     it('should render with initial props in chart mode', () => {
       render(
-        <GraduateAttributesChart
-          data={mockData}
-          showTable={false}
-          toggleShowTable={mockToggle}
-        />
+        React.createElement(GraduateAttributesChart, {
+          data: mockData,
+          showTable: false,
+          toggleShowTable: mockToggle
+        })
       );
       
       expect(screen.getByRole('button')).toHaveTextContent('Show Table');
@@ -43,11 +43,11 @@ describe('GraduateAttributesChart', () => {
 
     it('should render with initial props in table mode', () => {
       render(
-        <GraduateAttributesChart
-          data={mockData}
-          showTable={true}
-          toggleShowTable={mockToggle}
-        />
+        React.createElement(GraduateAttributesChart, {
+          data: mockData,
+          showTable: true,
+          toggleShowTable: mockToggle
+        })
       );
       
       expect(screen.getByRole('button')).toHaveTextContent('Show Chart');
@@ -62,11 +62,11 @@ describe('GraduateAttributesChart', () => {
       };
 
       render(
-        <GraduateAttributesChart
-          data={emptyData}
-          showTable={true}
-          toggleShowTable={mockToggle}
-        />
+        React.createElement(GraduateAttributesChart, {
+          data: emptyData,
+          showTable: true,
+          toggleShowTable: mockToggle
+        })
       );
       
       expect(screen.getByRole('table')).toBeInTheDocument();
@@ -76,11 +76,11 @@ describe('GraduateAttributesChart', () => {
   describe('Table Mode', () => {
     beforeEach(() => {
       render(
-        <GraduateAttributesChart
-          data={mockData}
-          showTable={true}
-          toggleShowTable={mockToggle}
-        />
+        React.createElement(GraduateAttributesChart, {
+          data: mockData,
+          showTable: true,
+          toggleShowTable: mockToggle
+        })
       );
     });
 
@@ -105,11 +105,11 @@ describe('GraduateAttributesChart', () => {
   describe('Toggle Functionality', () => {
     it('should call toggle function when button is clicked', () => {
       render(
-        <GraduateAttributesChart
-          data={mockData}
-          showTable={false}
-          toggleShowTable={mockToggle}
-        />
+        React.createElement(GraduateAttributesChart, {
+          data: mockData,
+          showTable: false,
+          toggleShowTable: mockToggle
+        })
       );
 
       const toggleButton = screen.getByRole('button');
@@ -120,21 +120,21 @@ describe('GraduateAttributesChart', () => {
 
     it('should show correct button text based on mode', () => {
       const { rerender } = render(
-        <GraduateAttributesChart
-          data={mockData}
-          showTable={false}
-          toggleShowTable={mockToggle}
-        />
+        React.createElement(GraduateAttributesChart, {
+          data: mockData,
+          showTable: false,
+          toggleShowTable: mockToggle
+        })
       );
 
       expect(screen.getByRole('button')).toHaveTextContent('Show Table');
 
       rerender(
-        <GraduateAttributesChart
-          data={mockData}
-          showTable={true}
-          toggleShowTable={mockToggle}
-        />
+        React.createElement(GraduateAttributesChart, {
+          data: mockData,
+          showTable: true,
+          toggleShowTable: mockToggle
+        })
       );
 
       expect(screen.getByRole('button')).toHaveTextContent('Show Chart');
@@ -144,11 +144,11 @@ describe('GraduateAttributesChart', () => {
   describe('Chart Mode', () => {
     beforeEach(() => {
       render(
-        <GraduateAttributesChart
-          data={mockData}
-          showTable={false}
-          toggleShowTable={mockToggle}
-        />
+        React.createElement(GraduateAttributesChart, {
+          data: mockData,
+          showTable: false,
+          toggleShowTable: mockToggle
+        })
       );
     });
 
@@ -177,11 +177,11 @@ describe('GraduateAttributesChart', () => {
   describe('Data Processing', () => {
     it('should handle zero values correctly in table mode', () => {
       render(
-        <GraduateAttributesChart
-          data={mockData}
-          showTable={true}
-          toggleShowTable={mockToggle}
-        />
+        React.createElement(GraduateAttributesChart, {
+          data: mockData,
+          showTable: true,
+          toggleShowTable: mockToggle
+        })
       );
 
       const zeroValueRow = screen.getByText('Attribute 2');
@@ -190,11 +190,11 @@ describe('GraduateAttributesChart', () => {
 
     it('should handle non-zero values correctly in table mode', () => {
       render(
-        <GraduateAttributesChart
-          data={mockData}
-          showTable={true}
-          toggleShowTable={mockToggle}
-        />
+        React.createElement(GraduateAttributesChart, {
+          data: mockData,
+          showTable: true,
+          toggleShowTable: mockToggle
+        })
       );
 
       const nonZeroValueRow = screen.getByText('Attribute 1');

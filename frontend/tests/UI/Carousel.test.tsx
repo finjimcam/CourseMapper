@@ -4,13 +4,16 @@ import '@testing-library/jest-dom';
 import Carousel from '../../src/components/Carousel';
 
 // Mock react-router-dom
-jest.mock('react-router-dom', () => ({
-  Link: ({ to, children }: { to: string; children: React.ReactNode }) => (
-    <a href={to} data-testid="mock-link">
-      {children}
-    </a>
-  ),
-}));
+jest.mock('react-router-dom', () => {
+  return {
+    Link: (props: { to: string; children: React.ReactNode }) => 
+      React.createElement('a', { 
+        href: props.to, 
+        'data-testid': 'mock-link' 
+      }, props.children),
+  };
+});
+
 
 describe('Carousel', () => {
   const mockItems = [
@@ -51,7 +54,7 @@ describe('Carousel', () => {
 
   describe('Initial Rendering', () => {
     it('should render with less than MAX_ITEMS', () => {
-      render(<Carousel items={mockItems} />);
+      render(React.createElement(Carousel, { items: mockItems }));
       expect(screen.getByText('Course 1')).toBeInTheDocument();
       expect(screen.getAllByRole('button')).toHaveLength(5); // 3 indicators + 2 navigation buttons
     });
@@ -62,7 +65,7 @@ describe('Carousel', () => {
         id: index + 1,
         course_name: `Course ${index + 1}`
       }));
-      render(<Carousel items={manyItems} />);
+      render(React.createElement(Carousel, { items: manyItems }));
       const indicators = screen.getAllByRole('button').filter(
         button => button.getAttribute('data-carousel-slide-to') !== null
       );
@@ -70,20 +73,20 @@ describe('Carousel', () => {
     });
 
     it('should render with single item', () => {
-      render(<Carousel items={[mockItems[0]]} />);
+      render(React.createElement(Carousel, { items: [mockItems[0]] }));
       expect(screen.getByText('Course 1')).toBeInTheDocument();
       expect(screen.getAllByRole('button')).toHaveLength(3); // 1 indicator + 2 navigation buttons
     });
 
     it('should handle empty items array', () => {
-      render(<Carousel items={[]} />);
+      render(React.createElement(Carousel, { items: [] }));
       expect(screen.queryByTestId('mock-link')).not.toBeInTheDocument();
     });
   });
 
   describe('Navigation Controls', () => {
     it('should navigate to next slide when next button is clicked', () => {
-      render(<Carousel items={mockItems} />);
+      render(React.createElement(Carousel, { items: mockItems }));
       
       const nextButton = screen.getByRole('button', { name: /next/i });
       fireEvent.click(nextButton);
@@ -95,7 +98,7 @@ describe('Carousel', () => {
     });
 
     it('should navigate to previous slide when previous button is clicked', () => {
-      render(<Carousel items={mockItems} />);
+      render(React.createElement(Carousel, { items: mockItems }));
       
       const prevButton = screen.getByRole('button', { name: /previous/i });
       fireEvent.click(prevButton);
@@ -106,7 +109,7 @@ describe('Carousel', () => {
     });
 
     it('should update indicators when navigating', () => {
-      render(<Carousel items={mockItems} />);
+      render(React.createElement(Carousel, { items: mockItems }));
       
       const indicators = screen.getAllByRole('button').filter(
         button => button.getAttribute('data-carousel-slide-to') !== null
@@ -119,7 +122,7 @@ describe('Carousel', () => {
     });
 
     it('should have accessible navigation controls', () => {
-      render(<Carousel items={mockItems} />);
+      render(React.createElement(Carousel, { items: mockItems }));
       
       expect(screen.getByRole('button', { name: /previous/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /next/i })).toBeInTheDocument();
@@ -133,7 +136,7 @@ describe('Carousel', () => {
 
   describe('Item Display', () => {
     it('should render item content correctly', () => {
-      render(<Carousel items={mockItems} />);
+      render(React.createElement(Carousel, { items: mockItems }));
       
       const firstItem = mockItems[0];
       expect(screen.getByText(firstItem.course_name)).toBeInTheDocument();
@@ -142,7 +145,7 @@ describe('Carousel', () => {
     });
 
     it('should render correct links with workbookId', () => {
-      render(<Carousel items={mockItems} />);
+      render(React.createElement(Carousel, { items: mockItems }));
       
       const links = screen.getAllByTestId('mock-link');
       expect(links[0]).toHaveAttribute('href', `/workbook/${mockItems[0].workbookId}`);
@@ -150,14 +153,14 @@ describe('Carousel', () => {
 
     it('should fallback to id when workbookId is not provided', () => {
       const itemsWithoutWorkbookId = mockItems.map(({ workbookId, ...item }) => item);
-      render(<Carousel items={itemsWithoutWorkbookId} />);
+      render(React.createElement(Carousel, { items: itemsWithoutWorkbookId }));
       
       const links = screen.getAllByTestId('mock-link');
       expect(links[0]).toHaveAttribute('href', `/workbook/1`);
     });
 
     it('should maintain visibility state during transitions', () => {
-      render(<Carousel items={mockItems} />);
+      render(React.createElement(Carousel, { items: mockItems }));
       
       const nextButton = screen.getByRole('button', { name: /next/i });
       const slides = screen.getAllByTestId('mock-link').map(link => link.parentElement);

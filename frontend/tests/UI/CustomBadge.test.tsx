@@ -12,11 +12,11 @@ describe('CustomBadge', () => {
         'hello world': '#00ff00'
       };
       
-      render(<CustomBadge label="TEST" colorMapping={colorMapping} />);
+      render(React.createElement(CustomBadge, { label: "TEST", colorMapping: colorMapping }));
       const badge = screen.getByText('TEST');
       expect(badge).toHaveStyle({ backgroundColor: '#ff0000' });
 
-      render(<CustomBadge label="Hello   World" colorMapping={colorMapping} />);
+      render(React.createElement(CustomBadge, { label: "Hello   World", colorMapping: colorMapping }));
       const badge2 = screen.getByText('Hello   World');
       expect(badge2).toHaveStyle({ backgroundColor: '#00ff00' });
     });
@@ -28,7 +28,7 @@ describe('CustomBadge', () => {
         'test': '#ff0000'
       };
       
-      render(<CustomBadge label="test" colorMapping={colorMapping} />);
+      render(React.createElement(CustomBadge, { label: "test", colorMapping: colorMapping }));
       const badge = screen.getByText('test');
       expect(badge).toHaveStyle({ backgroundColor: '#ff0000' });
     });
@@ -38,13 +38,13 @@ describe('CustomBadge', () => {
         'other': '#ff0000'
       };
       
-      render(<CustomBadge label="test" colorMapping={colorMapping} />);
+      render(React.createElement(CustomBadge, { label: "test", colorMapping: colorMapping }));
       const badge = screen.getByText('test');
       expect(badge).toHaveStyle({ backgroundColor: '#6c757d' });
     });
 
     it('should handle empty color mapping', () => {
-      render(<CustomBadge label="test" colorMapping={{}} />);
+      render(React.createElement(CustomBadge, { label: "test", colorMapping: {} }));
       const badge = screen.getByText('test');
       expect(badge).toHaveStyle({ backgroundColor: '#6c757d' });
     });
@@ -56,12 +56,12 @@ describe('CustomBadge', () => {
     };
 
     it('should render with correct label text', () => {
-      render(<CustomBadge label="test" colorMapping={colorMapping} />);
+      render(React.createElement(CustomBadge, { label: "test", colorMapping: colorMapping }));
       expect(screen.getByText('test')).toBeInTheDocument();
     });
 
     it('should render with correct styles', () => {
-      render(<CustomBadge label="test" colorMapping={colorMapping} />);
+      render(React.createElement(CustomBadge, { label: "test", colorMapping: colorMapping }));
       const badge = screen.getByText('test');
       
       expect(badge).toHaveStyle({
@@ -74,14 +74,14 @@ describe('CustomBadge', () => {
     });
 
     it('should handle empty label', () => {
-      render(<CustomBadge label="" colorMapping={colorMapping} />);
+      render(React.createElement(CustomBadge, { label: "", colorMapping: colorMapping }));
       const badge = screen.getByText('');
       expect(badge).toBeInTheDocument();
     });
 
     it('should handle long labels', () => {
       const longLabel = 'This is a very long label for testing purposes';
-      render(<CustomBadge label={longLabel} colorMapping={colorMapping} />);
+      render(React.createElement(CustomBadge, { label: longLabel, colorMapping: colorMapping }));
       expect(screen.getByText(longLabel)).toBeInTheDocument();
     });
   });
@@ -93,7 +93,7 @@ describe('CustomBadge', () => {
       };
       
       expect(() => {
-        render(<CustomBadge label="test" colorMapping={colorMapping} />);
+        render(React.createElement(CustomBadge, { label: "test", colorMapping: colorMapping }));
       }).not.toThrow();
     });
 
@@ -104,7 +104,7 @@ describe('CustomBadge', () => {
         'other': '#00ff00'
       };
       
-      render(<CustomBadge label="test" colorMapping={colorMapping} />);
+      render(React.createElement(CustomBadge, { label: "test", colorMapping: colorMapping }));
       const badge = screen.getByText('test');
       expect(badge).toHaveStyle({ backgroundColor: '#ff0000' });
     });

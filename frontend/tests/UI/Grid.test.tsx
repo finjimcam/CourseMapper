@@ -5,13 +5,16 @@ import Grid from '../../src/components/Grid';
 import { Workbook } from '../../src/utils/workbookUtils';
 
 // Mock react-router-dom
-jest.mock('react-router-dom', () => ({
-  Link: ({ to, children }: { to: string; children: React.ReactNode }) => (
-    <a href={to} data-testid="mock-link">
-      {children}
-    </a>
-  ),
-}));
+jest.mock('react-router-dom', () => {
+  return {
+    Link: (props: { to: string; children: React.ReactNode }) => 
+      React.createElement('a', { 
+        href: props.to, 
+        'data-testid': 'mock-link' 
+      }, props.children),
+  };
+});
+
 
 describe('Grid', () => {
   const mockWorkbooks: Workbook[] = [
@@ -51,7 +54,7 @@ describe('Grid', () => {
 
   describe('Layout Structure', () => {
     it('should render grid with correct responsive classes', () => {
-      render(<Grid workbooks={mockWorkbooks} />);
+      render(React.createElement(Grid, { workbooks: mockWorkbooks }));
       const gridContainer = screen.getByRole('list') || screen.getByRole('group');
       
       expect(gridContainer).toHaveClass(
@@ -65,13 +68,13 @@ describe('Grid', () => {
     });
 
     it('should render correct number of grid items', () => {
-      render(<Grid workbooks={mockWorkbooks} />);
+      render(React.createElement(Grid, { workbooks: mockWorkbooks }));
       const gridItems = screen.getAllByTestId('mock-link');
       expect(gridItems).toHaveLength(mockWorkbooks.length);
     });
 
     it('should apply proper spacing and border styles', () => {
-      render(<Grid workbooks={mockWorkbooks} />);
+      render(React.createElement(Grid, { workbooks: mockWorkbooks }));
       const firstCard = screen.getByText('Course 1').closest('div');
       
       expect(firstCard).toHaveClass(
@@ -87,7 +90,7 @@ describe('Grid', () => {
 
   describe('Content Display', () => {
     it('should render workbook details correctly', () => {
-      render(<Grid workbooks={mockWorkbooks} />);
+      render(React.createElement(Grid, { workbooks: mockWorkbooks }));
       
       mockWorkbooks.forEach(workbook => {
         expect(screen.getByText(workbook.workbook.course_name)).toBeInTheDocument();
@@ -97,7 +100,7 @@ describe('Grid', () => {
     });
 
     it('should render correct links for each workbook', () => {
-      render(<Grid workbooks={mockWorkbooks} />);
+      render(React.createElement(Grid, { workbooks: mockWorkbooks }));
       
       const links = screen.getAllByTestId('mock-link');
       links.forEach((link, index) => {
@@ -106,12 +109,12 @@ describe('Grid', () => {
     });
 
     it('should render "No workbooks found" when workbooks is null', () => {
-      render(<Grid workbooks={null} />);
+      render(React.createElement(Grid, { workbooks: null }));
       expect(screen.getByText('No workbooks found.')).toBeInTheDocument();
     });
 
     it('should render "No workbooks found" with full column span', () => {
-      render(<Grid workbooks={null} />);
+      render(React.createElement(Grid, { workbooks: null }));
       const message = screen.getByText('No workbooks found.');
       expect(message).toHaveClass('col-span-full');
     });
@@ -119,7 +122,7 @@ describe('Grid', () => {
 
   describe('Card Styling', () => {
     it('should have hover effects on cards', () => {
-      render(<Grid workbooks={mockWorkbooks} />);
+      render(React.createElement(Grid, { workbooks: mockWorkbooks }));
       const firstCard = screen.getByText('Course 1').closest('div');
       
       expect(firstCard).toHaveClass(
@@ -130,7 +133,7 @@ describe('Grid', () => {
     });
 
     it('should apply text styling correctly', () => {
-      render(<Grid workbooks={mockWorkbooks} />);
+      render(React.createElement(Grid, { workbooks: mockWorkbooks }));
       
       // Course name styling
       const courseName = screen.getByText('Course 1');
@@ -142,7 +145,7 @@ describe('Grid', () => {
     });
 
     it('should render links without underline', () => {
-      render(<Grid workbooks={mockWorkbooks} />);
+      render(React.createElement(Grid, { workbooks: mockWorkbooks }));
       const links = screen.getAllByTestId('mock-link');
       
       links.forEach(link => {
@@ -154,12 +157,12 @@ describe('Grid', () => {
 
   describe('Empty State', () => {
     it('should handle empty workbooks array', () => {
-      render(<Grid workbooks={[]} />);
+      render(React.createElement(Grid, { workbooks: [] }));
       expect(screen.getByText('No workbooks found.')).toBeInTheDocument();
     });
 
     it('should center align empty state message', () => {
-      render(<Grid workbooks={[]} />);
+      render(React.createElement(Grid, { workbooks: [] }));
       const message = screen.getByText('No workbooks found.');
       expect(message).toHaveClass('text-center', 'text-gray-500');
     });
