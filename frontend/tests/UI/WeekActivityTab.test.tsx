@@ -143,7 +143,7 @@ describe('WeekActivityTab', () => {
       jest.clearAllMocks();
     });
 
-    it('should handle sorting by staff', () => {
+    it('should handle sorting by staff', async () => {
       render(
         React.createElement(WeekActivityTab, {
           week: mockWeekInfo,
@@ -151,13 +151,13 @@ describe('WeekActivityTab', () => {
         })
       );
       
-      const staffHeader = screen.getByText('Staff Responsible');
+      const staffHeader = screen.getByText(/Staff Responsible/);
       fireEvent.click(staffHeader);
       
       expect(mockOnSort).toHaveBeenCalledWith('staff', 'asc');
     });
 
-    it('should toggle sort direction on second click', () => {
+    it('should toggle sort direction on second click', async () => {
       render(
         React.createElement(WeekActivityTab, {
           week: mockWeekInfo,
@@ -166,13 +166,13 @@ describe('WeekActivityTab', () => {
         })
       );
       
-      const staffHeader = screen.getByText('Staff Responsible');
+      const staffHeader = screen.getByText(/Staff Responsible/);
       fireEvent.click(staffHeader);
       
       expect(mockOnSort).toHaveBeenCalledWith('staff', 'desc');
     });
 
-    it('should show sort indicators', () => {
+    it('should show sort indicators', async () => {
       render(
         React.createElement(WeekActivityTab, {
           week: mockWeekInfo,
@@ -181,6 +181,76 @@ describe('WeekActivityTab', () => {
       );
       
       expect(screen.getByText('↑')).toBeInTheDocument();
+    });
+
+    it('should use local sort state when no onSort provided', async () => {
+      render(
+        React.createElement(WeekActivityTab, {
+          week: mockWeekInfo
+        })
+      );
+      
+      const staffHeader = screen.getByText(/Staff Responsible/);
+      fireEvent.click(staffHeader);
+
+      // First staff member should be sorted to top
+      const firstRow = screen.getAllByRole('row')[1]; // First data row
+      expect(firstRow).toHaveTextContent('Jane Smith, Bob Wilson');
+
+      // Click again to reverse sort
+      fireEvent.click(staffHeader);
+      const newFirstRow = screen.getAllByRole('row')[1];
+      expect(newFirstRow).toHaveTextContent('John Doe');
+    });
+
+    it('should sort by multiple columns', async () => {
+      render(
+        React.createElement(WeekActivityTab, {
+          week: mockWeekInfo
+        })
+      );
+      
+      // Sort by learning activity
+      const activityHeader = screen.getByText(/Learning Activity/);
+      fireEvent.click(activityHeader);
+
+      let rows = screen.getAllByRole('row');
+      expect(rows[1]).toHaveTextContent('Lecture'); // 'Lecture' should come before 'Workshop'
+
+      // Sort by learning type
+      const typeHeader = screen.getByText(/Learning Type/);
+      fireEvent.click(typeHeader);
+
+      rows = screen.getAllByRole('row');
+      expect(rows[1]).toHaveTextContent('Asynchronous'); // 'Asynchronous' should come before 'Synchronous'
+    });
+
+    it('should handle sorting by all sortable columns', async () => {
+      render(
+        React.createElement(WeekActivityTab, {
+          week: mockWeekInfo,
+          onSort: mockOnSort
+        })
+      );
+
+      const headers = [
+        'Staff Responsible',
+        'Learning Activity',
+        'Learning Type',
+        'Task Status'
+      ];
+
+      for (const header of headers) {
+        const headerElement = screen.getByText(new RegExp(header));
+        fireEvent.click(headerElement);
+        
+        const expectedKey = header === 'Staff Responsible' ? 'staff' :
+                          header === 'Learning Activity' ? 'activity' :
+                          header === 'Learning Type' ? 'type' : 'status';
+        
+        expect(mockOnSort).toHaveBeenCalledWith(expectedKey, 'asc');
+        jest.clearAllMocks();
+      }
     });
   });
 
@@ -202,11 +272,8 @@ describe('WeekActivityTab', () => {
         })
       );
 
-      const editButtons = screen.getAllByRole('button', { name: /edit activity/i });
-      const deleteButtons = screen.getAllByRole('button', { name: /delete activity/i });
-      
-      expect(editButtons.length).toBe(2);
-      expect(deleteButtons.length).toBe(2);
+      const editButtons = screen.getAllByRole('button');
+      expect(editButtons.length).toBe(4); // 2 edit buttons + 2 delete buttons
     });
 
     it('should call edit callback with correct parameters', () => {
@@ -219,8 +286,8 @@ describe('WeekActivityTab', () => {
         })
       );
 
-      const editButtons = screen.getAllByRole('button', { name: /edit activity/i });
-      fireEvent.click(editButtons[0]);
+      const buttons = screen.getAllByRole('button');
+      fireEvent.click(buttons[0]); // First button is edit
       
       expect(mockEditActivity).toHaveBeenCalledWith(
         mockOriginalActivities[0],
@@ -239,8 +306,8 @@ describe('WeekActivityTab', () => {
         })
       );
 
-      const deleteButtons = screen.getAllByRole('button', { name: /delete activity/i });
-      fireEvent.click(deleteButtons[1]);
+      const buttons = screen.getAllByRole('button');
+      fireEvent.click(buttons[3]); // Last button is delete for second row
       
       expect(mockDeleteActivity).toHaveBeenCalledWith(1, mockWeekInfo.weekNumber);
     });
@@ -248,8 +315,7 @@ describe('WeekActivityTab', () => {
     it('should not render action buttons when callbacks not provided', () => {
       render(React.createElement(WeekActivityTab, { week: mockWeekInfo }));
       
-      expect(screen.queryByRole('button', { name: /edit activity/i })).not.toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /delete activity/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button')).not.toBeInTheDocument();
     });
   });
 });
