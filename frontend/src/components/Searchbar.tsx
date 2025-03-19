@@ -30,6 +30,8 @@ function SearchBar() {
   const [ledBy, setLedBy] = useState('');
   const [contributedBy, setContributedBy] = useState('');
   const [learningPlatform, setLearningPlatform] = useState('');
+  const [area, setArea] = useState('');
+  const [school, setSchool] = useState('');
 
   function makeSearch(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -43,6 +45,8 @@ function SearchBar() {
     if (ledBy) params.led_by = ledBy;
     if (contributedBy) params.contributed_by = contributedBy;
     if (learningPlatform) params.learning_platform = learningPlatform;
+    if (area) params.area = area;
+    if (school) params.school = school;
 
     navigate({
       pathname: `/results`,
@@ -56,6 +60,8 @@ function SearchBar() {
     setLedBy('');
     setContributedBy('');
     setLearningPlatform('');
+    setArea('');
+    setSchool('');
   }
 
   return (
@@ -191,6 +197,40 @@ function SearchBar() {
                   placeholder="Platform name..."
                   value={learningPlatform}
                   onChange={(e) => setLearningPlatform(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="area"
+                  className="block mb-1 text-sm font-medium text-gray-700"
+                >
+                  Area
+                </label>
+                <input
+                  type="text"
+                  id="area"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                  placeholder="Area name..."
+                  value={area}
+                  onChange={(e) => setArea(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="school"
+                  className="block mb-1 text-sm font-medium text-gray-700"
+                >
+                  School
+                </label>
+                <input
+                  type="text"
+                  id="school"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                  placeholder="School name..."
+                  value={school}
+                  onChange={(e) => setSchool(e.target.value)}
                 />
               </div>
 
