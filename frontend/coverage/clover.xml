@@ -1,35 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1742395813197" clover="3.2.0">
-  <project timestamp="1742395813197" name="All files">
-    <metrics statements="99" coveredstatements="78" conditionals="75" coveredconditionals="51" methods="30" coveredmethods="23" elements="204" coveredelements="152" complexity="0" loc="99" ncloc="99" packages="1" files="5" classes="5"/>
-    <file name="Carousel.tsx" path="C:\Users\finji\Documents\CourseMapperSH01\sh01-main\frontend\src\components\Carousel.tsx">
-      <metrics statements="25" coveredstatements="25" conditionals="10" coveredconditionals="10" methods="9" coveredmethods="9"/>
-      <line num="19" count="1" type="stmt"/>
-      <line num="20" count="1" type="stmt"/>
-      <line num="22" count="1" type="stmt"/>
-      <line num="37" count="32" type="stmt"/>
-      <line num="38" count="32" type="stmt"/>
-      <line num="39" count="32" type="stmt"/>
-      <line num="41" count="32" type="stmt"/>
-      <line num="43" count="16" type="stmt"/>
-      <line num="45" count="16" type="cond" truecount="2" falsecount="0"/>
-      <line num="46" count="15" type="stmt"/>
-      <line num="48" count="1" type="stmt"/>
-      <line num="49" count="1" type="stmt"/>
-      <line num="50" count="5" type="stmt"/>
-      <line num="52" count="1" type="stmt"/>
-      <line num="56" count="32" type="stmt"/>
-      <line num="58" count="32" type="stmt"/>
-      <line num="59" count="2" type="stmt"/>
-      <line num="62" count="32" type="stmt"/>
-      <line num="63" count="1" type="stmt"/>
-      <line num="64" count="1" type="stmt"/>
-      <line num="68" count="32" type="stmt"/>
-      <line num="73" count="57" type="stmt"/>
-      <line num="97" count="90" type="stmt"/>
-      <line num="103" count="1" type="stmt"/>
-      <line num="163" count="1" type="stmt"/>
-    </file>
+<coverage generated="1742400515647" clover="3.2.0">
+  <project timestamp="1742400515647" name="All files">
+    <metrics statements="69" coveredstatements="48" conditionals="63" coveredconditionals="39" methods="19" coveredmethods="12" elements="151" coveredelements="99" complexity="0" loc="69" ncloc="69" packages="1" files="3" classes="3"/>
     <file name="CustomBadge.tsx" path="C:\Users\finji\Documents\CourseMapperSH01\sh01-main\frontend\src\components\CustomBadge.tsx">
       <metrics statements="9" coveredstatements="9" conditionals="2" coveredconditionals="2" methods="2" coveredmethods="2"/>
       <line num="19" count="2" type="stmt"/>
@@ -61,14 +33,6 @@
       <line num="115" count="13" type="stmt"/>
       <line num="130" count="21" type="stmt"/>
       <line num="162" count="1" type="stmt"/>
-    </file>
-    <file name="Grid.tsx" path="C:\Users\finji\Documents\CourseMapperSH01\sh01-main\frontend\src\components\Grid.tsx">
-      <metrics statements="5" coveredstatements="5" conditionals="2" coveredconditionals="2" methods="2" coveredmethods="2"/>
-      <line num="19" count="1" type="stmt"/>
-      <line num="22" count="1" type="stmt"/>
-      <line num="23" count="12" type="stmt"/>
-      <line num="26" count="16" type="stmt"/>
-      <line num="43" count="1" type="stmt"/>
     </file>
     <file name="WeekActivityTab.tsx" path="C:\Users\finji\Documents\CourseMapperSH01\sh01-main\frontend\src\components\WeekActivityTab.tsx">
       <metrics statements="43" coveredstatements="30" conditionals="49" coveredconditionals="31" methods="13" coveredmethods="8"/>
