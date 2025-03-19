@@ -1348,7 +1348,6 @@ def duplicate_workbook(
             start_date=original_workbook.start_date,
             end_date=original_workbook.end_date,
             course_name=str(original_workbook.course_name) + " - copy",
-            course_name=str(original_workbook.course_name) + " - copy",
             course_lead_id=session_data.user_id,
             learning_platform_id=original_workbook.learning_platform_id,
             number_of_weeks=original_workbook.number_of_weeks,
@@ -1370,14 +1369,19 @@ def duplicate_workbook(
             session.refresh(new_week)
             week_mapping[(original_week.workbook_id, original_week.number)] = new_week
 
-        original_week_grad_attrs = session.exec(
-            select(WeekGraduateAttribute).where(
-                WeekGraduateAttribute.week_workbook_id == workbook_id
-            )
-        ).all() or []
+        original_week_grad_attrs = (
+            session.exec(
+                select(WeekGraduateAttribute).where(
+                    WeekGraduateAttribute.week_workbook_id == workbook_id
+                )
+            ).all()
+            or []
+        )
 
         for grad_attr in original_week_grad_attrs:
-            new_week = week_mapping.get((grad_attr.week_workbook_id, grad_attr.week_number))
+            new_week: Week | None = week_mapping.get(
+                (grad_attr.week_workbook_id, grad_attr.week_number)
+            )
             if new_week is not None:
                 new_grad_attr = WeekGraduateAttribute(
                     week_workbook_id=new_workbook.id,
