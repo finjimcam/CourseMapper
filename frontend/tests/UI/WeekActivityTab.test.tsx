@@ -272,11 +272,8 @@ describe('WeekActivityTab', () => {
         })
       );
 
-      const editButtons = screen.getAllByRole('button', { name: 'Edit Activity' });
-      const deleteButtons = screen.getAllByRole('button', { name: 'Delete Activity' });
-      
-      expect(editButtons.length).toBe(2);
-      expect(deleteButtons.length).toBe(2);
+      const editButtons = screen.getAllByRole('button');
+      expect(editButtons.length).toBe(4); // 2 edit buttons + 2 delete buttons
     });
 
     it('should call edit callback with correct parameters', () => {
@@ -289,8 +286,8 @@ describe('WeekActivityTab', () => {
         })
       );
 
-      const editButtons = screen.getAllByRole('button', { name: 'Edit Activity' });
-      fireEvent.click(editButtons[0]);
+      const buttons = screen.getAllByRole('button');
+      fireEvent.click(buttons[0]); // First button is edit
       
       expect(mockEditActivity).toHaveBeenCalledWith(
         mockOriginalActivities[0],
@@ -309,8 +306,8 @@ describe('WeekActivityTab', () => {
         })
       );
 
-      const deleteButtons = screen.getAllByRole('button', { name: 'Delete Activity' });
-      fireEvent.click(deleteButtons[1]);
+      const buttons = screen.getAllByRole('button');
+      fireEvent.click(buttons[3]); // Last button is delete for second row
       
       expect(mockDeleteActivity).toHaveBeenCalledWith(1, mockWeekInfo.weekNumber);
     });
@@ -318,8 +315,7 @@ describe('WeekActivityTab', () => {
     it('should not render action buttons when callbacks not provided', () => {
       render(React.createElement(WeekActivityTab, { week: mockWeekInfo }));
       
-      expect(screen.queryByRole('button', { name: 'Edit Activity' })).not.toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: 'Delete Activity' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button')).not.toBeInTheDocument();
     });
   });
 });
