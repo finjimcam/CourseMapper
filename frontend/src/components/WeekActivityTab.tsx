@@ -21,7 +21,7 @@ import React from 'react';
 import { Table, Button, Tooltip } from 'flowbite-react';
 import { CustomBadge } from './CustomBadge';
 import { learningTypeColors, statusColors } from '../utils/colorMappings';
-import { WeekInfo, WeekData, Activity } from '../utils/workbookUtils';
+import { WeekInfo, Activity } from '../utils/workbookUtils';
 import { HiPencil, HiTrash } from 'react-icons/hi';
 
 interface WeekActivityTabProps {
@@ -80,21 +80,25 @@ const WeekActivityTab: React.FC<WeekActivityTabProps> = ({
       let result = 0;
 
       switch (key) {
-        case 'staff':
+        case 'staff': {
           // Sort by first staff member's name, or 'N/A' if no staff
           const aStaff = a.staff.length > 0 ? a.staff[0] : 'N/A';
           const bStaff = b.staff.length > 0 ? b.staff[0] : 'N/A';
           result = aStaff.localeCompare(bStaff);
           break;
-        case 'activity':
+        }
+        case 'activity': {
           result = a.activity.localeCompare(b.activity);
           break;
-        case 'type':
+        }
+        case 'type': {
           result = a.type.localeCompare(b.type);
           break;
-        case 'status':
+        }
+        case 'status': {
           result = a.status.localeCompare(b.status);
           break;
+        }
         default:
           result = 0;
       }
