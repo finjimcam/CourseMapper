@@ -87,15 +87,18 @@ const WeekActivityTab: React.FC<WeekActivityTabProps> = ({
           result = aStaff.localeCompare(bStaff);
           break;
         }
-        case 'activity':
+        case 'activity': {
           result = a.activity.localeCompare(b.activity);
           break;
-        case 'type':
+        }
+        case 'type': {
           result = a.type.localeCompare(b.type);
           break;
-        case 'status':
+        }
+        case 'status': {
           result = a.status.localeCompare(b.status);
           break;
+        }
         default:
           result = 0;
       }
