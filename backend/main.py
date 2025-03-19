@@ -1347,7 +1347,7 @@ def duplicate_workbook(
         new_workbook = Workbook(
             start_date=original_workbook.start_date,
             end_date=original_workbook.end_date,
-            course_name=original_workbook.course_name,
+            course_name=str(original_workbook.course_name) + " - copy",
             course_lead_id=session_data.user_id,
             learning_platform_id=original_workbook.learning_platform_id,
             number_of_weeks=original_workbook.number_of_weeks,
@@ -1359,6 +1359,7 @@ def duplicate_workbook(
         session.refresh(new_workbook)
 
         # Copy weeks
+        week_mapping = {}
         original_weeks = session.exec(select(Week).where(Week.workbook_id == workbook_id)).all()
 
         for original_week in original_weeks:
@@ -1366,6 +1367,23 @@ def duplicate_workbook(
             session.add(new_week)
             session.commit()
             session.refresh(new_week)
+            week_mapping[(original_week.workbook_id, original_week.number)] = new_week
+
+        original_week_grad_attrs = session.exec(
+            select(WeekGraduateAttribute).where(
+                WeekGraduateAttribute.week_workbook_id == workbook_id
+            )
+        ).all()
+
+        for grad_attr in original_week_grad_attrs:
+            new_week = week_mapping.get((grad_attr.week_workbook_id, grad_attr.week_number))
+            if new_week:
+                new_grad_attr = WeekGraduateAttribute(
+                    week_workbook_id=new_workbook.id,
+                    week_number=new_week.number,
+                    graduate_attribute_id=grad_attr.graduate_attribute_id,
+                )
+                session.add(new_grad_attr)
 
         # Copy activities and ActivityStaffs
         original_activities = session.exec(
