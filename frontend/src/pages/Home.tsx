@@ -82,12 +82,15 @@ function Home() {
   const handleCreateWorkbook = (workbookData: {
     courseName: string;
     learningPlatformId: string;
-    startDate: Date;
-    endDate: Date;
+    startDate: string;
+    endDate: string;
     coordinatorIds: string[];
+    areaId: string;
+    schoolId: string | null;
+    learningPlatform: string;
   }) => {
     sessionStorage.setItem('newWorkbookData', JSON.stringify(workbookData));
-    navigate('/workbooks/edit');
+    navigate('/workbooks/create');
   };
 
   if (loading) return <div className="text-center mt-10">Loading...</div>;

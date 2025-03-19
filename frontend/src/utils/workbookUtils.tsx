@@ -26,6 +26,17 @@ export const FONT_SIZE = '16px';
 // Type Definitions
 // =====================
 
+export interface Area {
+  id: string;
+  name: string;
+}
+
+export interface School {
+  id: string;
+  name: string;
+  area_id: string;
+}
+
 export interface GenericData {
   id: string;
   name: string;
@@ -71,6 +82,8 @@ export interface WorkbookData {
   start_date: string;
   end_date: string;
   course_name: string;
+  area_id?: string;
+  school_id?: string | null;
 }
 
 export interface GraduateAttribute {
