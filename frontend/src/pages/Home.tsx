@@ -147,6 +147,8 @@ function Home() {
               learning_platform_id: wb.learning_platform.id,
               course_lead: wb.course_lead.name,
               learning_platform: wb.learning_platform.name,
+              area_id: wb.workbook.area_id,
+              school_id: wb.workbook.school_id,
             }))}
           />
         </div>

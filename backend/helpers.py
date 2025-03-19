@@ -52,6 +52,8 @@ def add_workbook_details(session: Session, workbook: Workbook) -> Dict[str, Any]
             "course_name": workbook.course_name,
             "course_lead_id": str(workbook.course_lead_id),
             "learning_platform_id": str(workbook.learning_platform_id),
+            "area_id": str(workbook.area_id) if workbook.area_id else None,
+            "school_id": str(workbook.school_id) if workbook.school_id else None,
         },
         "course_lead": (
             {

@@ -134,6 +134,8 @@ function CreateWorkbook(): JSX.Element {
             course_name: data.courseName,
             start_date: data.startDate,
             end_date: data.endDate,
+            area_id: data.areaId,
+            school_id: data.schoolId,
           },
           learning_platform: {
             id: platform.id,
