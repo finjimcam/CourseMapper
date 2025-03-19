@@ -1348,6 +1348,7 @@ def duplicate_workbook(
             start_date=original_workbook.start_date,
             end_date=original_workbook.end_date,
             course_name=str(original_workbook.course_name) + " - copy",
+            course_name=str(original_workbook.course_name) + " - copy",
             course_lead_id=session_data.user_id,
             learning_platform_id=original_workbook.learning_platform_id,
             number_of_weeks=original_workbook.number_of_weeks,
