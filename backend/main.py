@@ -1379,13 +1379,13 @@ def duplicate_workbook(
         )
 
         for grad_attr in original_week_grad_attrs:
-            new_week: Week | None = week_mapping.get(
+            dic_new_week: Week | None = week_mapping.get(
                 (grad_attr.week_workbook_id, grad_attr.week_number)
             )
             if new_week is not None:
                 new_grad_attr = WeekGraduateAttribute(
                     week_workbook_id=new_workbook.id,
-                    week_number=new_week.number,
+                    week_number=dic_new_week.number,
                     graduate_attribute_id=grad_attr.graduate_attribute_id,
                 )
                 session.add(new_grad_attr)
