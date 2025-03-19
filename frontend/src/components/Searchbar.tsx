@@ -16,8 +16,19 @@ You should have received a copy of the GNU General Public License
 along with this program at /LICENSE.md. If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useState, useEffect, useRef } from 'react';
 import { createSearchParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+
+interface School {
+  id: string;
+  name: string;
+}
+
+interface Area {
+  id: string;
+  name: string;
+}
 
 function SearchBar() {
   const navigate = useNavigate();
@@ -30,6 +41,72 @@ function SearchBar() {
   const [ledBy, setLedBy] = useState('');
   const [contributedBy, setContributedBy] = useState('');
   const [learningPlatform, setLearningPlatform] = useState('');
+  const [area, setArea] = useState('');
+  const [areaId, setAreaId] = useState('');
+  const [school, setSchool] = useState('');
+  const [schoolId, setSchoolId] = useState('');
+  const [schools, setSchools] = useState<School[]>([]);
+  const [areas, setAreas] = useState<Area[]>([]);
+  const [filteredSchools, setFilteredSchools] = useState<School[]>([]);
+  const [filteredAreas, setFilteredAreas] = useState<Area[]>([]);
+  const [showSchoolDropdown, setShowSchoolDropdown] = useState(false);
+  const [showAreaDropdown, setShowAreaDropdown] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  const schoolRef = useRef<HTMLDivElement>(null);
+  const areaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [schoolsResponse, areasResponse] = await Promise.all([
+          axios.get(`${import.meta.env.VITE_API}/schools/`),
+          axios.get(`${import.meta.env.VITE_API}/area/`)
+        ]);
+        setSchools(schoolsResponse.data);
+        setAreas(areasResponse.data);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (schoolRef.current && !schoolRef.current.contains(event.target as Node)) {
+        setShowSchoolDropdown(false);
+      }
+      if (areaRef.current && !areaRef.current.contains(event.target as Node)) {
+        setShowAreaDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSchoolInput = (value: string) => {
+    setSchool(value);
+    setSchoolId(''); // Clear the ID when typing
+    const filtered = schools.filter(s => 
+      s.name.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredSchools(filtered);
+    setShowSchoolDropdown(true);
+  };
+
+  const handleAreaInput = (value: string) => {
+    setArea(value);
+    setAreaId(''); // Clear the ID when typing
+    const filtered = areas.filter(a => 
+      a.name.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredAreas(filtered);
+    setShowAreaDropdown(true);
+  };
 
   function makeSearch(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -43,6 +120,8 @@ function SearchBar() {
     if (ledBy) params.led_by = ledBy;
     if (contributedBy) params.contributed_by = contributedBy;
     if (learningPlatform) params.learning_platform = learningPlatform;
+    if (areaId) params.area_id = areaId;
+    if (schoolId) params.school_id = schoolId;
 
     navigate({
       pathname: `/results`,
@@ -56,6 +135,10 @@ function SearchBar() {
     setLedBy('');
     setContributedBy('');
     setLearningPlatform('');
+    setArea('');
+    setAreaId('');
+    setSchool('');
+    setSchoolId('');
   }
 
   return (
@@ -192,6 +275,78 @@ function SearchBar() {
                   value={learningPlatform}
                   onChange={(e) => setLearningPlatform(e.target.value)}
                 />
+              </div>
+
+              <div ref={areaRef} className="relative">
+                <label
+                  htmlFor="area"
+                  className="block mb-1 text-sm font-medium text-gray-700"
+                >
+                  Area {isLoading && <span className="text-gray-400 text-xs ml-1">(Loading...)</span>}
+                </label>
+                <input
+                  disabled={isLoading}
+                  type="text"
+                  id="area"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                  placeholder="Area name..."
+                  value={area}
+                  onChange={(e) => handleAreaInput(e.target.value)}
+                  onFocus={() => setShowAreaDropdown(true)}
+                />
+                {showAreaDropdown && filteredAreas.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                    {filteredAreas.map((a) => (
+                      <div
+                        key={a.id}
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => {
+                          setArea(a.name);
+                          setAreaId(a.id);
+                          setShowAreaDropdown(false);
+                        }}
+                      >
+                        {a.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div ref={schoolRef} className="relative">
+                <label
+                  htmlFor="school"
+                  className="block mb-1 text-sm font-medium text-gray-700"
+                >
+                  School {isLoading && <span className="text-gray-400 text-xs ml-1">(Loading...)</span>}
+                </label>
+                <input
+                  disabled={isLoading}
+                  type="text"
+                  id="school"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                  placeholder="School name..."
+                  value={school}
+                  onChange={(e) => handleSchoolInput(e.target.value)}
+                  onFocus={() => setShowSchoolDropdown(true)}
+                />
+                {showSchoolDropdown && filteredSchools.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                    {filteredSchools.map((s) => (
+                      <div
+                        key={s.id}
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => {
+                          setSchool(s.name);
+                          setSchoolId(s.id);
+                          setShowSchoolDropdown(false);
+                        }}
+                      >
+                        {s.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="flex items-end">

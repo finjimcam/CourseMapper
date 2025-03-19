@@ -18,6 +18,8 @@ along with this program at /LICENSE.md. If not, see <https://www.gnu.org/license
 
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
+import { Area, School } from '../utils/workbookUtils';
 
 const MAX_ITEMS = 5; // Maximum number of items to display
 
@@ -31,12 +33,61 @@ interface CarouselItem {
   course_name: string;
   course_lead: string;
   learning_platform: string;
+  area_id?: string;
+  school_id?: string | null;
 }
 
 function Carousel({ items }: { items: Array<CarouselItem> }) {
   const [currentPosition, setCurrentPosition] = useState(0);
   const carouselSize = 5;
   const [visibleItems, setVisibleItems] = useState<Array<CarouselItem>>([]);
+  const [areas, setAreas] = useState<Area[]>([]);
+  const [schools, setSchools] = useState<School[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const [areasResponse, schoolsResponse] = await Promise.all([
+          axios.get(`${import.meta.env.VITE_API}/area/`),
+          axios.get(`${import.meta.env.VITE_API}/schools/`)
+        ]);
+        setAreas(areasResponse.data);
+        setSchools(schoolsResponse.data);
+      } catch (error) {
+        console.error('Error fetching area/school data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const getAreaName = (areaId: string | undefined) => {
+    if (isLoading) return 'Loading...';
+    if (!areaId) {
+      return 'N/A';
+    }
+    if (areas.length === 0) {
+      return 'Loading...';
+    }
+    const area = areas.find(a => a.id === areaId);
+    return area ? area.name : 'N/A';
+  };
+
+  const getSchoolName = (schoolId: string | null | undefined) => {
+    if (isLoading) return 'Loading...';
+    if (!schoolId) {
+      return 'N/A';
+    }
+    if (schools.length === 0) {
+      return 'Loading...';
+    }
+    const school = schools.find(s => s.id === schoolId);
+    return school ? school.name : 'N/A';
+  };
 
   useEffect(() => {
     // Limit total items to MAX_ITEMS
@@ -81,9 +132,15 @@ function Carousel({ items }: { items: Array<CarouselItem> }) {
             >
               <div className="absolute block w-full h-full bg-gray-100 rounded-lg shadow-lg p-4">
                 <h6 className="text-lg font-bold dark:text-white">{item.course_name}</h6>
-                <p className="text-gray-500 md:text-l dark:text-gray-400">{item.course_lead}</p>
+                <p className="text-gray-500 md:text-l dark:text-gray-400">Lead: {item.course_lead}</p>
                 <p className="text-gray-500 md:text-l dark:text-gray-400">
-                  {item.learning_platform}
+                  Platform: {item.learning_platform}
+                </p>
+                <p className="text-gray-500 md:text-l dark:text-gray-400">
+                  Area: {getAreaName(item.area_id)}
+                </p>
+                <p className="text-gray-500 md:text-l dark:text-gray-400">
+                  School: {getSchoolName(item.school_id)}
                 </p>
               </div>
             </Link>

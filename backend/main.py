@@ -2087,6 +2087,8 @@ def search_workbooks(
     led_by: str | None = None,
     contributed_by: str | None = None,
     learning_platform: str | None = None,
+    area_id: uuid.UUID | None = None,
+    school_id: uuid.UUID | None = None,
     _: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
     peek: bool = Query(False),
@@ -2129,6 +2131,14 @@ def search_workbooks(
         # if ends_before is provided, returned workbooks must start on or after that date
         if ends_before:
             if workbook.end_date > ends_before:
+                continue
+        # if area_id is provided, filter by area
+        if area_id:
+            if workbook.area_id != area_id:
+                continue
+        # if school_id is provided, filter by school
+        if school_id:
+            if workbook.school_id != school_id:
                 continue
         workbooks.append(workbook)
 

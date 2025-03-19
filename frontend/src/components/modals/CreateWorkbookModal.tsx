@@ -21,41 +21,60 @@ import { Button, Modal, Label, TextInput, Select } from 'flowbite-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-
 interface LearningPlatform {
   id: string;
   name: string;
 }
 
+interface Area {
+  id: string;
+  name: string;
+}
+
+interface School {
+  id: string;
+  name: string;
+  area_id: string;
+}
+
+interface WorkbookData {
+  courseName: string;
+  learningPlatformId: string;
+  startDate: string;
+  endDate: string;
+  coordinatorIds: string[];
+  areaId: string;
+  schoolId: string | null;
+  learningPlatform: string;
+}
+
 interface CreateWorkbookModalProps {
   show: boolean;
   onClose: () => void;
-  onSubmit: (workbookData: {
-    courseName: string;
-    learningPlatformId: string;
-    startDate: Date;
-    endDate: Date;
-    coordinatorIds: string[];
-  }) => void;
+  onSubmit: (workbookData: WorkbookData) => void;
 }
 
-export function CreateWorkbookModal({ show, onClose }: CreateWorkbookModalProps) {
-  const navigate = useNavigate();
+export function CreateWorkbookModal({ show, onClose, onSubmit }: CreateWorkbookModalProps) {
   const [courseName, setCourseName] = useState('');
   const [learningPlatform, setLearningPlatform] = useState('');
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [learningPlatforms, setLearningPlatforms] = useState<LearningPlatform[]>([]);
+  const [areas, setAreas] = useState<Area[]>([]);
+  const [schools, setSchools] = useState<School[]>([]);
+  const [selectedArea, setSelectedArea] = useState('');
+  const [selectedSchool, setSelectedSchool] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch and validate learning platforms
-        const platformsResponse = await axios.get(
-          `${import.meta.env.VITE_API}/learning-platforms/`
-        );
+        // Fetch platforms, areas, and schools
+        const [platformsResponse, areasResponse, schoolsResponse] = await Promise.all([
+          axios.get(`${import.meta.env.VITE_API}/learning-platforms/`),
+          axios.get(`${import.meta.env.VITE_API}/area/`),
+          axios.get(`${import.meta.env.VITE_API}/schools/`),
+        ]);
         console.log('Raw platforms response:', platformsResponse.data);
 
         let platforms;
@@ -81,6 +100,8 @@ export function CreateWorkbookModal({ show, onClose }: CreateWorkbookModalProps)
 
           console.log('Processed platforms:', platforms);
           setLearningPlatforms(platforms);
+          setAreas(areasResponse.data);
+          setSchools(schoolsResponse.data);
         } catch (err) {
           console.error('Platform processing error:', err);
           setError('Failed to process learning platforms data');
@@ -119,21 +140,32 @@ export function CreateWorkbookModal({ show, onClose }: CreateWorkbookModalProps)
         return;
       }
 
-      // Store the validated data
-      const workbookData = {
-        platformName: selectedPlatform.name,
+      if (!selectedArea) {
+        setError('Area is required');
+        return;
+      }
+
+      // Store with the correct data structure expected by CreateWorkbook
+      // Create workbook data
+      const workbookData: WorkbookData = {
         courseName: courseName.trim(),
         learningPlatformId: learningPlatform,
         startDate: startDate.toISOString().split('T')[0],
-        endDate: startDate.toISOString().split('T')[0], // Initially same as start date, will be updated based on weeks
+        endDate: startDate.toISOString().split('T')[0], // Initially same as start date
+        coordinatorIds: [], // Empty array as coordinators are added later
+        learningPlatform: selectedPlatform.name, // Additional field for UI purposes
+        areaId: selectedArea,
+        schoolId: selectedSchool || null,
       };
 
-      console.log('Storing workbook data:', workbookData);
+      console.log('Creating workbook with data:', workbookData);
 
-      // Store in sessionStorage and navigate to EditWorkbook
+      // Store in sessionStorage
       sessionStorage.setItem('newWorkbookData', JSON.stringify(workbookData));
+      if (onSubmit) {
+        onSubmit(workbookData);
+      }
       onClose();
-      navigate('/workbooks/create');
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.status === 404) {
         if (err.config?.url?.includes('learning-platforms')) {
@@ -195,6 +227,54 @@ export function CreateWorkbookModal({ show, onClose }: CreateWorkbookModalProps)
                 ))}
               </Select>
             </div>
+
+            <div>
+              <div className="mb-2 block">
+                <Label htmlFor="area" value="Area" />
+              </div>
+              <Select
+                id="area"
+                value={selectedArea}
+                onChange={(e) => {
+                  setSelectedArea(e.target.value);
+                  setSelectedSchool(''); // Reset school when area changes
+                  setError(null);
+                }}
+                required
+              >
+                <option value="">Select area</option>
+                {areas.map((area) => (
+                  <option key={area.id} value={area.id}>
+                    {area.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
+
+            {selectedArea && (
+              <div>
+                <div className="mb-2 block">
+                  <Label htmlFor="school" value="School (Optional)" />
+                </div>
+                <Select
+                  id="school"
+                  value={selectedSchool}
+                  onChange={(e) => {
+                    setSelectedSchool(e.target.value);
+                    setError(null);
+                  }}
+                >
+                  <option value="">No school selected</option>
+                  {schools
+                    .filter((school) => school.area_id === selectedArea)
+                    .map((school) => (
+                      <option key={school.id} value={school.id}>
+                        {school.name}
+                      </option>
+                    ))}
+                </Select>
+              </div>
+            )}
 
             <div>
               <div className="mb-2 block">

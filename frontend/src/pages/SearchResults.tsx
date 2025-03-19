@@ -59,6 +59,8 @@ function SearchResults() {
     if (params.led_by) descriptions.push(`led by "${params.led_by}"`);
     if (params.contributed_by) descriptions.push(`contributed to by "${params.contributed_by}"`);
     if (params.learning_platform) descriptions.push(`on platform "${params.learning_platform}"`);
+    if (params.area) descriptions.push(`in area "${params.area}"`);
+    if (params.school) descriptions.push(`at school "${params.school}"`);
 
     return descriptions.length
       ? `Showing workbooks where ${descriptions.join(', ')}`
