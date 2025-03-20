@@ -26,7 +26,7 @@ import GraduateAttributesChart from './GraduateAttributesChart';
 import axios from 'axios';
 import { normalizeKey } from '../utils/stringUtils';
 import { ApexOptions } from 'apexcharts';
-import { getErrorMessage } from '../utils/workbookUtils';
+import { getErrorMessage, getApiBaseUrl } from '../utils/workbookUtils';
 
 interface DashboardTabProps {
   series: ApexOptions['series'];
@@ -77,13 +77,13 @@ const DashboardTab: React.FC<DashboardTabProps> = ({
 
         // Get all graduate attributes
         const gradRes = await axios.get<GraduateAttribute[]>(
-          `${import.meta.env.VITE_API}/graduate_attributes/`
+          `${getApiBaseUrl()}/graduate_attributes/`
         );
         const gradData = gradRes.data;
 
         // Get graduate attributes for this specific workbook
         const gradSelRes = await axios.get<WeekGraduateAttribute[]>(
-          `${import.meta.env.VITE_API}/workbooks/${workbook_id}/week-graduate-attributes`
+          `${getApiBaseUrl()}/workbooks/${workbook_id}/week-graduate-attributes`
         );
         const gradSelData = gradSelRes.data;
 

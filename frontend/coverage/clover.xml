@@ -1,8 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1742404468522" clover="3.2.0">
-  <project timestamp="1742404468522" name="All files">
-    <metrics statements="43" coveredstatements="40" conditionals="49" coveredconditionals="40" methods="13" coveredmethods="13" elements="105" coveredelements="93" complexity="0" loc="43" ncloc="43" packages="1" files="1" classes="1"/>
-    <file name="WeekActivityTab.tsx" path="C:\Users\Colin\OneDrive - University of Glasgow\Desktop\Team Project\sh01-main\sh01-main\frontend\src\components\WeekActivityTab.tsx">
+<coverage generated="1742472580113" clover="3.2.0">
+  <project timestamp="1742472580113" name="All files">
+    <metrics statements="69" coveredstatements="58" conditionals="63" coveredconditionals="48" methods="19" coveredmethods="17" elements="151" coveredelements="123" complexity="0" loc="69" ncloc="69" packages="1" files="3" classes="3"/>
+    <file name="CustomBadge.tsx" path="C:\Users\finji\Documents\CourseMapperSH01\sh01-main\frontend\src\components\CustomBadge.tsx">
+      <metrics statements="9" coveredstatements="9" conditionals="2" coveredconditionals="2" methods="2" coveredmethods="2"/>
+      <line num="19" count="2" type="stmt"/>
+      <line num="20" count="2" type="stmt"/>
+      <line num="27" count="2" type="stmt"/>
+      <line num="28" count="26" type="stmt"/>
+      <line num="31" count="2" type="stmt"/>
+      <line num="32" count="26" type="stmt"/>
+      <line num="33" count="26" type="cond" truecount="2" falsecount="0"/>
+      <line num="34" count="26" type="stmt"/>
+      <line num="36" count="26" type="stmt"/>
+    </file>
+    <file name="GraduateAttributesChart.tsx" path="C:\Users\finji\Documents\CourseMapperSH01\sh01-main\frontend\src\components\GraduateAttributesChart.tsx">
+      <metrics statements="17" coveredstatements="9" conditionals="12" coveredconditionals="6" methods="4" coveredmethods="2"/>
+      <line num="20" count="1" type="stmt"/>
+      <line num="21" count="1" type="stmt"/>
+      <line num="22" count="1" type="stmt"/>
+      <line num="24" count="1" type="stmt"/>
+      <line num="36" count="1" type="stmt"/>
+      <line num="41" count="13" type="stmt"/>
+      <line num="73" count="0" type="stmt"/>
+      <line num="74" count="0" type="cond" truecount="0" falsecount="2"/>
+      <line num="76" count="0" type="cond" truecount="0" falsecount="2"/>
+      <line num="79" count="0" type="cond" truecount="0" falsecount="2"/>
+      <line num="89" count="0" type="stmt"/>
+      <line num="90" count="0" type="stmt"/>
+      <line num="91" count="0" type="stmt"/>
+      <line num="93" count="0" type="stmt"/>
+      <line num="115" count="13" type="stmt"/>
+      <line num="130" count="21" type="stmt"/>
+      <line num="162" count="1" type="stmt"/>
+    </file>
+    <file name="WeekActivityTab.tsx" path="C:\Users\finji\Documents\CourseMapperSH01\sh01-main\frontend\src\components\WeekActivityTab.tsx">
       <metrics statements="43" coveredstatements="40" conditionals="49" coveredconditionals="40" methods="13" coveredmethods="13"/>
       <line num="20" count="1" type="stmt"/>
       <line num="21" count="1" type="stmt"/>

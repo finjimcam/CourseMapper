@@ -82,13 +82,13 @@ describe('DashboardTab', () => {
     jest.clearAllMocks();
     // Setup axios mock responses
     mockedAxios.get.mockImplementation((url) => {
-      if (url.includes('/graduate_attributes')) {
+      if (url === 'http://test-api/graduate_attributes/') {
         return Promise.resolve({ data: mockGraduateAttributes });
       }
-      if (url.includes('/week-graduate-attributes')) {
+      if (url === `http://test-api/workbooks/${mockProps.workbook_id}/week-graduate-attributes`) {
         return Promise.resolve({ data: mockWeekGraduateAttributes });
       }
-      return Promise.reject(new Error('not found'));
+      return Promise.reject(new Error(`URL not found: ${url}`));
     });
   });
 
@@ -164,10 +164,10 @@ describe('DashboardTab', () => {
       await waitFor(() => {
         // Verify API calls
         expect(mockedAxios.get).toHaveBeenCalledWith(
-          expect.stringContaining('/graduate_attributes/')
+          'http://test-api/graduate_attributes/'
         );
         expect(mockedAxios.get).toHaveBeenCalledWith(
-          expect.stringContaining('/week-graduate-attributes')
+          'http://test-api/workbooks/123/week-graduate-attributes'
         );
       });
     });

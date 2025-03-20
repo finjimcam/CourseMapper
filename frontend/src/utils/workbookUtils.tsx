@@ -20,6 +20,34 @@ import { ApexOptions } from 'apexcharts';
 import { learningTypeColors } from './colorMappings';
 import axios from 'axios';
 
+/**
+ * Gets the base API URL for either test or production environment
+ * 
+ * TODO: Technical Debt
+ * This utility is currently only used in some components.
+ * Other components are still using import.meta.env.VITE_API directly.
+ * Future work should refactor all API calls to use this function
+ * for consistent API URL handling across the application.
+ * See the following files that need updating:
+ * - CourseDetailsHeader.tsx
+ * - Carousel.tsx
+ * - WeeklyAttributes.tsx
+ * - Searchbar.tsx
+ * - Piechart.tsx
+ * - Navbar.tsx
+ * - Grid.tsx
+ * - CreateWorkbookModal.tsx
+ * - CourseDetailsEditModal.tsx
+ */
+export const getApiBaseUrl = () => {
+  // In test environment, return a default test URL
+  if (process.env.NODE_ENV === 'test') {
+    return 'http://test-api';
+  }
+  // In development/production, use Vite's environment variables
+  return import.meta.env.VITE_API;
+};
+
 export const FONT_SIZE = '16px';
 
 // =====================
@@ -155,13 +183,13 @@ export interface UserExtended {
 
 export const getUsername = async (): Promise<string> => {
   return axios
-    .get(`${import.meta.env.VITE_API}/session/`, {
+    .get(`${getApiBaseUrl()}/session/`, {
       withCredentials: true,
     })
     .then((sessionResponse) => {
       // Get user details using the user_id from session
       console.log(sessionResponse);
-      return axios.get(`${import.meta.env.VITE_API}/users/`).then((usersResponse) => ({
+      return axios.get(`${getApiBaseUrl()}/users/`).then((usersResponse) => ({
         sessionData: sessionResponse.data,
         users: usersResponse.data,
       }));
@@ -181,12 +209,12 @@ export const getUsername = async (): Promise<string> => {
 
 export const getUser = async (): Promise<UserExtended> => {
   return axios
-    .get(`${import.meta.env.VITE_API}/session/`, {
+    .get(`${getApiBaseUrl()}/session/`, {
       withCredentials: true,
     })
     .then((sessionResponse) => {
       // Get user details using the user_id from session
-      return axios.get(`${import.meta.env.VITE_API}/users/`).then((usersResponse) => ({
+      return axios.get(`${getApiBaseUrl()}/users/`).then((usersResponse) => ({
         sessionData: sessionResponse.data,
         users: usersResponse.data,
       }));
@@ -206,7 +234,7 @@ export const getUser = async (): Promise<UserExtended> => {
 
 export const getContributors = async (workbook_id: string): Promise<User[]> => {
   return (
-    await axios.get<User[]>(`${import.meta.env.VITE_API}/workbook-contributors/`, {
+    await axios.get<User[]>(`${getApiBaseUrl()}/workbook-contributors/`, {
       params: { workbook_id: workbook_id },
     })
   ).data;
@@ -215,7 +243,7 @@ export const getContributors = async (workbook_id: string): Promise<User[]> => {
 export const isCourseLead = async (workbook_id: string): Promise<boolean> => {
   const [workbookData, isAdminUser] = await Promise.all([
     axios.get<WorkbookDetailsResponse>(
-      `${import.meta.env.VITE_API}/workbooks/${workbook_id}/details`
+      `${getApiBaseUrl()}/workbooks/${workbook_id}/details`
     ).then(res => res.data),
     isAdmin()
   ]);
@@ -230,7 +258,7 @@ export const isCourseLead = async (workbook_id: string): Promise<boolean> => {
 
 export const isAdmin = async (): Promise<boolean> => {
   return getUser().then((user) => {
-    return axios.get(`${import.meta.env.VITE_API}/permissions-groups/`)
+    return axios.get(`${getApiBaseUrl()}/permissions-groups/`)
       .then((response) => {
         const permissionsGroups = response.data;
         const userGroup = permissionsGroups.find(
@@ -244,7 +272,7 @@ export const isAdmin = async (): Promise<boolean> => {
 export const canUserEdit = async (workbook_id: string): Promise<boolean> => {
   const [workbookData, contributors, isAdminUser] = await Promise.all([
     axios.get<WorkbookDetailsResponse>(
-      `${import.meta.env.VITE_API}/workbooks/${workbook_id}/details`
+      `${getApiBaseUrl()}/workbooks/${workbook_id}/details`
     ).then(res => res.data),
     getContributors(workbook_id),
     isAdmin()
