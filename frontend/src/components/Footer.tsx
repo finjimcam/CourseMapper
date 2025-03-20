@@ -22,19 +22,33 @@ export default function FooterComponent() {
   return (
     <footer style={{ backgroundColor: '#002446' }}>
       <div className="w-full mx-auto p-4 md:py-8">
-        <div className="sm:flex sm:items-center sm:justify-between">
+        <div className="sm:flex sm:items-center sm:justify-between gap-4">
           <a
             href="https://www.gla.ac.uk/"
             className="flex items-center mx-5 mb-4 sm:mb-0 space-x-3 rtl:space-x-reverse w-256px sm:w-256px md:w-400px lg:w-512px"
           >
-            <img
-              src="/UoG_keyline.png"
-              className="h-8"
-              alt="University of Glasgow Logo"
-              style={{ width: '256px', height: '80px' }}
-            />
+              <img
+                src="/UoG_keyline.png"
+                className="h-8"
+                alt="University of Glasgow Logo"
+                style={{ width: '256px', height: '80px' }}
+              />
           </a>
-          <ul className="flex flex-wrap items-center justify-between mx-5 mb-6 text-sm font-medium text-gray-500 sm:mb-0 dark:text-gray-400 space-x-10">
+          <div className="text-sm text-gray-500 dark:text-gray-400 text-center">
+            <div>
+              <span>
+                © 2025 University of Glasgow™
+                
+                © 2025 Learning Innovation Support Unit. All Rights Reserved.
+              </span>
+            </div>
+            <div>
+              <span>
+                The University of Glasgow is a registered Scottish charity: Registration Number SC004401.
+              </span>
+            </div>
+          </div>
+          <ul className="flex flex-wrap items-center justify-between mx-5 text-sm font-medium text-gray-500 dark:text-gray-400 space-x-10">
             <li>
               <a href="https://x.com/UofGlasgow" target="_blank" rel="noopener noreferrer">
                 <img
@@ -85,17 +99,6 @@ export default function FooterComponent() {
             </li>
           </ul>
         </div>
-        <hr className="my-6 border-gray-200 sm:mx-auto dark:border-gray-700 lg:my-8" />
-        <span className="block text-sm text-gray-500 sm:text-center dark:text-gray-400 sm:flex sm:flex-col sm:items-center">
-          <span>
-            © 2025{' '}
-            <a href="https://www.gla.ac.uk/" className="hover:underline">
-              University of Glasgow™
-            </a>
-            © 2025 Learning Innovation Support Unit. All Rights Reserved.
-          </span>
-          <span>The University of Glasgow is a registered Scottish charity: Registration Number SC004401.</span>
-        </span>
       </div>
     </footer>
   );
