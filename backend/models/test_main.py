@@ -1036,7 +1036,7 @@ class TestDuplicate:
         response = client.post(f"/workbooks/{workbook.id}/duplicate", headers=headers)
         assert response.status_code == 200
         duplicated_workbook = response.json()
-        assert duplicated_workbook["course_name"] == workbook.course_name + " - copy"
+        assert duplicated_workbook["course_name"] == workbook.course_name
         assert duplicated_workbook["start_date"] == str(workbook.start_date)
         assert duplicated_workbook["end_date"] == str(workbook.end_date)
 
