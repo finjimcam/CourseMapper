@@ -98,8 +98,8 @@ function Home() {
 
   return (
     <>
-      <div className="flex">
-        <div className="p-8 space-y-8">
+      <div className="flex px-16 justify-center">
+        <div className="p-8 space-y-8 flex-1 max-w-2xl">
           <div className="flex flex-col items-centre space-y-4">
             <div className="space-y-2">
               <h2 className="text-3xl font-bold text-left">Welcome back, {username}!</h2>
@@ -153,9 +153,9 @@ function Home() {
           />
         </div>
       </div>
-      <div className="p-8">
+      <div className="px-16 py-8">
         <h1 className="text-2xl font-semibold mb-4">All Workbooks</h1>
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center justify-center">
           <Grid workbooks={showAllWorkbooks ? workbooks : workbooks.slice(0, 16)} />
           {workbooks.length > 16 && (
             <button

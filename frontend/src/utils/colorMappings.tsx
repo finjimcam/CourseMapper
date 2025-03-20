@@ -17,6 +17,14 @@ along with this program at /LICENSE.md. If not, see <https://www.gnu.org/license
 */
 
 // Colour mappings for statuses
+export const areaColors: { [key: string]: string } = {
+  'College of Arts & Humanities': '#FFE4E1', 
+  'College of Medical, Veterinary & Life Sciences': '#E0FFFF', 
+  'College of Science & Engineering': '#F0FFF0',
+  'College of Social Sciences': '#FFF0F5', 
+  'University Services': '#F5F5DC', 
+};
+
 export const statusColors: { [key: string]: string } = {
   completed: '#00b050', // Green
   inprogress: '#ffc000', // Amber
