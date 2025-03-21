@@ -529,7 +529,9 @@ class TestCreate:
             "workbook_id": str(uuid.uuid4()),
             "contributor_id": str(contributor.id),
         }
-        response = client.post("/api/workbook-contributors/", json=contributor_data, headers=headers)
+        response = client.post(
+            "/api/workbook-contributors/", json=contributor_data, headers=headers
+        )
         assert response.status_code == 422
 
         # Test that a contributor cannot be created with an invalid contributor ID
@@ -1003,7 +1005,9 @@ class TestPatch:
 
         # Test that an activity can be updated with a new location
         update_data = {"time_estimate_minutes": "90"}
-        response = client.patch(f"/api/activities/{activity.id}", json=update_data, headers=headers)
+        response = client.patch(
+            f"/api/activities/{activity.id}", json=update_data, headers=headers
+        )
         assert response.status_code == 200
         assert response.json()["time_estimate_minutes"] == 90
 
