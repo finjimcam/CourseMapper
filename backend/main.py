@@ -1290,7 +1290,7 @@ def create_week(
 
 
 @app.post(
-    "/workbooks/{workbook_id}/duplicate", response_model=Workbook, dependencies=[Depends(cookie)]
+    "/api/workbooks/{workbook_id}/duplicate", response_model=Workbook, dependencies=[Depends(cookie)]
 )
 def duplicate_workbook(
     workbook_id: uuid.UUID,
@@ -1348,7 +1348,7 @@ def duplicate_workbook(
         new_workbook = Workbook(
             start_date=original_workbook.start_date,
             end_date=original_workbook.end_date,
-            course_name=original_workbook.course_name,
+            course_name=str(original_workbook.course_name) + " - COPY",
             course_lead_id=session_data.user_id,
             learning_platform_id=original_workbook.learning_platform_id,
             number_of_weeks=original_workbook.number_of_weeks,
@@ -1367,6 +1367,23 @@ def duplicate_workbook(
             session.add(new_week)
             session.commit()
             session.refresh(new_week)
+
+        original_week_grad_attrs = (
+            session.exec(
+                select(WeekGraduateAttribute).where(
+                    WeekGraduateAttribute.week_workbook_id == workbook_id
+                )
+            ).all()
+            or []
+        )
+
+        for grad_attr in original_week_grad_attrs:
+            new_grad_attr = WeekGraduateAttribute(
+                week_workbook_id=new_workbook.id,
+                week_number=grad_attr.week_number,
+                graduate_attribute_id=grad_attr.graduate_attribute_id,
+            )
+            session.add(new_grad_attr)
 
         # Copy activities and ActivityStaffs
         original_activities = session.exec(
@@ -1417,7 +1434,7 @@ def duplicate_workbook(
 
 
 @app.post(
-    "/workbook-contributors/", response_model=WorkbookContributor, dependencies=[Depends(cookie)]
+    "/api/workbook-contributors/", response_model=WorkbookContributor, dependencies=[Depends(cookie)]
 )
 def create_workbook_contributor(
     workbook_contributor: WorkbookContributorCreate,
@@ -1486,7 +1503,7 @@ def create_workbook_contributor(
 
 
 @app.post(
-    "/week-graduate-attributes/",
+    "/api/week-graduate-attributes/",
     response_model=WeekGraduateAttribute,
     dependencies=[Depends(cookie)],
 )
