@@ -175,8 +175,7 @@ def get_auth_headers(client: TestClient, username: str) -> Dict[str, str]:
     Get the authorization headers for the given username.
     """
 
-    response = client.post(f"api/session/{username}")
-    print(response)
+    response = client.post(f"/api/session/{username}")
     assert response.status_code == 200
     cookie = response.headers["set-cookie"]
     print(cookie)
