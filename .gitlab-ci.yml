@@ -58,6 +58,7 @@ Unit tests on backend:
   stage: Dynamic Analysis
   before_script:
     - cd backend
+    - pip install -r backend/requirements.txt
   script:
     - pytest .
   rules:
