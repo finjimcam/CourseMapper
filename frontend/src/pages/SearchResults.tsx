@@ -32,7 +32,7 @@ function SearchResults() {
     const fetchResults = async () => {
       setIsLoading(true);
       try {
-        const response = await axios.get(`${import.meta.env.VITE_API}/workbooks/search/`, {
+        const response = await axios.get(`${process.env.VITE_API}/workbooks/search/`, {
           params: searchParams,
         });
         setResults(response.data);

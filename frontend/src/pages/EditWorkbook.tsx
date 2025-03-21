@@ -104,7 +104,7 @@ function EditWorkbook(): JSX.Element {
         setError(null);
         // Fetch workbook details
         const { data: workbookDetails } = await axios.get<WorkbookDetailsResponse>(
-          `${import.meta.env.VITE_API}/workbooks/${workbook_id}/details`
+          `${process.env.VITE_API}/workbooks/${workbook_id}/details`
         );
           setWorkbookData({
             workbook: {
@@ -136,9 +136,9 @@ function EditWorkbook(): JSX.Element {
 
         // Fetch weeks, activities and staff-activity relationships
         const [weeksRes, activitiesRes, staffActivitiesRes] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API}/weeks/?workbook_id=${workbook_id}`),
-          axios.get(`${import.meta.env.VITE_API}/activities/?workbook_id=${workbook_id}`),
-          axios.get(`${import.meta.env.VITE_API}/activity-staff/`),
+          axios.get(`${process.env.VITE_API}/weeks/?workbook_id=${workbook_id}`),
+          axios.get(`${process.env.VITE_API}/activities/?workbook_id=${workbook_id}`),
+          axios.get(`${process.env.VITE_API}/activity-staff/`),
         ]);
         const weeksData = weeksRes.data;
         const activitiesData = activitiesRes.data;
@@ -170,14 +170,14 @@ function EditWorkbook(): JSX.Element {
           taskStatusesRes,
           usersRes,
         ] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API}/locations/`),
+          axios.get(`${process.env.VITE_API}/locations/`),
           axios.get(
-            `${import.meta.env.VITE_API}/learning-activities/?learning_platform_id=${workbookDetails.learning_platform.id}`
+            `${process.env.VITE_API}/learning-activities/?learning_platform_id=${workbookDetails.learning_platform.id}`
           ),
-          axios.get(`${import.meta.env.VITE_API}/learning-platforms/`),
-          axios.get(`${import.meta.env.VITE_API}/learning-types/`),
-          axios.get(`${import.meta.env.VITE_API}/task-statuses/`),
-          axios.get(`${import.meta.env.VITE_API}/users/`),
+          axios.get(`${process.env.VITE_API}/learning-platforms/`),
+          axios.get(`${process.env.VITE_API}/learning-types/`),
+          axios.get(`${process.env.VITE_API}/task-statuses/`),
+          axios.get(`${process.env.VITE_API}/users/`),
         ]);
         setLocations(locationsRes.data);
         setLearningActivities(learningActivitiesRes.data);
@@ -211,7 +211,7 @@ function EditWorkbook(): JSX.Element {
     const endDate = new Date(startDate);
     endDate.setDate(endDate.getDate() + 6);
     try {
-      await axios.post(`${import.meta.env.VITE_API}/weeks/`, {
+      await axios.post(`${process.env.VITE_API}/weeks/`, {
         workbook_id,
         start_date: formatISODate(startDate),
         end_date: formatISODate(endDate),
@@ -246,7 +246,7 @@ function EditWorkbook(): JSX.Element {
     if (!workbook_id) return;
 
     try {
-      await axios.delete(`${import.meta.env.VITE_API}/workbooks/`, {
+      await axios.delete(`${process.env.VITE_API}/workbooks/`, {
         params: { workbook_id }
       });
       navigate('/my-workbooks');
@@ -259,7 +259,7 @@ function EditWorkbook(): JSX.Element {
     setShowDeleteWeekModal(false);
     if (!workbookData || !workbook_id) return;
     try {
-      await axios.delete(`${import.meta.env.VITE_API}/weeks/`, {
+      await axios.delete(`${process.env.VITE_API}/weeks/`, {
         data: { workbook_id, number: weekNumber },
       });
       const updatedWeeks = weeks
@@ -316,7 +316,7 @@ function EditWorkbook(): JSX.Element {
     // Save changes to backend
     if (!workbookData || !workbook_id) return;
     try {
-      await axios.patch(`${import.meta.env.VITE_API}/workbooks/${workbook_id}`, {
+      await axios.patch(`${process.env.VITE_API}/workbooks/${workbook_id}`, {
         course_name: workbookData.workbook.course_name,
         start_date: workbookData.workbook.start_date,
         end_date: workbookData.workbook.end_date,
@@ -357,11 +357,11 @@ function EditWorkbook(): JSX.Element {
     if (!activity?.id) return;
     try {
       if (activity.staff_id) {
-        await axios.delete(`${import.meta.env.VITE_API}/activity-staff/`, {
+        await axios.delete(`${process.env.VITE_API}/activity-staff/`, {
           data: { staff_id: activity.staff_id, activity_id: activity.id },
         });
       }
-      await axios.delete(`${import.meta.env.VITE_API}/activities/`, {
+      await axios.delete(`${process.env.VITE_API}/activities/`, {
         params: { activity_id: activity.id },
       });
       setWeeks((prev) =>
@@ -389,7 +389,7 @@ function EditWorkbook(): JSX.Element {
     try {
       if (editingActivity && editingActivity.activity.id) {
         await axios.patch(
-          `${import.meta.env.VITE_API}/activities/${editingActivity.activity.id}`,
+          `${process.env.VITE_API}/activities/${editingActivity.activity.id}`,
           {
             ...activityForm,
             week_number: editingActivity.weekNumber,
@@ -397,7 +397,7 @@ function EditWorkbook(): JSX.Element {
         );
         if (editingActivity.activity.staff_id !== activityForm.staff_id) {
           if (editingActivity.activity.staff_id) {
-            await axios.delete(`${import.meta.env.VITE_API}/activity-staff/`, {
+            await axios.delete(`${process.env.VITE_API}/activity-staff/`, {
               data: {
                 staff_id: editingActivity.activity.staff_id,
                 activity_id: editingActivity.activity.id,
@@ -405,7 +405,7 @@ function EditWorkbook(): JSX.Element {
             });
           }
           if (activityForm.staff_id) {
-            await axios.post(`${import.meta.env.VITE_API}/activity-staff/`, {
+            await axios.post(`${process.env.VITE_API}/activity-staff/`, {
               staff_id: activityForm.staff_id,
               activity_id: editingActivity.activity.id,
             });
@@ -430,13 +430,13 @@ function EditWorkbook(): JSX.Element {
           )
         );
       } else if (selectedWeek !== null && workbookData?.workbook.id) {
-        const { data: newActivity } = await axios.post(`${import.meta.env.VITE_API}/activities/`, {
+        const { data: newActivity } = await axios.post(`${process.env.VITE_API}/activities/`, {
           ...activityForm,
           workbook_id: workbookData.workbook.id,
           week_number: selectedWeek,
         });
         if (activityForm.staff_id) {
-          await axios.post(`${import.meta.env.VITE_API}/activity-staff/`, {
+          await axios.post(`${process.env.VITE_API}/activity-staff/`, {
             staff_id: activityForm.staff_id,
             activity_id: newActivity.id,
           });
@@ -481,7 +481,7 @@ function EditWorkbook(): JSX.Element {
     try {
       setSaving(true);
       setError(null);
-      await axios.patch(`${import.meta.env.VITE_API}/workbooks/${workbook_id}`, {
+      await axios.patch(`${process.env.VITE_API}/workbooks/${workbook_id}`, {
         course_name: workbookData.workbook.course_name,
         start_date: workbookData.workbook.start_date,
         end_date: workbookData.workbook.end_date,

@@ -25,7 +25,7 @@ import axios from 'axios';
  * 
  * TODO: Technical Debt
  * This utility is currently only used in some components.
- * Other components are still using import.meta.env.VITE_API directly.
+ * Other components are still using process.env.VITE_API directly.
  * Future work should refactor all API calls to use this function
  * for consistent API URL handling across the application.
  * See the following files that need updating:
@@ -45,7 +45,7 @@ export const getApiBaseUrl = () => {
     return 'http://test-api';
   }
   // In development/production, use Vite's environment variables
-  return import.meta.env.VITE_API;
+  return process.env.VITE_API;
 };
 
 export const FONT_SIZE = '16px';

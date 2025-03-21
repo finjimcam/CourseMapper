@@ -60,8 +60,8 @@ function SearchBar() {
     const fetchData = async () => {
       try {
         const [schoolsResponse, areasResponse] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API}/schools/`),
-          axios.get(`${import.meta.env.VITE_API}/area/`)
+          axios.get(`${process.env.VITE_API}/schools/`),
+          axios.get(`${process.env.VITE_API}/area/`)
         ]);
         setSchools(schoolsResponse.data);
         setAreas(areasResponse.data);

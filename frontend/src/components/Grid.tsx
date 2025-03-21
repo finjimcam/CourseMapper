@@ -31,8 +31,8 @@ const Grid: React.FC<{ workbooks: Workbook[] | null }> = ({ workbooks }) => {
       try {
         setIsLoading(true);
         const [areasResponse, schoolsResponse] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API}/area/`),
-          axios.get(`${import.meta.env.VITE_API}/schools/`)
+          axios.get(`${process.env.VITE_API}/area/`),
+          axios.get(`${process.env.VITE_API}/schools/`)
         ]);
         setAreas(areasResponse.data);
         setSchools(schoolsResponse.data);

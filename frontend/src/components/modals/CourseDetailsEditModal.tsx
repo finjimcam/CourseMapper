@@ -60,7 +60,7 @@ const CourseDetailsEditModal: React.FC<CourseDetailsEditModalProps> = ({
   const loadContributors = useCallback(async () => {
     try {
       const response = await axios.get<User[]>(
-        `${import.meta.env.VITE_API}/workbook-contributors/`,
+        `${process.env.VITE_API}/workbook-contributors/`,
         {
           params: { workbook_id: workbook.workbook.id },
         }
@@ -80,7 +80,7 @@ const CourseDetailsEditModal: React.FC<CourseDetailsEditModalProps> = ({
   const handleAddContributor = async (userId: string) => {
     try {
       setIsLoading(true);
-      await axios.post(`${import.meta.env.VITE_API}/workbook-contributors/`, {
+      await axios.post(`${process.env.VITE_API}/workbook-contributors/`, {
         workbook_id: workbook.workbook.id,
         contributor_id: userId,
       });
@@ -95,7 +95,7 @@ const CourseDetailsEditModal: React.FC<CourseDetailsEditModalProps> = ({
   const handleRemoveContributor = async (userId: string) => {
     try {
       setIsLoading(true);
-      await axios.delete(`${import.meta.env.VITE_API}/workbook-contributors/`, {
+      await axios.delete(`${process.env.VITE_API}/workbook-contributors/`, {
         data: {
           workbook_id: workbook.workbook.id,
           contributor_id: userId,

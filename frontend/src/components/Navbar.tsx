@@ -35,7 +35,7 @@ function Navbar() {
     if (location.pathname.startsWith('/workbook/')) {
       const workbookId = location.pathname.split('/')[2];
       axios
-        .get(`${import.meta.env.VITE_API}/workbooks/${workbookId}/details`)
+        .get(`${process.env.VITE_API}/workbooks/${workbookId}/details`)
         .then((response) => {
           setWorkbookData(response.data.workbook);
         })
@@ -48,12 +48,12 @@ function Navbar() {
   useEffect(() => {
     // Fetch user data when component mounts
     axios
-      .get(`${import.meta.env.VITE_API}/session/`, {
+      .get(`${process.env.VITE_API}/session/`, {
         withCredentials: true,
       })
       .then((sessionResponse) => {
         // Get user details using the user_id from session
-        return axios.get(`${import.meta.env.VITE_API}/users/`).then((usersResponse) => ({
+        return axios.get(`${process.env.VITE_API}/users/`).then((usersResponse) => ({
           sessionData: sessionResponse.data,
           users: usersResponse.data,
         }));
@@ -72,7 +72,7 @@ function Navbar() {
 
   const handleLogout = async () => {
     try {
-      await axios.delete(`${import.meta.env.VITE_API}/session/`, {
+      await axios.delete(`${process.env.VITE_API}/session/`, {
         withCredentials: true,
       });
       setUsername(''); // Reset username state on logout

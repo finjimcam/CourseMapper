@@ -46,7 +46,7 @@ const WeeklyAttributes: React.FC<WeeklyAttributesProps> = ({
   const refreshAttributes = useCallback(async () => {
     try {
       const selectedRes = await axios.get(
-        `${import.meta.env.VITE_API}/week-graduate-attributes/`,
+        `${process.env.VITE_API}/week-graduate-attributes/`,
         {
           params: {
             week_number: weekNumber,
@@ -103,7 +103,7 @@ const WeeklyAttributes: React.FC<WeeklyAttributesProps> = ({
         // First fetch all graduate attributes if not already loaded
         if (graduateAttributes.length === 0) {
           const attributesRes = await axios.get(
-            `${import.meta.env.VITE_API}/graduate_attributes/`
+            `${process.env.VITE_API}/graduate_attributes/`
           );
           if (!mounted) return;
 
@@ -121,7 +121,7 @@ const WeeklyAttributes: React.FC<WeeklyAttributesProps> = ({
 
         // Then fetch selected attributes for the current week
         const selectedRes = await axios.get(
-          `${import.meta.env.VITE_API}/week-graduate-attributes/`,
+          `${process.env.VITE_API}/week-graduate-attributes/`,
           {
             params: {
               week_number: weekNumber,
@@ -179,7 +179,7 @@ const WeeklyAttributes: React.FC<WeeklyAttributesProps> = ({
 
       // Get current attributes for this week
       const currentAttributes = await axios.get(
-        `${import.meta.env.VITE_API}/week-graduate-attributes/`,
+        `${process.env.VITE_API}/week-graduate-attributes/`,
         {
           params: {
             week_number: weekNumber,
@@ -194,7 +194,7 @@ const WeeklyAttributes: React.FC<WeeklyAttributesProps> = ({
       if (existingAttrAtPosition) {
         // Delete only the attribute at this position
         console.log('Deleting attribute at position:', position);
-        await axios.delete(`${import.meta.env.VITE_API}/week-graduate-attributes/`, {
+        await axios.delete(`${process.env.VITE_API}/week-graduate-attributes/`, {
           data: {
             week_number: weekNumber,
             week_workbook_id: workbookId,
@@ -203,7 +203,7 @@ const WeeklyAttributes: React.FC<WeeklyAttributesProps> = ({
         });
       }
 
-      await axios.post(`${import.meta.env.VITE_API}/week-graduate-attributes/`, {
+      await axios.post(`${process.env.VITE_API}/week-graduate-attributes/`, {
         week_number: weekNumber,
         week_workbook_id: workbookId,
         graduate_attribute_id: newAttribute.id,

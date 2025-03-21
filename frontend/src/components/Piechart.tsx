@@ -53,12 +53,12 @@ const PieChart: React.FC<PieChartProps> = ({ workbook_id }) => {
         console.log('PieChart - Fetching data for workbook_id:', workbook_id);
 
         // Get all graduate attributes to show in chart (even if not used)
-        const gradRes = await axios.get(`${import.meta.env.VITE_API}/graduate_attributes/`);
+        const gradRes = await axios.get(`${process.env.VITE_API}/graduate_attributes/`);
         const gradData: GraduateAttribute[] = gradRes.data;
         console.log('PieChart - All graduate attributes:', gradData);
 
         // Get graduate attributes for this workbook from all weeks
-        const url = `${import.meta.env.VITE_API}/week-graduate-attributes/?week_workbook_id=${workbook_id}`;
+        const url = `${process.env.VITE_API}/week-graduate-attributes/?week_workbook_id=${workbook_id}`;
         console.log('PieChart - Fetching workbook attributes from:', url);
         const gradSelRes = await axios.get(url);
         console.log('PieChart - Workbook graduate attributes response:', gradSelRes.data);

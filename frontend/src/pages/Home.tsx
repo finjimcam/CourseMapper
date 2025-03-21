@@ -39,12 +39,12 @@ function Home() {
   useEffect(() => {
     // Fetch user data when component mounts
     axios
-      .get(`${import.meta.env.VITE_API}/session/`, {
+      .get(`${process.env.VITE_API}/session/`, {
         withCredentials: true,
       })
       .then((sessionResponse) => {
         // Get user details using the user_id from session
-        return axios.get(`${import.meta.env.VITE_API}/users/`).then((usersResponse) => ({
+        return axios.get(`${process.env.VITE_API}/users/`).then((usersResponse) => ({
           sessionData: sessionResponse.data,
           users: usersResponse.data,
         }));
@@ -65,7 +65,7 @@ function Home() {
     const fetchWorkbooks = async () => {
       try {
         // Get all workbooks with full details
-        const response = await axios.get(`${import.meta.env.VITE_API}/workbooks/search/`, {
+        const response = await axios.get(`${process.env.VITE_API}/workbooks/search/`, {
           params: {}, // Empty params to get all workbooks
         });
         setWorkbooks(response.data);

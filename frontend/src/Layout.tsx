@@ -31,7 +31,7 @@ function Layout() {
     // Check session once on mount
     const checkSession = async () => {
       try {
-        await axios.get(`${import.meta.env.VITE_API}/session/`, {
+        await axios.get(`${process.env.VITE_API}/session/`, {
           withCredentials: true,
         });
         setSessionValid(true);

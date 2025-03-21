@@ -32,7 +32,7 @@ function Login() {
       // The second argument (payload) can be empty {} for this route
       // The third argument includes withCredentials to store the session cookie
       await axios.post(
-        `${import.meta.env.VITE_API}/session/${username}`,
+        `${process.env.VITE_API}/session/${username}`,
         {},
         { withCredentials: true }
       );
