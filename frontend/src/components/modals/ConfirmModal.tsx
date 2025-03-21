@@ -16,8 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program at /LICENSE.md. If not, see <https://www.gnu.org/licenses/>.
 */
 
-import { Modal, Button } from "flowbite-react";
-import { HiOutlineExclamationCircle } from "react-icons/hi";
+import { Modal, Button } from 'flowbite-react';
+import { HiOutlineExclamationCircle } from 'react-icons/hi';
 
 interface ConfirmModalProps {
   show: boolean;
@@ -34,7 +34,7 @@ const ConfirmModal = ({
   title,
   message,
   confirmText = "Yes, I'm sure",
-  cancelText = "No, cancel",
+  cancelText = 'No, cancel',
   onConfirm,
   onCancel,
 }: ConfirmModalProps) => {
@@ -44,12 +44,8 @@ const ConfirmModal = ({
       <Modal.Body>
         <div className="text-center">
           <HiOutlineExclamationCircle className="mx-auto mb-4 h-14 w-14 text-gray-400 dark:text-gray-200" />
-          <h3 className="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
-            {title}
-          </h3>
-          <p className="mb-5 text-sm text-gray-500 dark:text-gray-400">
-            {message}
-          </p>
+          <h3 className="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">{title}</h3>
+          <p className="mb-5 text-sm text-gray-500 dark:text-gray-400">{message}</p>
           <div className="flex justify-center gap-4">
             <Button color="failure" onClick={onConfirm}>
               {confirmText}

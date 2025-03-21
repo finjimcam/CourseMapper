@@ -32,8 +32,8 @@ const Grid: React.FC<{ workbooks: Workbook[] | null }> = ({ workbooks }) => {
       try {
         setIsLoading(true);
         const [areasResponse, schoolsResponse] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API}/area/`),
-          axios.get(`${import.meta.env.VITE_API}/schools/`)
+          axios.get(`${process.env.VITE_API}/area/`),
+          axios.get(`${process.env.VITE_API}/schools/`),
         ]);
         setAreas(areasResponse.data);
         setSchools(schoolsResponse.data);
@@ -55,7 +55,7 @@ const Grid: React.FC<{ workbooks: Workbook[] | null }> = ({ workbooks }) => {
     if (areas.length === 0) {
       return 'Loading...';
     }
-    const area = areas.find(a => a.id === areaId);
+    const area = areas.find((a) => a.id === areaId);
     return area ? area.name : 'N/A';
   };
 
@@ -67,33 +67,40 @@ const Grid: React.FC<{ workbooks: Workbook[] | null }> = ({ workbooks }) => {
     if (schools.length === 0) {
       return 'Loading...';
     }
-    const school = schools.find(s => s.id === schoolId);
+    const school = schools.find((s) => s.id === schoolId);
     return school ? school.name : 'N/A';
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-      {workbooks ? (
+    <div
+      id="grid-container"
+      className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
+    >
+      {workbooks && workbooks.length != 0 ? (
         workbooks.map((item) => (
           <div
             key={item.workbook.id}
+            id={item.workbook.id}
             className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 border border-gray-200 overflow-hidden"
           >
-            <div 
-              className="h-20 relative" 
-              style={{ 
+            <div
+              className="h-20 relative"
+              style={{
                 backgroundColor: areaColors[getAreaName(item.workbook.area_id)] || '#f5f5f5',
               }}
             >
               <h6 className="text-lg font-bold p-4">{item.workbook.course_name}</h6>
             </div>
             <div className="p-4">
-            <Link to={`/workbook/${item.workbook.id}`} className="block text-gray-800 no-underline">
-              <p className="text-gray-500">Lead: {item.course_lead?.name || 'N/A'}</p>
-              <p className="text-gray-500">Platform: {item.learning_platform?.name || 'N/A'}</p>
-              <p className="text-gray-500">Area: {getAreaName(item.workbook.area_id)}</p>
-              <p className="text-gray-500">School: {getSchoolName(item.workbook.school_id)}</p>
-            </Link>
+              <Link
+                to={`/workbook/${item.workbook.id}`}
+                className="block text-gray-800 no-underline"
+              >
+                <p className="text-gray-500">Lead: {item.course_lead?.name || 'N/A'}</p>
+                <p className="text-gray-500">Platform: {item.learning_platform?.name || 'N/A'}</p>
+                <p className="text-gray-500">Area: {getAreaName(item.workbook.area_id)}</p>
+                <p className="text-gray-500">School: {getSchoolName(item.workbook.school_id)}</p>
+              </Link>
             </div>
           </div>
         ))

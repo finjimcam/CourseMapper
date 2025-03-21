@@ -52,7 +52,9 @@ function WorkbookPage(): JSX.Element {
   const handleDuplicateWorkbook = async () => {
     if (!workbook_id) return;
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API}/workbooks/${workbook_id}/duplicate`);
+      const response = await axios.post(
+        `${process.env.VITE_API}/workbooks/${workbook_id}/duplicate`
+      );
       alert('Workbook duplicated successfully!');
       console.log(response.data);
     } catch (error) {
@@ -68,7 +70,7 @@ function WorkbookPage(): JSX.Element {
         setError(null);
 
         const response = await axios.get<WorkbookDetailsResponse>(
-          `${import.meta.env.VITE_API}/workbooks/${workbook_id}/details`
+          `${process.env.VITE_API}/workbooks/${workbook_id}/details`
         );
 
         const { workbook, course_lead, learning_platform, activities } = response.data;

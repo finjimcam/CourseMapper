@@ -34,8 +34,8 @@ const CourseHeader: React.FC<{ workbook: Workbook; contributors: User[] }> = ({
       try {
         setIsLoading(true);
         const [areasResponse, schoolsResponse] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API}/area/`),
-          axios.get(`${import.meta.env.VITE_API}/schools/`)
+          axios.get(`${process.env.VITE_API}/area/`),
+          axios.get(`${process.env.VITE_API}/schools/`),
         ]);
         setAreas(areasResponse.data);
         setSchools(schoolsResponse.data);
@@ -57,7 +57,7 @@ const CourseHeader: React.FC<{ workbook: Workbook; contributors: User[] }> = ({
     if (areas.length === 0) {
       return 'Loading...';
     }
-    const area = areas.find(a => a.id === areaId);
+    const area = areas.find((a) => a.id === areaId);
     return area ? area.name : 'N/A';
   };
 
@@ -69,7 +69,7 @@ const CourseHeader: React.FC<{ workbook: Workbook; contributors: User[] }> = ({
     if (schools.length === 0) {
       return 'Loading...';
     }
-    const school = schools.find(s => s.id === schoolId);
+    const school = schools.find((s) => s.id === schoolId);
     return school ? school.name : 'N/A';
   };
 
@@ -85,12 +85,8 @@ const CourseHeader: React.FC<{ workbook: Workbook; contributors: User[] }> = ({
         Learning Platform:{' '}
         {workbook.learning_platform?.name || <span className="text-gray-500">N/A</span>}
       </p>
-      <p className="text-lg text-gray-600">
-        Area: {getAreaName(workbook.workbook.area_id)}
-      </p>
-      <p className="text-lg text-gray-600">
-        School: {getSchoolName(workbook.workbook.school_id)}
-      </p>
+      <p className="text-lg text-gray-600">Area: {getAreaName(workbook.workbook.area_id)}</p>
+      <p className="text-lg text-gray-600">School: {getSchoolName(workbook.workbook.school_id)}</p>
       <p className="text-lg text-gray-600">
         Start Date:{' '}
         {workbook.workbook.start_date ? (

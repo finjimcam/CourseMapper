@@ -64,7 +64,10 @@ function EditWorkbook(): JSX.Element {
   const [showDeleteWeekModal, setShowDeleteWeekModal] = useState<boolean>(false);
   const [weekToDelete, setWeekToDelete] = useState<number | null>(null);
   const [showDeleteActivityModal, setShowDeleteActivityModal] = useState<boolean>(false);
-  const [activityToDelete, setActivityToDelete] = useState<{weekNumber: number; activityIndex: number} | null>(null);
+  const [activityToDelete, setActivityToDelete] = useState<{
+    weekNumber: number;
+    activityIndex: number;
+  } | null>(null);
   const [showDeleteWorkbookModal, setShowDeleteWorkbookModal] = useState<boolean>(false);
   const [isUserCourseLead, setIsUserCourseLead] = useState<boolean>(false);
   const [isUserAdmin, setIsUserAdmin] = useState<boolean>(false);
@@ -104,31 +107,31 @@ function EditWorkbook(): JSX.Element {
         setError(null);
         // Fetch workbook details
         const { data: workbookDetails } = await axios.get<WorkbookDetailsResponse>(
-          `${import.meta.env.VITE_API}/workbooks/${workbook_id}/details`
+          `${process.env.VITE_API}/workbooks/${workbook_id}/details`
         );
-          setWorkbookData({
-            workbook: {
-              id: workbookDetails.workbook.id,
-              course_name: workbookDetails.workbook.course_name,
-              start_date: workbookDetails.workbook.start_date,
-              end_date: workbookDetails.workbook.end_date,
-              area_id: workbookDetails.workbook.area_id,
-              school_id: workbookDetails.workbook.school_id,
-            },
-            learning_platform: {
-              id: workbookDetails.learning_platform.id,
-              name: workbookDetails.learning_platform.name,
-            },
-            course_lead: {
-              id: workbookDetails.course_lead.id,
-              name: workbookDetails.course_lead.name,
-            },
-          });
+        setWorkbookData({
+          workbook: {
+            id: workbookDetails.workbook.id,
+            course_name: workbookDetails.workbook.course_name,
+            start_date: workbookDetails.workbook.start_date,
+            end_date: workbookDetails.workbook.end_date,
+            area_id: workbookDetails.workbook.area_id,
+            school_id: workbookDetails.workbook.school_id,
+          },
+          learning_platform: {
+            id: workbookDetails.learning_platform.id,
+            name: workbookDetails.learning_platform.name,
+          },
+          course_lead: {
+            id: workbookDetails.course_lead.id,
+            name: workbookDetails.course_lead.name,
+          },
+        });
 
         const [contributorsData, isUserCourseLeadData, isUserAdminData] = await Promise.all([
           getContributors(workbookDetails.workbook.id),
           isCourseLead(workbookDetails.workbook.id),
-          isAdmin()
+          isAdmin(),
         ]);
         setContributors(contributorsData);
         setIsUserCourseLead(isUserCourseLeadData);
@@ -136,9 +139,9 @@ function EditWorkbook(): JSX.Element {
 
         // Fetch weeks, activities and staff-activity relationships
         const [weeksRes, activitiesRes, staffActivitiesRes] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API}/weeks/?workbook_id=${workbook_id}`),
-          axios.get(`${import.meta.env.VITE_API}/activities/?workbook_id=${workbook_id}`),
-          axios.get(`${import.meta.env.VITE_API}/activity-staff/`),
+          axios.get(`${process.env.VITE_API}/weeks/?workbook_id=${workbook_id}`),
+          axios.get(`${process.env.VITE_API}/activities/?workbook_id=${workbook_id}`),
+          axios.get(`${process.env.VITE_API}/activity-staff/`),
         ]);
         const weeksData = weeksRes.data;
         const activitiesData = activitiesRes.data;
@@ -170,14 +173,14 @@ function EditWorkbook(): JSX.Element {
           taskStatusesRes,
           usersRes,
         ] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API}/locations/`),
+          axios.get(`${process.env.VITE_API}/locations/`),
           axios.get(
-            `${import.meta.env.VITE_API}/learning-activities/?learning_platform_id=${workbookDetails.learning_platform.id}`
+            `${process.env.VITE_API}/learning-activities/?learning_platform_id=${workbookDetails.learning_platform.id}`
           ),
-          axios.get(`${import.meta.env.VITE_API}/learning-platforms/`),
-          axios.get(`${import.meta.env.VITE_API}/learning-types/`),
-          axios.get(`${import.meta.env.VITE_API}/task-statuses/`),
-          axios.get(`${import.meta.env.VITE_API}/users/`),
+          axios.get(`${process.env.VITE_API}/learning-platforms/`),
+          axios.get(`${process.env.VITE_API}/learning-types/`),
+          axios.get(`${process.env.VITE_API}/task-statuses/`),
+          axios.get(`${process.env.VITE_API}/users/`),
         ]);
         setLocations(locationsRes.data);
         setLearningActivities(learningActivitiesRes.data);
@@ -211,7 +214,7 @@ function EditWorkbook(): JSX.Element {
     const endDate = new Date(startDate);
     endDate.setDate(endDate.getDate() + 6);
     try {
-      await axios.post(`${import.meta.env.VITE_API}/weeks/`, {
+      await axios.post(`${process.env.VITE_API}/weeks/`, {
         workbook_id,
         start_date: formatISODate(startDate),
         end_date: formatISODate(endDate),
@@ -246,8 +249,8 @@ function EditWorkbook(): JSX.Element {
     if (!workbook_id) return;
 
     try {
-      await axios.delete(`${import.meta.env.VITE_API}/workbooks/`, {
-        params: { workbook_id }
+      await axios.delete(`${process.env.VITE_API}/workbooks/`, {
+        params: { workbook_id },
       });
       navigate('/my-workbooks');
     } catch (err) {
@@ -259,7 +262,7 @@ function EditWorkbook(): JSX.Element {
     setShowDeleteWeekModal(false);
     if (!workbookData || !workbook_id) return;
     try {
-      await axios.delete(`${import.meta.env.VITE_API}/weeks/`, {
+      await axios.delete(`${process.env.VITE_API}/weeks/`, {
         data: { workbook_id, number: weekNumber },
       });
       const updatedWeeks = weeks
@@ -316,7 +319,7 @@ function EditWorkbook(): JSX.Element {
     // Save changes to backend
     if (!workbookData || !workbook_id) return;
     try {
-      await axios.patch(`${import.meta.env.VITE_API}/workbooks/${workbook_id}`, {
+      await axios.patch(`${process.env.VITE_API}/workbooks/${workbook_id}`, {
         course_name: workbookData.workbook.course_name,
         start_date: workbookData.workbook.start_date,
         end_date: workbookData.workbook.end_date,
@@ -357,11 +360,11 @@ function EditWorkbook(): JSX.Element {
     if (!activity?.id) return;
     try {
       if (activity.staff_id) {
-        await axios.delete(`${import.meta.env.VITE_API}/activity-staff/`, {
+        await axios.delete(`${process.env.VITE_API}/activity-staff/`, {
           data: { staff_id: activity.staff_id, activity_id: activity.id },
         });
       }
-      await axios.delete(`${import.meta.env.VITE_API}/activities/`, {
+      await axios.delete(`${process.env.VITE_API}/activities/`, {
         params: { activity_id: activity.id },
       });
       setWeeks((prev) =>
@@ -388,16 +391,13 @@ function EditWorkbook(): JSX.Element {
     }
     try {
       if (editingActivity && editingActivity.activity.id) {
-        await axios.patch(
-          `${import.meta.env.VITE_API}/activities/${editingActivity.activity.id}`,
-          {
-            ...activityForm,
-            week_number: editingActivity.weekNumber,
-          }
-        );
+        await axios.patch(`${process.env.VITE_API}/activities/${editingActivity.activity.id}`, {
+          ...activityForm,
+          week_number: editingActivity.weekNumber,
+        });
         if (editingActivity.activity.staff_id !== activityForm.staff_id) {
           if (editingActivity.activity.staff_id) {
-            await axios.delete(`${import.meta.env.VITE_API}/activity-staff/`, {
+            await axios.delete(`${process.env.VITE_API}/activity-staff/`, {
               data: {
                 staff_id: editingActivity.activity.staff_id,
                 activity_id: editingActivity.activity.id,
@@ -405,7 +405,7 @@ function EditWorkbook(): JSX.Element {
             });
           }
           if (activityForm.staff_id) {
-            await axios.post(`${import.meta.env.VITE_API}/activity-staff/`, {
+            await axios.post(`${process.env.VITE_API}/activity-staff/`, {
               staff_id: activityForm.staff_id,
               activity_id: editingActivity.activity.id,
             });
@@ -430,13 +430,13 @@ function EditWorkbook(): JSX.Element {
           )
         );
       } else if (selectedWeek !== null && workbookData?.workbook.id) {
-        const { data: newActivity } = await axios.post(`${import.meta.env.VITE_API}/activities/`, {
+        const { data: newActivity } = await axios.post(`${process.env.VITE_API}/activities/`, {
           ...activityForm,
           workbook_id: workbookData.workbook.id,
           week_number: selectedWeek,
         });
         if (activityForm.staff_id) {
-          await axios.post(`${import.meta.env.VITE_API}/activity-staff/`, {
+          await axios.post(`${process.env.VITE_API}/activity-staff/`, {
             staff_id: activityForm.staff_id,
             activity_id: newActivity.id,
           });
@@ -481,7 +481,7 @@ function EditWorkbook(): JSX.Element {
     try {
       setSaving(true);
       setError(null);
-      await axios.patch(`${import.meta.env.VITE_API}/workbooks/${workbook_id}`, {
+      await axios.patch(`${process.env.VITE_API}/workbooks/${workbook_id}`, {
         course_name: workbookData.workbook.course_name,
         start_date: workbookData.workbook.start_date,
         end_date: workbookData.workbook.end_date,
@@ -520,31 +520,31 @@ function EditWorkbook(): JSX.Element {
   if (!workbookData) return <div className="text-center mt-10">No workbook data available.</div>;
 
   return (
-      <div className="container mx-auto px-4 py-8">
-        <ConfirmModal
-          show={showDeleteWeekModal}
-          title="Delete Week"
-          message="Are you sure you want to delete this week? This action cannot be undone."
-          onConfirm={() => weekToDelete !== null && handleDeleteWeek(weekToDelete)}
-          onCancel={() => setShowDeleteWeekModal(false)}
-        />
-        <ConfirmModal
-          show={showDeleteWorkbookModal}
-          title="Delete Workbook"
-          message="Are you sure you want to delete this workbook? This action cannot be undone and will delete all associated weeks and activities."
-          onConfirm={handleDeleteWorkbook}
-          onCancel={() => setShowDeleteWorkbookModal(false)}
-        />
-        <ConfirmModal
-          show={showDeleteActivityModal}
-          title="Delete Activity"
-          message="Are you sure you want to delete this activity? This action cannot be undone."
-          onConfirm={() => 
-            activityToDelete !== null && 
-            handleDeleteActivity(activityToDelete.activityIndex, activityToDelete.weekNumber)
-          }
-          onCancel={() => setShowDeleteActivityModal(false)}
-        />
+    <div className="container mx-auto px-4 py-8">
+      <ConfirmModal
+        show={showDeleteWeekModal}
+        title="Delete Week"
+        message="Are you sure you want to delete this week? This action cannot be undone."
+        onConfirm={() => weekToDelete !== null && handleDeleteWeek(weekToDelete)}
+        onCancel={() => setShowDeleteWeekModal(false)}
+      />
+      <ConfirmModal
+        show={showDeleteWorkbookModal}
+        title="Delete Workbook"
+        message="Are you sure you want to delete this workbook? This action cannot be undone and will delete all associated weeks and activities."
+        onConfirm={handleDeleteWorkbook}
+        onCancel={() => setShowDeleteWorkbookModal(false)}
+      />
+      <ConfirmModal
+        show={showDeleteActivityModal}
+        title="Delete Activity"
+        message="Are you sure you want to delete this activity? This action cannot be undone."
+        onConfirm={() =>
+          activityToDelete !== null &&
+          handleDeleteActivity(activityToDelete.activityIndex, activityToDelete.weekNumber)
+        }
+        onCancel={() => setShowDeleteActivityModal(false)}
+      />
       <ErrorModal
         show={showValidationModal}
         title="Cannot Save Changes"
@@ -601,11 +601,7 @@ function EditWorkbook(): JSX.Element {
           <div className="flex flex-col items-end gap-2">
             <div className="flex gap-2">
               {isUserAdmin && (
-                <Button
-                  color="failure"
-                  size="lg"
-                  onClick={() => setShowDeleteWorkbookModal(true)}
-                >
+                <Button color="failure" size="lg" onClick={() => setShowDeleteWorkbookModal(true)}>
                   Delete Workbook
                 </Button>
               )}

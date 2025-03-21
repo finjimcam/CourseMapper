@@ -38,12 +38,12 @@ function MyWorkbooks() {
   useEffect(() => {
     // Fetch user data when component mounts
     axios
-      .get(`${import.meta.env.VITE_API}/session/`, {
+      .get(`${process.env.VITE_API}/session/`, {
         withCredentials: true,
       })
       .then((sessionResponse) => {
         // Get user details using the user_id from session
-        return axios.get(`${import.meta.env.VITE_API}/users/`).then((usersResponse) => ({
+        return axios.get(`${process.env.VITE_API}/users/`).then((usersResponse) => ({
           sessionData: sessionResponse.data,
           users: usersResponse.data,
         }));
@@ -64,24 +64,24 @@ function MyWorkbooks() {
     const fetchWorkbooks = async () => {
       try {
         // Get current user's session
-        const sessionResponse = await axios.get(`${import.meta.env.VITE_API}/session/`, {
+        const sessionResponse = await axios.get(`${process.env.VITE_API}/session/`, {
           withCredentials: true,
         });
         const userId = sessionResponse.data.user_id;
 
         // Get users to find current user's name
-        const usersResponse = await axios.get(`${import.meta.env.VITE_API}/users/`);
+        const usersResponse = await axios.get(`${process.env.VITE_API}/users/`);
         const currentUser = usersResponse.data.find((user: { id: string }) => user.id === userId);
 
         if (currentUser) {
           // Get workbooks where user is lead
           const leadResponse = await axios.get(
-            `${import.meta.env.VITE_API}/workbooks/search/?led_by=${encodeURIComponent(currentUser.name)}`
+            `${process.env.VITE_API}/workbooks/search/?led_by=${encodeURIComponent(currentUser.name)}`
           );
 
           // Get workbooks where user is contributor
           const contributorResponse = await axios.get(
-            `${import.meta.env.VITE_API}/workbooks/search/?contributed_by=${encodeURIComponent(currentUser.name)}`
+            `${process.env.VITE_API}/workbooks/search/?contributed_by=${encodeURIComponent(currentUser.name)}`
           );
 
           // Combine the results

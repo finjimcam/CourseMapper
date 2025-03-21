@@ -65,7 +65,10 @@ function CreateWorkbook(): JSX.Element {
   const [showDeleteWeekModal, setShowDeleteWeekModal] = useState<boolean>(false);
   const [weekToDelete, setWeekToDelete] = useState<number | null>(null);
   const [showDeleteActivityModal, setShowDeleteActivityModal] = useState<boolean>(false);
-  const [activityToDelete, setActivityToDelete] = useState<{weekNumber: number; activityIndex: number} | null>(null);
+  const [activityToDelete, setActivityToDelete] = useState<{
+    weekNumber: number;
+    activityIndex: number;
+  } | null>(null);
 
   // Activity form & editing state
   const [activityForm, setActivityForm] = useState<Partial<Activity>>(defaultActivityForm);
@@ -97,28 +100,26 @@ function CreateWorkbook(): JSX.Element {
         const data = JSON.parse(storedData);
 
         // Get user session data for current user
-        const sessionResponse = await axios.get(`${import.meta.env.VITE_API}/session/`, {
+        const sessionResponse = await axios.get(`${process.env.VITE_API}/session/`, {
           withCredentials: true,
         });
 
         const [locationsRes, platformsRes, learningTypesRes, taskStatusesRes, usersRes] =
           await Promise.all([
-            axios.get(`${import.meta.env.VITE_API}/locations/`),
-            axios.get(`${import.meta.env.VITE_API}/learning-platforms/`),
-            axios.get(`${import.meta.env.VITE_API}/learning-types/`),
-            axios.get(`${import.meta.env.VITE_API}/task-statuses/`),
-            axios.get(`${import.meta.env.VITE_API}/users/`),
+            axios.get(`${process.env.VITE_API}/locations/`),
+            axios.get(`${process.env.VITE_API}/learning-platforms/`),
+            axios.get(`${process.env.VITE_API}/learning-types/`),
+            axios.get(`${process.env.VITE_API}/task-statuses/`),
+            axios.get(`${process.env.VITE_API}/users/`),
           ]);
 
         // Get the learning activities for the selected platform
         const activitiesRes = await axios.get(
-          `${import.meta.env.VITE_API}/learning-activities/?learning_platform_id=${data.learningPlatformId}`
+          `${process.env.VITE_API}/learning-activities/?learning_platform_id=${data.learningPlatformId}`
         );
 
         // Find current user details
-        const currentUser = usersRes.data.find(
-          (u: User) => u.id === sessionResponse.data.user_id
-        );
+        const currentUser = usersRes.data.find((u: User) => u.id === sessionResponse.data.user_id);
 
         // Find platform details
         const platform = platformsRes.data.find(
@@ -239,7 +240,7 @@ function CreateWorkbook(): JSX.Element {
       );
       // Fetch new learning activities for the selected platform
       axios
-        .get(`${import.meta.env.VITE_API}/learning-activities/?learning_platform_id=${value}`)
+        .get(`${process.env.VITE_API}/learning-activities/?learning_platform_id=${value}`)
         .then((res) => setLearningActivities(res.data))
         .catch((err) => setError(getErrorMessage(err)));
     } else {
@@ -267,13 +268,15 @@ function CreateWorkbook(): JSX.Element {
   const handleDeleteActivity = () => {
     setShowDeleteActivityModal(false);
     if (!activityToDelete) return;
-    
+
     setWeeks((prevWeeks) =>
       prevWeeks.map((week) =>
         week.number === activityToDelete.weekNumber
           ? {
               ...week,
-              activities: week.activities.filter((_, idx) => idx !== activityToDelete.activityIndex),
+              activities: week.activities.filter(
+                (_, idx) => idx !== activityToDelete.activityIndex
+              ),
             }
           : week
       )
@@ -328,7 +331,7 @@ function CreateWorkbook(): JSX.Element {
                 ...week,
                 activities: week.activities.map((act, idx) =>
                   idx === editingActivity.activityIndex
-                    ? { ...activityForm, week_number: week.number } as Activity
+                    ? ({ ...activityForm, week_number: week.number } as Activity)
                     : act
                 ),
               }
@@ -400,12 +403,15 @@ function CreateWorkbook(): JSX.Element {
       console.log('Workbook Data:', workbookData);
       console.log('Area ID:', storedData.areaId);
       console.log('School ID:', storedData.schoolId);
-      const workbookResponse = await axios.post(`${import.meta.env.VITE_API}/workbooks/`, workbookData);
+      const workbookResponse = await axios.post(
+        `${process.env.VITE_API}/workbooks/`,
+        workbookData
+      );
       const workbookId = workbookResponse.data.id;
 
       // Create weeks and activities
       for (const week of weeks) {
-        await axios.post(`${import.meta.env.VITE_API}/weeks/`, {
+        await axios.post(`${process.env.VITE_API}/weeks/`, {
           workbook_id: workbookId,
           number: week.number,
           start_date: week.start_date,
@@ -414,13 +420,13 @@ function CreateWorkbook(): JSX.Element {
 
         // Create activities and link staff
         for (const activity of week.activities) {
-          const activityResponse = await axios.post(`${import.meta.env.VITE_API}/activities/`, {
+          const activityResponse = await axios.post(`${process.env.VITE_API}/activities/`, {
             ...activity,
             workbook_id: workbookId,
           });
 
           if (activity.staff_id) {
-            await axios.post(`${import.meta.env.VITE_API}/activity-staff/`, {
+            await axios.post(`${process.env.VITE_API}/activity-staff/`, {
               staff_id: activity.staff_id,
               activity_id: activityResponse.data.id,
             });
@@ -439,9 +445,10 @@ function CreateWorkbook(): JSX.Element {
 
         if (err.response?.status === 422) {
           const errorDetail = err.response.data.detail;
-          const errorMessage = typeof errorDetail === 'object' ? 
-            JSON.stringify(errorDetail, null, 2) : 
-            errorDetail || 'Invalid workbook data';
+          const errorMessage =
+            typeof errorDetail === 'object'
+              ? JSON.stringify(errorDetail, null, 2)
+              : errorDetail || 'Invalid workbook data';
           setError(`Validation error: ${errorMessage}`);
         } else {
           setError(`API Error: ${err.response?.statusText || 'Unknown error'}`);

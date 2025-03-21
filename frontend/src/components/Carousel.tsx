@@ -50,8 +50,8 @@ function Carousel({ items }: { items: Array<CarouselItem> }) {
       try {
         setIsLoading(true);
         const [areasResponse, schoolsResponse] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API}/area/`),
-          axios.get(`${import.meta.env.VITE_API}/schools/`)
+          axios.get(`${process.env.VITE_API}/area/`),
+          axios.get(`${process.env.VITE_API}/schools/`),
         ]);
         setAreas(areasResponse.data);
         setSchools(schoolsResponse.data);
@@ -73,7 +73,7 @@ function Carousel({ items }: { items: Array<CarouselItem> }) {
     if (areas.length === 0) {
       return 'Loading...';
     }
-    const area = areas.find(a => a.id === areaId);
+    const area = areas.find((a) => a.id === areaId);
     return area ? area.name : 'N/A';
   };
 
@@ -85,7 +85,7 @@ function Carousel({ items }: { items: Array<CarouselItem> }) {
     if (schools.length === 0) {
       return 'Loading...';
     }
-    const school = schools.find(s => s.id === schoolId);
+    const school = schools.find((s) => s.id === schoolId);
     return school ? school.name : 'N/A';
   };
 
@@ -132,7 +132,9 @@ function Carousel({ items }: { items: Array<CarouselItem> }) {
             >
               <div className="absolute block w-full h-full bg-gray-100 rounded-lg shadow-lg p-4">
                 <h6 className="text-lg font-bold dark:text-white">{item.course_name}</h6>
-                <p className="text-gray-500 md:text-l dark:text-gray-400">Lead: {item.course_lead}</p>
+                <p className="text-gray-500 md:text-l dark:text-gray-400">
+                  Lead: {item.course_lead}
+                </p>
                 <p className="text-gray-500 md:text-l dark:text-gray-400">
                   Platform: {item.learning_platform}
                 </p>

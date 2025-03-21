@@ -27,24 +27,24 @@ export default function FooterComponent() {
             href="https://www.gla.ac.uk/"
             className="flex items-center mx-5 mb-4 sm:mb-0 space-x-3 rtl:space-x-reverse w-256px sm:w-256px md:w-400px lg:w-512px"
           >
-              <img
-                src="/UoG_keyline.png"
-                className="h-8"
-                alt="University of Glasgow Logo"
-                style={{ width: '256px', height: '80px' }}
-              />
+            <img
+              src="/UoG_keyline.png"
+              className="h-8"
+              alt="University of Glasgow Logo"
+              style={{ width: '256px', height: '80px' }}
+            />
           </a>
           <div className="text-sm text-gray-500 dark:text-gray-400 text-center">
             <div>
               <span>
-                © 2025 University of Glasgow™
-                
-                © 2025 Learning Innovation Support Unit. All Rights Reserved.
+                © 2025 University of Glasgow™ © 2025 Learning Innovation Support Unit. All
+                Rights Reserved.
               </span>
             </div>
             <div>
               <span>
-                The University of Glasgow is a registered Scottish charity: Registration Number SC004401.
+                The University of Glasgow is a registered Scottish charity: Registration Number
+                SC004401.
               </span>
             </div>
           </div>

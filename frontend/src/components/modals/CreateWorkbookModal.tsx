@@ -71,9 +71,9 @@ export function CreateWorkbookModal({ show, onClose, onSubmit }: CreateWorkbookM
       try {
         // Fetch platforms, areas, and schools
         const [platformsResponse, areasResponse, schoolsResponse] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API}/learning-platforms/`),
-          axios.get(`${import.meta.env.VITE_API}/area/`),
-          axios.get(`${import.meta.env.VITE_API}/schools/`),
+          axios.get(`${process.env.VITE_API}/learning-platforms/`),
+          axios.get(`${process.env.VITE_API}/area/`),
+          axios.get(`${process.env.VITE_API}/schools/`),
         ]);
         console.log('Raw platforms response:', platformsResponse.data);
 
