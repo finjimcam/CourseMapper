@@ -29,8 +29,8 @@ Linting with black in backend:
   before_script:
     - cd backend
     - pip install --upgrade pip
-    - pip install -r backend/requirements.txt
   script:
+    - pip install -r backend/requirements.txt
     - black --check --diff .
   rules:
     - changes:
@@ -41,8 +41,8 @@ Type checking with mypy in backend:
   before_script:
     - cd backend
     - pip install --upgrade pip
-    - pip install -r backend/requirements.txt
   script:
+    - pip install -r backend/requirements.txt
     - mypy .
   rules:
     - changes:
@@ -53,8 +53,8 @@ Unit tests on backend:
   before_script:
     - cd backend
     - pip install --upgrade pip
-    - pip install -r backend/requirements.txt
   script:
+    - pip install -r backend/requirements.txt
     - pytest .
   rules:
     - changes:
