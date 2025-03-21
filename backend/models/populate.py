@@ -167,21 +167,21 @@ def _populate_initial_data() -> None:
             "Admin": PermissionsGroup(name="Admin"),
         }
         users = {
-            "Tim Storer": User(name="Tim Storer", permissions_group=permissions_groups["User"]),
+            "Tim Storer": User(id="testid1", name="Tim Storer", email="tim.storer@fake_domain.com", permissions_group=permissions_groups["User"]),
             "Richard Johnston": User(
-                name="Richard Johnston", permissions_group=permissions_groups["Admin"]
+                id="testid2", name="Richard Johnston", email="richard.johnston@fake_domain.com", permissions_group=permissions_groups["Admin"]
             ),
             "Scott Ramsey": User(
-                name="Scott Ramsey", permissions_group=permissions_groups["User"]
+                id="testid3", name="Scott Ramsey", email="scott.ramsey@fake_domain.com", permissions_group=permissions_groups["User"]
             ),
             "Andrew Struan": User(
-                name="Andrew Struan", permissions_group=permissions_groups["User"]
+                id="testid4", name="Andrew Struan", email="andrew.struan@fake_domain.com", permissions_group=permissions_groups["User"]
             ),
             "Caitlin Diver": User(
-                name="Caitlin Diver", permissions_group=permissions_groups["User"]
+                id="testid5", name="Caitlin Diver", email="caitlin.diver@fake_domain.com", permissions_group=permissions_groups["User"]
             ),
             "Jennifer Boyle": User(
-                name="Jennifer Boyle", permissions_group=permissions_groups["User"]
+                id="testid6", name="Jennifer Boyle", email="jennifer.boyle@fake_domain.com", permissions_group=permissions_groups["User"]
             ),
         }
 
