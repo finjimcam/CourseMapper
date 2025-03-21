@@ -5,6 +5,18 @@ workflow:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
+cache:
+  paths:
+    - deps_cache
+    - venv/
+
+before_script:
+  - apt-get update && apt-get install -y git
+  - python3.10 -m venv venv
+  - source venv/bin/activate
+  - pip install --upgrade pip
+  - pip install -r backend/requirements.txt --cache-dir deps_cache
+
 stages:
   - Static Analysis
   - Dynamic Analysis
@@ -26,10 +38,8 @@ Checking Rebase:
 
 Linting with black in backend:
   stage: Static Analysis
-  before_script:
-    - cd backend
-    - pip install --upgrade pip
   script:
+    - cd backend
     - pip install -r backend/requirements.txt
     - black --check --diff .
   rules:
@@ -38,10 +48,8 @@ Linting with black in backend:
 
 Type checking with mypy in backend:
   stage: Static Analysis
-  before_script:
-    - cd backend
-    - pip install --upgrade pip
   script:
+    - cd backend
     - pip install -r backend/requirements.txt
     - mypy .
   rules:
@@ -50,10 +58,8 @@ Type checking with mypy in backend:
 
 Unit tests on backend:
   stage: Dynamic Analysis
-  before_script:
-    - cd backend
-    - pip install --upgrade pip
   script:
+    - cd backend
     - pip install -r backend/requirements.txt
     - pytest .
   rules:
