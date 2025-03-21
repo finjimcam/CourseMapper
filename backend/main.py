@@ -1290,7 +1290,9 @@ def create_week(
 
 
 @app.post(
-    "/workbooks/{workbook_id}/duplicate", response_model=Workbook, dependencies=[Depends(cookie)]
+    "/api/workbooks/{workbook_id}/duplicate",
+    response_model=Workbook,
+    dependencies=[Depends(cookie)],
 )
 def duplicate_workbook(
     workbook_id: uuid.UUID,
@@ -1417,7 +1419,9 @@ def duplicate_workbook(
 
 
 @app.post(
-    "/workbook-contributors/", response_model=WorkbookContributor, dependencies=[Depends(cookie)]
+    "/api/workbook-contributors/",
+    response_model=WorkbookContributor,
+    dependencies=[Depends(cookie)],
 )
 def create_workbook_contributor(
     workbook_contributor: WorkbookContributorCreate,
@@ -1486,7 +1490,7 @@ def create_workbook_contributor(
 
 
 @app.post(
-    "/week-graduate-attributes/",
+    "/api/week-graduate-attributes/",
     response_model=WeekGraduateAttribute,
     dependencies=[Depends(cookie)],
 )
