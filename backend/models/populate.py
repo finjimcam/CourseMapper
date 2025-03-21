@@ -167,21 +167,41 @@ def _populate_initial_data() -> None:
             "Admin": PermissionsGroup(name="Admin"),
         }
         users = {
-            "Tim Storer": User(id="testid1", name="Tim Storer", email="tim.storer@fake_domain.com", permissions_group=permissions_groups["User"]),
+            "Tim Storer": User(
+                id="testid1",
+                name="Tim Storer",
+                email="tim.storer@fake_domain.com",
+                permissions_group=permissions_groups["User"],
+            ),
             "Richard Johnston": User(
-                id="testid2", name="Richard Johnston", email="richard.johnston@fake_domain.com", permissions_group=permissions_groups["Admin"]
+                id="testid2",
+                name="Richard Johnston",
+                email="richard.johnston@fake_domain.com",
+                permissions_group=permissions_groups["Admin"],
             ),
             "Scott Ramsey": User(
-                id="testid3", name="Scott Ramsey", email="scott.ramsey@fake_domain.com", permissions_group=permissions_groups["User"]
+                id="testid3",
+                name="Scott Ramsey",
+                email="scott.ramsey@fake_domain.com",
+                permissions_group=permissions_groups["User"],
             ),
             "Andrew Struan": User(
-                id="testid4", name="Andrew Struan", email="andrew.struan@fake_domain.com", permissions_group=permissions_groups["User"]
+                id="testid4",
+                name="Andrew Struan",
+                email="andrew.struan@fake_domain.com",
+                permissions_group=permissions_groups["User"],
             ),
             "Caitlin Diver": User(
-                id="testid5", name="Caitlin Diver", email="caitlin.diver@fake_domain.com", permissions_group=permissions_groups["User"]
+                id="testid5",
+                name="Caitlin Diver",
+                email="caitlin.diver@fake_domain.com",
+                permissions_group=permissions_groups["User"],
             ),
             "Jennifer Boyle": User(
-                id="testid6", name="Jennifer Boyle", email="jennifer.boyle@fake_domain.com", permissions_group=permissions_groups["User"]
+                id="testid6",
+                name="Jennifer Boyle",
+                email="jennifer.boyle@fake_domain.com",
+                permissions_group=permissions_groups["User"],
             ),
         }
 
