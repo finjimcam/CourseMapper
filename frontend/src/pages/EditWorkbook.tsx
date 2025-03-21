@@ -64,7 +64,10 @@ function EditWorkbook(): JSX.Element {
   const [showDeleteWeekModal, setShowDeleteWeekModal] = useState<boolean>(false);
   const [weekToDelete, setWeekToDelete] = useState<number | null>(null);
   const [showDeleteActivityModal, setShowDeleteActivityModal] = useState<boolean>(false);
-  const [activityToDelete, setActivityToDelete] = useState<{weekNumber: number; activityIndex: number} | null>(null);
+  const [activityToDelete, setActivityToDelete] = useState<{
+    weekNumber: number;
+    activityIndex: number;
+  } | null>(null);
   const [showDeleteWorkbookModal, setShowDeleteWorkbookModal] = useState<boolean>(false);
   const [isUserCourseLead, setIsUserCourseLead] = useState<boolean>(false);
   const [isUserAdmin, setIsUserAdmin] = useState<boolean>(false);
@@ -106,29 +109,29 @@ function EditWorkbook(): JSX.Element {
         const { data: workbookDetails } = await axios.get<WorkbookDetailsResponse>(
           `${process.env.VITE_API}/workbooks/${workbook_id}/details`
         );
-          setWorkbookData({
-            workbook: {
-              id: workbookDetails.workbook.id,
-              course_name: workbookDetails.workbook.course_name,
-              start_date: workbookDetails.workbook.start_date,
-              end_date: workbookDetails.workbook.end_date,
-              area_id: workbookDetails.workbook.area_id,
-              school_id: workbookDetails.workbook.school_id,
-            },
-            learning_platform: {
-              id: workbookDetails.learning_platform.id,
-              name: workbookDetails.learning_platform.name,
-            },
-            course_lead: {
-              id: workbookDetails.course_lead.id,
-              name: workbookDetails.course_lead.name,
-            },
-          });
+        setWorkbookData({
+          workbook: {
+            id: workbookDetails.workbook.id,
+            course_name: workbookDetails.workbook.course_name,
+            start_date: workbookDetails.workbook.start_date,
+            end_date: workbookDetails.workbook.end_date,
+            area_id: workbookDetails.workbook.area_id,
+            school_id: workbookDetails.workbook.school_id,
+          },
+          learning_platform: {
+            id: workbookDetails.learning_platform.id,
+            name: workbookDetails.learning_platform.name,
+          },
+          course_lead: {
+            id: workbookDetails.course_lead.id,
+            name: workbookDetails.course_lead.name,
+          },
+        });
 
         const [contributorsData, isUserCourseLeadData, isUserAdminData] = await Promise.all([
           getContributors(workbookDetails.workbook.id),
           isCourseLead(workbookDetails.workbook.id),
-          isAdmin()
+          isAdmin(),
         ]);
         setContributors(contributorsData);
         setIsUserCourseLead(isUserCourseLeadData);
@@ -247,7 +250,7 @@ function EditWorkbook(): JSX.Element {
 
     try {
       await axios.delete(`${process.env.VITE_API}/workbooks/`, {
-        params: { workbook_id }
+        params: { workbook_id },
       });
       navigate('/my-workbooks');
     } catch (err) {
@@ -388,13 +391,10 @@ function EditWorkbook(): JSX.Element {
     }
     try {
       if (editingActivity && editingActivity.activity.id) {
-        await axios.patch(
-          `${process.env.VITE_API}/activities/${editingActivity.activity.id}`,
-          {
-            ...activityForm,
-            week_number: editingActivity.weekNumber,
-          }
-        );
+        await axios.patch(`${process.env.VITE_API}/activities/${editingActivity.activity.id}`, {
+          ...activityForm,
+          week_number: editingActivity.weekNumber,
+        });
         if (editingActivity.activity.staff_id !== activityForm.staff_id) {
           if (editingActivity.activity.staff_id) {
             await axios.delete(`${process.env.VITE_API}/activity-staff/`, {
@@ -520,31 +520,31 @@ function EditWorkbook(): JSX.Element {
   if (!workbookData) return <div className="text-center mt-10">No workbook data available.</div>;
 
   return (
-      <div className="container mx-auto px-4 py-8">
-        <ConfirmModal
-          show={showDeleteWeekModal}
-          title="Delete Week"
-          message="Are you sure you want to delete this week? This action cannot be undone."
-          onConfirm={() => weekToDelete !== null && handleDeleteWeek(weekToDelete)}
-          onCancel={() => setShowDeleteWeekModal(false)}
-        />
-        <ConfirmModal
-          show={showDeleteWorkbookModal}
-          title="Delete Workbook"
-          message="Are you sure you want to delete this workbook? This action cannot be undone and will delete all associated weeks and activities."
-          onConfirm={handleDeleteWorkbook}
-          onCancel={() => setShowDeleteWorkbookModal(false)}
-        />
-        <ConfirmModal
-          show={showDeleteActivityModal}
-          title="Delete Activity"
-          message="Are you sure you want to delete this activity? This action cannot be undone."
-          onConfirm={() => 
-            activityToDelete !== null && 
-            handleDeleteActivity(activityToDelete.activityIndex, activityToDelete.weekNumber)
-          }
-          onCancel={() => setShowDeleteActivityModal(false)}
-        />
+    <div className="container mx-auto px-4 py-8">
+      <ConfirmModal
+        show={showDeleteWeekModal}
+        title="Delete Week"
+        message="Are you sure you want to delete this week? This action cannot be undone."
+        onConfirm={() => weekToDelete !== null && handleDeleteWeek(weekToDelete)}
+        onCancel={() => setShowDeleteWeekModal(false)}
+      />
+      <ConfirmModal
+        show={showDeleteWorkbookModal}
+        title="Delete Workbook"
+        message="Are you sure you want to delete this workbook? This action cannot be undone and will delete all associated weeks and activities."
+        onConfirm={handleDeleteWorkbook}
+        onCancel={() => setShowDeleteWorkbookModal(false)}
+      />
+      <ConfirmModal
+        show={showDeleteActivityModal}
+        title="Delete Activity"
+        message="Are you sure you want to delete this activity? This action cannot be undone."
+        onConfirm={() =>
+          activityToDelete !== null &&
+          handleDeleteActivity(activityToDelete.activityIndex, activityToDelete.weekNumber)
+        }
+        onCancel={() => setShowDeleteActivityModal(false)}
+      />
       <ErrorModal
         show={showValidationModal}
         title="Cannot Save Changes"
@@ -601,11 +601,7 @@ function EditWorkbook(): JSX.Element {
           <div className="flex flex-col items-end gap-2">
             <div className="flex gap-2">
               {isUserAdmin && (
-                <Button
-                  color="failure"
-                  size="lg"
-                  onClick={() => setShowDeleteWorkbookModal(true)}
-                >
+                <Button color="failure" size="lg" onClick={() => setShowDeleteWorkbookModal(true)}>
                   Delete Workbook
                 </Button>
               )}

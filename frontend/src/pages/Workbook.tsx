@@ -52,7 +52,9 @@ function WorkbookPage(): JSX.Element {
   const handleDuplicateWorkbook = async () => {
     if (!workbook_id) return;
     try {
-      const response = await axios.post(`${process.env.VITE_API}/workbooks/${workbook_id}/duplicate`);
+      const response = await axios.post(
+        `${process.env.VITE_API}/workbooks/${workbook_id}/duplicate`
+      );
       alert('Workbook duplicated successfully!');
       console.log(response.data);
     } catch (error) {

@@ -45,15 +45,12 @@ const WeeklyAttributes: React.FC<WeeklyAttributesProps> = ({
 
   const refreshAttributes = useCallback(async () => {
     try {
-      const selectedRes = await axios.get(
-        `${process.env.VITE_API}/week-graduate-attributes/`,
-        {
-          params: {
-            week_number: weekNumber,
-            week_workbook_id: workbookId,
-          },
-        }
-      );
+      const selectedRes = await axios.get(`${process.env.VITE_API}/week-graduate-attributes/`, {
+        params: {
+          week_number: weekNumber,
+          week_workbook_id: workbookId,
+        },
+      });
 
       console.log(selectedRes);
       const selectedIds = selectedRes.data.map(
@@ -102,9 +99,7 @@ const WeeklyAttributes: React.FC<WeeklyAttributesProps> = ({
       try {
         // First fetch all graduate attributes if not already loaded
         if (graduateAttributes.length === 0) {
-          const attributesRes = await axios.get(
-            `${process.env.VITE_API}/graduate_attributes/`
-          );
+          const attributesRes = await axios.get(`${process.env.VITE_API}/graduate_attributes/`);
           if (!mounted) return;
 
           const attributes = attributesRes.data;
@@ -120,15 +115,12 @@ const WeeklyAttributes: React.FC<WeeklyAttributesProps> = ({
         }
 
         // Then fetch selected attributes for the current week
-        const selectedRes = await axios.get(
-          `${process.env.VITE_API}/week-graduate-attributes/`,
-          {
-            params: {
-              week_number: weekNumber,
-              week_workbook_id: workbookId,
-            },
-          }
-        );
+        const selectedRes = await axios.get(`${process.env.VITE_API}/week-graduate-attributes/`, {
+          params: {
+            week_number: weekNumber,
+            week_workbook_id: workbookId,
+          },
+        });
 
         if (!mounted) return;
 

@@ -158,6 +158,7 @@ describe('GraduateAttributesChart', () => {
     });
 
     it('should pass correct props to ReactApexChart', () => {
+      // eslint-disable-next-line
       const ReactApexChart = require('react-apexcharts').default;
       expect(ReactApexChart).toHaveBeenCalledWith(
         expect.objectContaining({

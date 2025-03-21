@@ -52,7 +52,7 @@ function SearchBar() {
   const [showSchoolDropdown, setShowSchoolDropdown] = useState(false);
   const [showAreaDropdown, setShowAreaDropdown] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   const schoolRef = useRef<HTMLDivElement>(null);
   const areaRef = useRef<HTMLDivElement>(null);
 
@@ -61,7 +61,7 @@ function SearchBar() {
       try {
         const [schoolsResponse, areasResponse] = await Promise.all([
           axios.get(`${process.env.VITE_API}/schools/`),
-          axios.get(`${process.env.VITE_API}/area/`)
+          axios.get(`${process.env.VITE_API}/area/`),
         ]);
         setSchools(schoolsResponse.data);
         setAreas(areasResponse.data);
@@ -91,9 +91,7 @@ function SearchBar() {
   const handleSchoolInput = (value: string) => {
     setSchool(value);
     setSchoolId(''); // Clear the ID when typing
-    const filtered = schools.filter(s => 
-      s.name.toLowerCase().includes(value.toLowerCase())
-    );
+    const filtered = schools.filter((s) => s.name.toLowerCase().includes(value.toLowerCase()));
     setFilteredSchools(filtered);
     setShowSchoolDropdown(true);
   };
@@ -101,9 +99,7 @@ function SearchBar() {
   const handleAreaInput = (value: string) => {
     setArea(value);
     setAreaId(''); // Clear the ID when typing
-    const filtered = areas.filter(a => 
-      a.name.toLowerCase().includes(value.toLowerCase())
-    );
+    const filtered = areas.filter((a) => a.name.toLowerCase().includes(value.toLowerCase()));
     setFilteredAreas(filtered);
     setShowAreaDropdown(true);
   };
@@ -278,11 +274,9 @@ function SearchBar() {
               </div>
 
               <div ref={areaRef} className="relative">
-                <label
-                  htmlFor="area"
-                  className="block mb-1 text-sm font-medium text-gray-700"
-                >
-                  Area {isLoading && <span className="text-gray-400 text-xs ml-1">(Loading...)</span>}
+                <label htmlFor="area" className="block mb-1 text-sm font-medium text-gray-700">
+                  Area{' '}
+                  {isLoading && <span className="text-gray-400 text-xs ml-1">(Loading...)</span>}
                 </label>
                 <input
                   disabled={isLoading}
@@ -314,11 +308,9 @@ function SearchBar() {
               </div>
 
               <div ref={schoolRef} className="relative">
-                <label
-                  htmlFor="school"
-                  className="block mb-1 text-sm font-medium text-gray-700"
-                >
-                  School {isLoading && <span className="text-gray-400 text-xs ml-1">(Loading...)</span>}
+                <label htmlFor="school" className="block mb-1 text-sm font-medium text-gray-700">
+                  School{' '}
+                  {isLoading && <span className="text-gray-400 text-xs ml-1">(Loading...)</span>}
                 </label>
                 <input
                   disabled={isLoading}

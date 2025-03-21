@@ -65,7 +65,10 @@ function CreateWorkbook(): JSX.Element {
   const [showDeleteWeekModal, setShowDeleteWeekModal] = useState<boolean>(false);
   const [weekToDelete, setWeekToDelete] = useState<number | null>(null);
   const [showDeleteActivityModal, setShowDeleteActivityModal] = useState<boolean>(false);
-  const [activityToDelete, setActivityToDelete] = useState<{weekNumber: number; activityIndex: number} | null>(null);
+  const [activityToDelete, setActivityToDelete] = useState<{
+    weekNumber: number;
+    activityIndex: number;
+  } | null>(null);
 
   // Activity form & editing state
   const [activityForm, setActivityForm] = useState<Partial<Activity>>(defaultActivityForm);
@@ -116,9 +119,7 @@ function CreateWorkbook(): JSX.Element {
         );
 
         // Find current user details
-        const currentUser = usersRes.data.find(
-          (u: User) => u.id === sessionResponse.data.user_id
-        );
+        const currentUser = usersRes.data.find((u: User) => u.id === sessionResponse.data.user_id);
 
         // Find platform details
         const platform = platformsRes.data.find(
@@ -267,13 +268,15 @@ function CreateWorkbook(): JSX.Element {
   const handleDeleteActivity = () => {
     setShowDeleteActivityModal(false);
     if (!activityToDelete) return;
-    
+
     setWeeks((prevWeeks) =>
       prevWeeks.map((week) =>
         week.number === activityToDelete.weekNumber
           ? {
               ...week,
-              activities: week.activities.filter((_, idx) => idx !== activityToDelete.activityIndex),
+              activities: week.activities.filter(
+                (_, idx) => idx !== activityToDelete.activityIndex
+              ),
             }
           : week
       )
@@ -328,7 +331,7 @@ function CreateWorkbook(): JSX.Element {
                 ...week,
                 activities: week.activities.map((act, idx) =>
                   idx === editingActivity.activityIndex
-                    ? { ...activityForm, week_number: week.number } as Activity
+                    ? ({ ...activityForm, week_number: week.number } as Activity)
                     : act
                 ),
               }
@@ -400,7 +403,10 @@ function CreateWorkbook(): JSX.Element {
       console.log('Workbook Data:', workbookData);
       console.log('Area ID:', storedData.areaId);
       console.log('School ID:', storedData.schoolId);
-      const workbookResponse = await axios.post(`${process.env.VITE_API}/workbooks/`, workbookData);
+      const workbookResponse = await axios.post(
+        `${process.env.VITE_API}/workbooks/`,
+        workbookData
+      );
       const workbookId = workbookResponse.data.id;
 
       // Create weeks and activities
@@ -439,9 +445,10 @@ function CreateWorkbook(): JSX.Element {
 
         if (err.response?.status === 422) {
           const errorDetail = err.response.data.detail;
-          const errorMessage = typeof errorDetail === 'object' ? 
-            JSON.stringify(errorDetail, null, 2) : 
-            errorDetail || 'Invalid workbook data';
+          const errorMessage =
+            typeof errorDetail === 'object'
+              ? JSON.stringify(errorDetail, null, 2)
+              : errorDetail || 'Invalid workbook data';
           setError(`Validation error: ${errorMessage}`);
         } else {
           setError(`API Error: ${err.response?.statusText || 'Unknown error'}`);

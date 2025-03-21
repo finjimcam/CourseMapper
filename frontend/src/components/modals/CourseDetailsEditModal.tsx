@@ -59,12 +59,9 @@ const CourseDetailsEditModal: React.FC<CourseDetailsEditModalProps> = ({
 
   const loadContributors = useCallback(async () => {
     try {
-      const response = await axios.get<User[]>(
-        `${process.env.VITE_API}/workbook-contributors/`,
-        {
-          params: { workbook_id: workbook.workbook.id },
-        }
-      );
+      const response = await axios.get<User[]>(`${process.env.VITE_API}/workbook-contributors/`, {
+        params: { workbook_id: workbook.workbook.id },
+      });
       setContributors(response.data);
     } catch (error) {
       console.error('Error loading contributors:', getErrorMessage(error));
@@ -139,125 +136,125 @@ const CourseDetailsEditModal: React.FC<CourseDetailsEditModalProps> = ({
         }}
       />
       <Modal show={show} onClose={onCancel}>
-      <Modal.Header>Edit Course Details</Modal.Header>
-      <Modal.Body>
-        <div className="space-y-4">
-          <Tabs aria-label="Course edit tabs">
-            <TabItem title="Details">
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="courseName" value="Course Name" />
-                  <TextInput
-                    id="courseName"
-                    value={workbook.workbook.course_name || ''}
-                    onChange={(e) => onChange('workbook.course_name', e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="courseLead" value="Course Lead" />
-                  <Select
-                    id="courseLead"
-                    value={workbook.course_lead.id || ''}
-                    onChange={(e) => {
-                      setNewLeadId(e.target.value);
-                      setShowLeadChangeModal(true);
-                    }}
-                  >
-                    {users.map((user: GenericData) => (
-                      <option key={user.id} value={user.id}>
-                        {user.name}
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="learningPlatform" value="Learning Platform" />
-                  <div className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-gray-900">
-                    {workbook.learning_platform.name || 'Not selected'}
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="startDate" value="Start Date" />
-                  <DatePicker
-                    selected={new Date(workbook.workbook.start_date)}
-                    onChange={handleDateChange}
-                    dateFormat="dd/MM/yyyy"
-                    className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5"
-                  />
-                </div>
-              </div>
-            </TabItem>
-            <TabItem title="Contributors">
-              <div className="space-y-4">
-                <Label value="Current Contributors" />
-                <div className="space-y-2">
-                  {contributors.map((contributor) => (
-                    <div
-                      key={contributor.id}
-                      className="flex items-center justify-between p-2 bg-gray-50 rounded"
-                    >
-                      <span>{contributor.name}</span>
-                      <Button
-                        color="failure"
-                        size="xs"
-                        onClick={() => handleRemoveContributor(contributor.id)}
-                        disabled={isLoading}
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-                <div>
-                  <Label htmlFor="contributorSearch" value="Add Contributor" />
-                  <div className="relative">
+        <Modal.Header>Edit Course Details</Modal.Header>
+        <Modal.Body>
+          <div className="space-y-4">
+            <Tabs aria-label="Course edit tabs">
+              <TabItem title="Details">
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="courseName" value="Course Name" />
                     <TextInput
-                      id="contributorSearch"
-                      type="text"
-                      placeholder="Search for a user..."
-                      value={searchQuery}
-                      onChange={(e) => {
-                        const query = e.target.value;
-                        setSearchQuery(query);
-                        const filtered = users.filter(
-                          (user) =>
-                            !contributors.some((c) => c.id === user.id) &&
-                            user.name.toLowerCase().includes(query.toLowerCase())
-                        );
-                        setFilteredUsers(filtered);
-                      }}
+                      id="courseName"
+                      value={workbook.workbook.course_name || ''}
+                      onChange={(e) => onChange('workbook.course_name', e.target.value)}
                     />
-                    {searchQuery && filteredUsers.length > 0 && (
-                      <div className="absolute z-10 w-full">
-                        <div className="bg-white border border-gray-200 rounded-lg max-h-48 overflow-y-auto divide-y divide-gray-100">
-                          {filteredUsers.map((user) => (
-                            <div
-                              key={user.id}
-                              className="px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer text-sm text-gray-700 dark:text-gray-200"
-                              onClick={() => {
-                                handleAddContributor(user.id);
-                                setSearchQuery('');
-                                setFilteredUsers([]);
-                              }}
-                            >
-                              {user.name}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="courseLead" value="Course Lead" />
+                    <Select
+                      id="courseLead"
+                      value={workbook.course_lead.id || ''}
+                      onChange={(e) => {
+                        setNewLeadId(e.target.value);
+                        setShowLeadChangeModal(true);
+                      }}
+                    >
+                      {users.map((user: GenericData) => (
+                        <option key={user.id} value={user.id}>
+                          {user.name}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="learningPlatform" value="Learning Platform" />
+                    <div className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-gray-900">
+                      {workbook.learning_platform.name || 'Not selected'}
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="startDate" value="Start Date" />
+                    <DatePicker
+                      selected={new Date(workbook.workbook.start_date)}
+                      onChange={handleDateChange}
+                      dateFormat="dd/MM/yyyy"
+                      className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5"
+                    />
                   </div>
                 </div>
-              </div>
-            </TabItem>
-          </Tabs>
-        </div>
-      </Modal.Body>
-      <Modal.Footer>
-        <Button color="gray" onClick={onCancel}>
-          Close
-        </Button>
-      </Modal.Footer>
+              </TabItem>
+              <TabItem title="Contributors">
+                <div className="space-y-4">
+                  <Label value="Current Contributors" />
+                  <div className="space-y-2">
+                    {contributors.map((contributor) => (
+                      <div
+                        key={contributor.id}
+                        className="flex items-center justify-between p-2 bg-gray-50 rounded"
+                      >
+                        <span>{contributor.name}</span>
+                        <Button
+                          color="failure"
+                          size="xs"
+                          onClick={() => handleRemoveContributor(contributor.id)}
+                          disabled={isLoading}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  <div>
+                    <Label htmlFor="contributorSearch" value="Add Contributor" />
+                    <div className="relative">
+                      <TextInput
+                        id="contributorSearch"
+                        type="text"
+                        placeholder="Search for a user..."
+                        value={searchQuery}
+                        onChange={(e) => {
+                          const query = e.target.value;
+                          setSearchQuery(query);
+                          const filtered = users.filter(
+                            (user) =>
+                              !contributors.some((c) => c.id === user.id) &&
+                              user.name.toLowerCase().includes(query.toLowerCase())
+                          );
+                          setFilteredUsers(filtered);
+                        }}
+                      />
+                      {searchQuery && filteredUsers.length > 0 && (
+                        <div className="absolute z-10 w-full">
+                          <div className="bg-white border border-gray-200 rounded-lg max-h-48 overflow-y-auto divide-y divide-gray-100">
+                            {filteredUsers.map((user) => (
+                              <div
+                                key={user.id}
+                                className="px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer text-sm text-gray-700 dark:text-gray-200"
+                                onClick={() => {
+                                  handleAddContributor(user.id);
+                                  setSearchQuery('');
+                                  setFilteredUsers([]);
+                                }}
+                              >
+                                {user.name}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </TabItem>
+            </Tabs>
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button color="gray" onClick={onCancel}>
+            Close
+          </Button>
+        </Modal.Footer>
       </Modal>
     </>
   );

@@ -53,9 +53,9 @@ const WeeksTabs: React.FC<WeeksTabsProps> = ({
   }>({});
 
   const handleSort = (weekNumber: number, key: string, direction: 'asc' | 'desc') => {
-    setWeekSortConfigs(prev => ({
+    setWeekSortConfigs((prev) => ({
       ...prev,
-      [weekNumber]: { key, direction }
+      [weekNumber]: { key, direction },
     }));
   };
 

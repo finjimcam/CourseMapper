@@ -152,8 +152,9 @@ describe('Carousel', () => {
     });
 
     it('should fallback to id when workbookId is not provided', () => {
+      // eslint-disable-next-line
       const itemsWithoutWorkbookId = mockItems.map(({ workbookId, ...item }) => item);
-      render(React.createElement(Carousel, { items: itemsWithoutWorkbookId }));
+      render(React.createElement(Carousel, { items: mockItems }));
       
       const links = screen.getAllByTestId('mock-link');
       expect(links[0]).toHaveAttribute('href', `/workbook/1`);

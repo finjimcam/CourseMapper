@@ -37,15 +37,15 @@ function Navbar() {
     if (location.pathname.startsWith('/workbook/')) {
       const workbookId = location.pathname.split('/')[2];
       axios
-      .get(`${process.env.VITE_API}/workbooks/${workbookId}/details`)
-      .then(async (response) => {
-        setWorkbookData(response.data.workbook);
-        const userCanEdit = await canUserEdit(workbookId);
-        setCanEdit(userCanEdit);
-      })
-      .catch((error) => {
-        console.error('Error fetching workbook data:', error);
-      });
+        .get(`${process.env.VITE_API}/workbooks/${workbookId}/details`)
+        .then(async (response) => {
+          setWorkbookData(response.data.workbook);
+          const userCanEdit = await canUserEdit(workbookId);
+          setCanEdit(userCanEdit);
+        })
+        .catch((error) => {
+          console.error('Error fetching workbook data:', error);
+        });
     }
   }, [location.pathname]);
 

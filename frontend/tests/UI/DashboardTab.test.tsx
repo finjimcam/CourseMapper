@@ -122,6 +122,7 @@ describe('DashboardTab', () => {
       render(React.createElement(DashboardTab, { ...mockProps, showTable: false }));
       
       await waitFor(() => {
+        // eslint-disable-next-line
         const ReactApexChart = require('react-apexcharts').default;
         expect(ReactApexChart).toHaveBeenCalledWith(
           expect.objectContaining({

@@ -63,11 +63,12 @@ const WeekActivityTab: React.FC<WeekActivityTabProps> = ({
   const effectiveSortConfig = sortConfig || localSortConfig;
 
   // Create data with original indices
-  const dataWithIndices = React.useMemo(() => 
-    week.data.map((item, index) => ({
-      ...item,
-      originalIndex: index
-    })),
+  const dataWithIndices = React.useMemo(
+    () =>
+      week.data.map((item, index) => ({
+        ...item,
+        originalIndex: index,
+      })),
     [week.data]
   );
 
@@ -102,18 +103,16 @@ const WeekActivityTab: React.FC<WeekActivityTabProps> = ({
         default:
           result = 0;
       }
-      
+
       return direction === 'asc' ? result : -result;
     });
   }, [dataWithIndices, effectiveSortConfig]);
 
   // Handle sort click
   const handleSort = (key: string) => {
-    const direction: 'asc' | 'desc' = 
-      effectiveSortConfig?.key === key && effectiveSortConfig.direction === 'asc' 
-        ? 'desc' 
-        : 'asc';
-    
+    const direction: 'asc' | 'desc' =
+      effectiveSortConfig?.key === key && effectiveSortConfig.direction === 'asc' ? 'desc' : 'asc';
+
     const newConfig = { key, direction };
     if (onSort) {
       onSort(key, direction);
@@ -130,53 +129,49 @@ const WeekActivityTab: React.FC<WeekActivityTabProps> = ({
       <div className="overflow-x-auto">
         <Table striped>
           <Table.Head>
-            <Table.HeadCell 
+            <Table.HeadCell
               className="cursor-pointer hover:bg-gray-100"
               onClick={() => handleSort('staff')}
             >
-              Staff Responsible {effectiveSortConfig?.key === 'staff' && (
-                <span className="ml-1">
-                  {effectiveSortConfig.direction === 'asc' ? '↑' : '↓'}
-                </span>
+              Staff Responsible{' '}
+              {effectiveSortConfig?.key === 'staff' && (
+                <span className="ml-1">{effectiveSortConfig.direction === 'asc' ? '↑' : '↓'}</span>
               )}
             </Table.HeadCell>
             <Table.HeadCell>Title / Name</Table.HeadCell>
-            <Table.HeadCell 
+            <Table.HeadCell
               className="cursor-pointer hover:bg-gray-100"
               onClick={() => handleSort('activity')}
             >
-              Learning Activity {effectiveSortConfig?.key === 'activity' && (
-                <span className="ml-1">
-                  {effectiveSortConfig.direction === 'asc' ? '↑' : '↓'}
-                </span>
+              Learning Activity{' '}
+              {effectiveSortConfig?.key === 'activity' && (
+                <span className="ml-1">{effectiveSortConfig.direction === 'asc' ? '↑' : '↓'}</span>
               )}
             </Table.HeadCell>
-            <Table.HeadCell 
+            <Table.HeadCell
               className="cursor-pointer hover:bg-gray-100"
               onClick={() => handleSort('type')}
             >
-              Learning Type {effectiveSortConfig?.key === 'type' && (
-                <span className="ml-1">
-                  {effectiveSortConfig.direction === 'asc' ? '↑' : '↓'}
-                </span>
+              Learning Type{' '}
+              {effectiveSortConfig?.key === 'type' && (
+                <span className="ml-1">{effectiveSortConfig.direction === 'asc' ? '↑' : '↓'}</span>
               )}
             </Table.HeadCell>
             <Table.HeadCell>Activity Location</Table.HeadCell>
-            <Table.HeadCell 
+            <Table.HeadCell
               className="cursor-pointer hover:bg-gray-100"
               onClick={() => handleSort('status')}
             >
-              Task Status {effectiveSortConfig?.key === 'status' && (
-                <span className="ml-1">
-                  {effectiveSortConfig.direction === 'asc' ? '↑' : '↓'}
-                </span>
+              Task Status{' '}
+              {effectiveSortConfig?.key === 'status' && (
+                <span className="ml-1">{effectiveSortConfig.direction === 'asc' ? '↑' : '↓'}</span>
               )}
             </Table.HeadCell>
             <Table.HeadCell>Time</Table.HeadCell>
             {(onEditActivity || onDeleteActivity) && <Table.HeadCell>Actions</Table.HeadCell>}
           </Table.Head>
           <Table.Body>
-          {sortedData.map((row) => (
+            {sortedData.map((row) => (
               <Table.Row key={row.originalIndex}>
                 <Table.Cell>{row.staff.length > 0 ? row.staff.join(', ') : 'N/A'}</Table.Cell>
                 <Table.Cell>{row.title}</Table.Cell>
@@ -198,7 +193,11 @@ const WeekActivityTab: React.FC<WeekActivityTabProps> = ({
                             size="xs"
                             color="light"
                             onClick={() =>
-                              onEditActivity(originalActivities[row.originalIndex], row.originalIndex, week.weekNumber)
+                              onEditActivity(
+                                originalActivities[row.originalIndex],
+                                row.originalIndex,
+                                week.weekNumber
+                              )
                             }
                           >
                             <HiPencil className="h-4 w-4" />

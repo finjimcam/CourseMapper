@@ -22,7 +22,7 @@ import axios from 'axios';
 
 /**
  * Gets the base API URL for either test or production environment
- * 
+ *
  * TODO: Technical Debt
  * This utility is currently only used in some components.
  * Other components are still using process.env.VITE_API directly.
@@ -242,10 +242,10 @@ export const getContributors = async (workbook_id: string): Promise<User[]> => {
 
 export const isCourseLead = async (workbook_id: string): Promise<boolean> => {
   const [workbookData, isAdminUser] = await Promise.all([
-    axios.get<WorkbookDetailsResponse>(
-      `${getApiBaseUrl()}/workbooks/${workbook_id}/details`
-    ).then(res => res.data),
-    isAdmin()
+    axios
+      .get<WorkbookDetailsResponse>(`${getApiBaseUrl()}/workbooks/${workbook_id}/details`)
+      .then((res) => res.data),
+    isAdmin(),
   ]);
 
   return getUser().then((user) => {
@@ -258,24 +258,23 @@ export const isCourseLead = async (workbook_id: string): Promise<boolean> => {
 
 export const isAdmin = async (): Promise<boolean> => {
   return getUser().then((user) => {
-    return axios.get(`${getApiBaseUrl()}/permissions-groups/`)
-      .then((response) => {
-        const permissionsGroups = response.data;
-        const userGroup = permissionsGroups.find(
-          (group: { id: string }) => group.id === user.permissions_group_id
-        );
-        return userGroup?.name === "Admin";
-      });
+    return axios.get(`${getApiBaseUrl()}/permissions-groups/`).then((response) => {
+      const permissionsGroups = response.data;
+      const userGroup = permissionsGroups.find(
+        (group: { id: string }) => group.id === user.permissions_group_id
+      );
+      return userGroup?.name === 'Admin';
+    });
   });
 };
 
 export const canUserEdit = async (workbook_id: string): Promise<boolean> => {
   const [workbookData, contributors, isAdminUser] = await Promise.all([
-    axios.get<WorkbookDetailsResponse>(
-      `${getApiBaseUrl()}/workbooks/${workbook_id}/details`
-    ).then(res => res.data),
+    axios
+      .get<WorkbookDetailsResponse>(`${getApiBaseUrl()}/workbooks/${workbook_id}/details`)
+      .then((res) => res.data),
     getContributors(workbook_id),
-    isAdmin()
+    isAdmin(),
   ]);
 
   return getUser().then((user) => {
