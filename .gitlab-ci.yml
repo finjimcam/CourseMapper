@@ -74,7 +74,7 @@ Type checking with tsc in frontend:
   script:
     - npx tsc --noEmit
   rules:
-    changes:
+    - changes:
       - frontend/**/*
 
 Linting with eslint in frontend:
@@ -87,7 +87,7 @@ Linting with eslint in frontend:
     - npm run lint
     - npm run prettier
   rules:
-    changes:
+    - changes:
       - frontend/**/*
 
 Unit tests on frontend:
@@ -98,5 +98,5 @@ Unit tests on frontend:
   script:
     - npm run test
   rules:
-    changes:
+    - changes:
       - frontend/**/*
