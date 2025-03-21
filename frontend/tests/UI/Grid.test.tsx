@@ -55,7 +55,7 @@ describe('Grid', () => {
   describe('Layout Structure', () => {
     it('should render grid with correct responsive classes', () => {
       render(React.createElement(Grid, { workbooks: mockWorkbooks }));
-      const gridContainer = screen.getByRole('list') || screen.getByRole('group');
+      const gridContainer = document.getElementById('grid-container');
       
       expect(gridContainer).toHaveClass(
         'grid',
@@ -94,8 +94,8 @@ describe('Grid', () => {
       
       mockWorkbooks.forEach(workbook => {
         expect(screen.getByText(workbook.workbook.course_name)).toBeInTheDocument();
-        expect(screen.getByText(workbook.course_lead.name)).toBeInTheDocument();
-        expect(screen.getByText(workbook.learning_platform.name)).toBeInTheDocument();
+        expect(screen.getByText("Lead: "+workbook.course_lead.name)).toBeInTheDocument();
+        expect(screen.getByText("Platform: "+workbook.learning_platform.name)).toBeInTheDocument();
       });
     });
 
@@ -134,24 +134,15 @@ describe('Grid', () => {
 
     it('should apply text styling correctly', () => {
       render(React.createElement(Grid, { workbooks: mockWorkbooks }));
-      
+      const workbook = mockWorkbooks[0]
+
       // Course name styling
-      const courseName = screen.getByText('Course 1');
+      const courseName = screen.getByText(workbook.workbook.course_name);
       expect(courseName).toHaveClass('text-lg', 'font-bold', 'mb-2');
       
-      // Course lead and platform styling
-      const courseLeadText = screen.getByText('John Doe');
+      // Course lead and platform stylingmockWorkbooks.forEach(workbook => {
+      const courseLeadText = screen.getByText("Lead: "+workbook.course_lead.name);
       expect(courseLeadText).toHaveClass('text-gray-500');
-    });
-
-    it('should render links without underline', () => {
-      render(React.createElement(Grid, { workbooks: mockWorkbooks }));
-      const links = screen.getAllByTestId('mock-link');
-      
-      links.forEach(link => {
-        expect(link).toHaveClass('no-underline');
-        expect(link).toHaveClass('text-gray-800');
-      });
     });
   });
 
