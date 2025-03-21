@@ -16,6 +16,7 @@ before_script:
   - source venv/bin/activate
   - pip install --upgrade pip
   - pip install -r backend/requirements.txt --cache-dir deps_cache
+  - cat backend/requirements.txt
 
 stages:
   - Static Analysis
@@ -40,7 +41,6 @@ Linting with black in backend:
   stage: Static Analysis
   script:
     - cd backend
-    - pip install -r requirements.txt
     - black --check --diff .
   rules:
     - changes:
@@ -50,7 +50,6 @@ Type checking with mypy in backend:
   stage: Static Analysis
   script:
     - cd backend
-    - pip install -r requirements.txt
     - mypy .
   rules:
     - changes:
@@ -60,7 +59,6 @@ Unit tests on backend:
   stage: Dynamic Analysis
   script:
     - cd backend
-    - pip install -r requirements.txt
     - pytest .
   rules:
     - changes:
