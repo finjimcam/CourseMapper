@@ -16,7 +16,6 @@ before_script:
   - source venv/bin/activate
   - pip install --upgrade pip
   - pip install -r backend/requirements.txt --cache-dir deps_cache
-  - cat backend/requirements.txt
 
 stages:
   - Static Analysis
