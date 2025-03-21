@@ -20,6 +20,7 @@ import { useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Breadcrumb, Dropdown } from 'flowbite-react';
 import axios from 'axios';
+import { canUserEdit } from '../utils/workbookUtils';
 
 interface WorkbookData {
   id: string;
@@ -30,18 +31,21 @@ function Navbar() {
   const location = useLocation();
   const [workbookData, setWorkbookData] = useState<WorkbookData | null>(null);
   const [username, setUsername] = useState('');
+  const [canEdit, setCanEdit] = useState<boolean>(false);
 
   useEffect(() => {
     if (location.pathname.startsWith('/workbook/')) {
       const workbookId = location.pathname.split('/')[2];
       axios
-        .get(`${process.env.VITE_API}/workbooks/${workbookId}/details`)
-        .then((response) => {
-          setWorkbookData(response.data.workbook);
-        })
-        .catch((error) => {
-          console.error('Error fetching workbook data:', error);
-        });
+      .get(`${process.env.VITE_API}/workbooks/${workbookId}/details`)
+      .then(async (response) => {
+        setWorkbookData(response.data.workbook);
+        const userCanEdit = await canUserEdit(workbookId);
+        setCanEdit(userCanEdit);
+      })
+      .catch((error) => {
+        console.error('Error fetching workbook data:', error);
+      });
     }
   }, [location.pathname]);
 
@@ -117,12 +121,14 @@ function Navbar() {
                 <Breadcrumb.Item className="text-gray-700">My Workbooks</Breadcrumb.Item>
               ) : (
                 <>
-                  <Breadcrumb.Item
-                    href="/my-workbooks"
-                    className="text-gray-900 hover:text-blue-700"
-                  >
-                    My Workbooks
-                  </Breadcrumb.Item>
+                  {canEdit && (
+                    <Breadcrumb.Item
+                      href="/my-workbooks"
+                      className="text-gray-900 hover:text-blue-700"
+                    >
+                      My Workbooks
+                    </Breadcrumb.Item>
+                  )}
                   <Breadcrumb.Item className="text-gray-700">
                     {workbookData?.course_name || 'Workbook'}
                   </Breadcrumb.Item>

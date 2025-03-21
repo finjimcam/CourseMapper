@@ -20,6 +20,7 @@ import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Workbook, Area, School } from '../utils/workbookUtils';
+import { areaColors } from '../utils/colorMappings';
 
 const Grid: React.FC<{ workbooks: Workbook[] | null }> = ({ workbooks }) => {
   const [areas, setAreas] = useState<Area[]>([]);
@@ -76,15 +77,24 @@ const Grid: React.FC<{ workbooks: Workbook[] | null }> = ({ workbooks }) => {
         workbooks.map((item) => (
           <div
             key={item.workbook.id}
-            className="bg-white p-6 rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 border border-gray-200"
+            className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 border border-gray-200 overflow-hidden"
           >
+            <div 
+              className="h-20 relative" 
+              style={{ 
+                backgroundColor: areaColors[getAreaName(item.workbook.area_id)] || '#f5f5f5',
+              }}
+            >
+              <h6 className="text-lg font-bold p-4">{item.workbook.course_name}</h6>
+            </div>
+            <div className="p-4">
             <Link to={`/workbook/${item.workbook.id}`} className="block text-gray-800 no-underline">
-              <h6 className="text-lg font-bold mb-2">{item.workbook.course_name}</h6>
               <p className="text-gray-500">Lead: {item.course_lead?.name || 'N/A'}</p>
               <p className="text-gray-500">Platform: {item.learning_platform?.name || 'N/A'}</p>
               <p className="text-gray-500">Area: {getAreaName(item.workbook.area_id)}</p>
               <p className="text-gray-500">School: {getSchoolName(item.workbook.school_id)}</p>
             </Link>
+            </div>
           </div>
         ))
       ) : (
