@@ -1,8 +1,10 @@
 FROM python:3.10-alpine
-WORKDIR /code
 
-COPY . /code/
+WORKDIR /backend
 
-RUN pip install --upgrade -r /code/requirements.txt
+COPY requirements.txt requirements.txt
 
-CMD ["fastapi", "run", "main.py", "--port", "80"]
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
+
+COPY . .

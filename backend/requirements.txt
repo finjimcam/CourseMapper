@@ -1,4 +1,7 @@
 fastapi[standard]
+requests
+pyjwt
+fastapi_azure_auth
 black
 mypy
 sqlmodel
@@ -6,3 +9,5 @@ pandas
 pandas-stubs
 fastapi_sessions
 pytest
+pydantic_settings
+python-dotenv

@@ -31,7 +31,7 @@ from fastapi_sessions.session_verifier import SessionVerifier
 class SessionData(BaseModel):
     """The data stored in the session cookie."""
 
-    user_id: uuid.UUID
+    user_id: str
 
 
 class BaseVerifier(SessionVerifier[uuid.UUID, SessionData]):  # type: ignore[misc]

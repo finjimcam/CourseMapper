@@ -46,7 +46,7 @@ class WorkbookContributorBase(SQLModel):
         workbook_id: The id of the related workbook.
     """
 
-    contributor_id: uuid.UUID = Field(foreign_key="user.id", primary_key=True)
+    contributor_id: str = Field(foreign_key="user.id", primary_key=True)
     workbook_id: uuid.UUID = Field(foreign_key="workbook.id", primary_key=True)
 
 
@@ -146,7 +146,7 @@ class ActivityStaffBase(SQLModel):
         activity_id: The id of the related activity.
     """
 
-    staff_id: uuid.UUID = Field(foreign_key="user.id", primary_key=True)
+    staff_id: str = Field(foreign_key="user.id", primary_key=True)
     activity_id: uuid.UUID = Field(foreign_key="activity.id", primary_key=True)
 
 
@@ -390,8 +390,9 @@ class User(SQLModel, table=True):
             ActivityStaff model.
     """
 
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    id: str = Field(primary_key=True)  # populated by AzureAD OID
     name: str = Field(index=True)
+    email: str = Field(index=True)
     permissions_group_id: uuid.UUID = Field(foreign_key="permissionsgroup.id")
 
     permissions_group: Optional["PermissionsGroup"] = Relationship(back_populates="users")
@@ -438,7 +439,7 @@ class WorkbookBase(SQLModel):
     start_date: datetime.date = Field(nullable=False)
     end_date: datetime.date = Field(nullable=False)
     course_name: str = Field(index=True)
-    course_lead_id: uuid.UUID = Field(foreign_key="user.id")
+    course_lead_id: str = Field(foreign_key="user.id")
     learning_platform_id: uuid.UUID = Field(foreign_key="learningplatform.id")
 
 
@@ -562,7 +563,7 @@ class WorkbookUpdate(BaseModel):
     start_date: Optional[datetime.date] = None
     end_date: Optional[datetime.date] = None
     course_name: Optional[str] = None
-    course_lead_id: Optional[uuid.UUID] = None
+    course_lead_id: Optional[str] = None
     area_id: Optional[uuid.UUID] = None
     school_id: Optional[uuid.UUID] = None
 

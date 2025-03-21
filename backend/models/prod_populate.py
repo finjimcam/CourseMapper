@@ -17,7 +17,10 @@ along with this program at /LICENSE.md. If not, see <https://www.gnu.org/license
 
 __-----------------------------------------------------------------------------------__
 
-This module populates the database with initial data for testing purposes.
+This module populates the database with initial data for production.
+
+As opposed to populate.py or big_populate.py, this module does not populate sample workbooks.
+It populates only what is necessary, but no actual data.
 """
 
 import sys
@@ -160,127 +163,10 @@ def _populate_initial_data() -> None:
                     learning_platform=learning_platforms[learning_platform],
                 )
 
-        weeks = {}
-        activities = []
         permissions_groups = {
             "User": PermissionsGroup(name="User"),
             "Admin": PermissionsGroup(name="Admin"),
         }
-        users = {
-            "Tim Storer": User(
-                id="testid1",
-                name="Tim Storer",
-                email="tim.storer@fake_domain.com",
-                permissions_group=permissions_groups["User"],
-            ),
-            "Richard Johnston": User(
-                id="testid2",
-                name="Richard Johnston",
-                email="richard.johnston@fake_domain.com",
-                permissions_group=permissions_groups["Admin"],
-            ),
-            "Scott Ramsey": User(
-                id="testid3",
-                name="Scott Ramsey",
-                email="scott.ramsey@fake_domain.com",
-                permissions_group=permissions_groups["User"],
-            ),
-            "Andrew Struan": User(
-                id="testid4",
-                name="Andrew Struan",
-                email="andrew.struan@fake_domain.com",
-                permissions_group=permissions_groups["User"],
-            ),
-            "Caitlin Diver": User(
-                id="testid5",
-                name="Caitlin Diver",
-                email="caitlin.diver@fake_domain.com",
-                permissions_group=permissions_groups["User"],
-            ),
-            "Jennifer Boyle": User(
-                id="testid6",
-                name="Jennifer Boyle",
-                email="jennifer.boyle@fake_domain.com",
-                permissions_group=permissions_groups["User"],
-            ),
-        }
-
-        selected_area = session.exec(
-            select(Area).where(Area.name == "College of Science & Engineering")
-        ).first()
-        selected_school = session.exec(
-            select(Schools).where(Schools.name == "School of Computing Science")
-        ).first()
-
-        if not selected_area:
-            raise ValueError(
-                "Error: Area 'College of Science & Engineering' not found in the database."
-            )
-
-        if not selected_school:
-            raise ValueError(
-                "Error: School 'School of Computing Science' not found in the database."
-            )
-
-        workbook = Workbook(
-            start_date=datetime.date(2024, 9, 23),
-            end_date=datetime.date(2024, 9, 23) + datetime.timedelta(weeks=3),
-            course_lead=users["Tim Storer"],
-            course_name="Professional Software Development",
-            learning_platform=learning_platforms["Moodle"],
-            area_id=selected_area.id,
-            school_id=selected_school.id,
-            contributors=[users["Jennifer Boyle"], users["Caitlin Diver"]],
-        )
-        if workbook.learning_platform is None:
-            raise Exception("Workbook not correctly populated. This is a problem with the script.")
-        for week_no in _WEEK_CSV_PATHS:
-            dataframe = pd.read_csv(_WEEK_CSV_PATHS[week_no])
-            weeks[week_no] = Week(
-                number=week_no,
-                workbook=workbook,
-                start_date=workbook.start_date + datetime.timedelta(weeks=week_no - 1),
-                end_date=workbook.start_date
-                + datetime.timedelta(weeks=week_no - 1)
-                + datetime.timedelta(days=4),
-                graduate_attributes=[
-                    graduate_attributes[graduate_attribute]
-                    for graduate_attribute in dataframe["Graduate Attribute"].dropna()
-                ],
-            )
-            for i in range(len(dataframe)):
-                name = dataframe["Title / Name"].iloc[i]
-                staff_responsible = dataframe["Staff Responsible"].iloc[i]
-                learning_activity = dataframe["Learning Activity"].iloc[i]
-                learning_type = dataframe["Learning Type"].iloc[i]
-                time_estimate = int(dataframe["Time (in mins)"].iloc[i])
-                task_status = dataframe["Task Status"].iloc[i]
-                location = dataframe["Activity Location"].iloc[i]
-
-                activity = Activity(
-                    week=weeks[week_no],
-                    number=i + 1,
-                    workbook=workbook,
-                    name=name,
-                    location=locations[location],
-                    learning_activity=learning_activities[workbook.learning_platform.name][
-                        learning_activity
-                    ],
-                    learning_type=learning_types[learning_type],
-                    time_estimate_minutes=time_estimate,
-                    task_status=(
-                        task_statuses[task_status]
-                        if not pd.isna(task_status)
-                        else task_statuses["Unassigned"]
-                    ),
-                )
-
-                # Add staff responsibility if staff is specified
-                if not pd.isna(staff_responsible) and staff_responsible in users:
-                    activity.staff_responsible.append(users[staff_responsible])
-
-                activities.append(activity)
-        workbook.number_of_weeks = len(weeks)
 
         session.add_all(locations.values())
         session.add_all(task_statuses.values())
@@ -289,11 +175,7 @@ def _populate_initial_data() -> None:
         session.add_all(learning_platforms.values())
         for platform_activities in learning_activities.values():
             session.add_all(platform_activities.values())
-        session.add_all(weeks.values())
-        session.add_all(activities)
         session.add_all(permissions_groups.values())
-        session.add_all(users.values())
-        session.add(workbook)
 
         session.commit()
         print("Database populated with initial data.")

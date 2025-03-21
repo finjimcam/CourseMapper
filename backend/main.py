@@ -90,6 +90,7 @@ app = FastAPI(lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "http://localhost:3000",
         "http://localhost:5173",
         "https://sh01-frontend.netlify.app",
     ],  # Frontend's origin
@@ -129,7 +130,7 @@ def unwrap(model: T | None) -> T:
 
 
 # Session requests
-@app.post("/session/{username}")
+@app.post("/api/session/{username}")
 async def create_session(
     username: str, response: Response, session: Session = Depends(get_session)
 ) -> dict[str, Any]:
@@ -160,7 +161,7 @@ async def create_session(
     return {"ok": True, "session_id": str(session_id)}
 
 
-@app.get("/session/", dependencies=[Depends(cookie)])
+@app.get("/api/session/", dependencies=[Depends(cookie)])
 async def read_session(session_data: SessionData = Depends(verifier)) -> SessionData:
     """Return the session data of an authenticated user.
 
@@ -177,7 +178,7 @@ async def read_session(session_data: SessionData = Depends(verifier)) -> Session
     return session_data
 
 
-@app.delete("/session/")
+@app.delete("/api/session/")
 async def delete_session(
     response: Response, session_id: uuid.UUID = Depends(cookie)
 ) -> dict[str, bool]:
@@ -202,7 +203,7 @@ async def delete_session(
 
 
 # Delete requests for removing entries
-@app.delete("/activity-staff/", dependencies=[Depends(cookie)])
+@app.delete("/api/activity-staff/", dependencies=[Depends(cookie)])
 def delete_activity_staff(
     activity_staff: ActivityStaffDelete,
     session_data: SessionData = Depends(verifier),
@@ -288,7 +289,7 @@ def delete_activity_staff(
     return {"ok": True}
 
 
-@app.delete("/workbook-contributors/", dependencies=[Depends(cookie)])
+@app.delete("/api/workbook-contributors/", dependencies=[Depends(cookie)])
 def delete_workbook_contributor(
     workbook_contributor: WorkbookContributorDelete,
     session_data: SessionData = Depends(verifier),
@@ -365,7 +366,7 @@ def delete_workbook_contributor(
     return {"ok": True}
 
 
-@app.delete("/weeks/", dependencies=[Depends(cookie)])
+@app.delete("/api/weeks/", dependencies=[Depends(cookie)])
 def delete_week(
     week: WeekDelete,
     session_data: SessionData = Depends(verifier),
@@ -503,7 +504,7 @@ def delete_week(
     return {"ok": True}
 
 
-@app.delete("/week-graduate-attributes/", dependencies=[Depends(cookie)])
+@app.delete("/api/week-graduate-attributes/", dependencies=[Depends(cookie)])
 def delete_week_graduate_attribute(
     week_graduate_attribute: WeekGraduateAttributeDelete,
     session_data: SessionData = Depends(verifier),
@@ -595,7 +596,7 @@ def delete_week_graduate_attribute(
     return {"ok": True}
 
 
-@app.delete("/workbooks/", dependencies=[Depends(cookie)])
+@app.delete("/api/workbooks/", dependencies=[Depends(cookie)])
 def delete_workbook(
     workbook_id: uuid.UUID,
     session_data: SessionData = Depends(verifier),
@@ -667,7 +668,7 @@ def delete_workbook(
     return {"ok": True}
 
 
-@app.delete("/activities/", dependencies=[Depends(cookie)])
+@app.delete("/api/activities/", dependencies=[Depends(cookie)])
 def delete_activity(
     activity_id: uuid.UUID,
     session_data: SessionData = Depends(verifier),
@@ -758,7 +759,7 @@ def delete_activity(
 
 
 # Patch requests for editing entries
-@app.patch("/activities/{activity_id}", dependencies=[Depends(cookie)])
+@app.patch("/api/activities/{activity_id}", dependencies=[Depends(cookie)])
 def patch_activity(
     activity_id: uuid.UUID,
     activity_update: ActivityUpdate,
@@ -911,7 +912,7 @@ def patch_activity(
     return db_activity
 
 
-@app.patch("/workbooks/{workbook_id}", dependencies=[Depends(cookie)])
+@app.patch("/api/workbooks/{workbook_id}", dependencies=[Depends(cookie)])
 def patch_workbook(
     workbook_id: uuid.UUID,
     workbook_update: WorkbookUpdate,
@@ -987,7 +988,7 @@ def patch_workbook(
 
 
 # Post requests for creating new entries
-@app.post("/activity-staff/", response_model=ActivityStaff, dependencies=[Depends(cookie)])
+@app.post("/api/activity-staff/", response_model=ActivityStaff, dependencies=[Depends(cookie)])
 def create_activity_staff(
     activity_staff: ActivityStaffCreate,
     session_data: SessionData = Depends(verifier),
@@ -1067,7 +1068,7 @@ def create_activity_staff(
     return db_activity_staff
 
 
-@app.post("/activities/", response_model=Activity, dependencies=[Depends(cookie)])
+@app.post("/api/activities/", response_model=Activity, dependencies=[Depends(cookie)])
 def create_activity(
     activity: ActivityCreate,
     session_data: SessionData = Depends(verifier),
@@ -1162,7 +1163,7 @@ def create_activity(
     return db_activity
 
 
-@app.post("/workbooks/", response_model=Workbook, dependencies=[Depends(cookie)])
+@app.post("/api/workbooks/", response_model=Workbook, dependencies=[Depends(cookie)])
 def create_workbook(
     workbook: WorkbookCreate,
     session_data: SessionData = Depends(verifier),
@@ -1208,7 +1209,7 @@ def create_workbook(
     return db_workbook
 
 
-@app.post("/weeks/", response_model=Week, dependencies=[Depends(cookie)])
+@app.post("/api/weeks/", response_model=Week, dependencies=[Depends(cookie)])
 def create_week(
     week: WeekCreate,
     session_data: SessionData = Depends(verifier),
@@ -1570,7 +1571,7 @@ def create_week_graduate_attribute(
 
 
 # Get requests for viewing entries
-@app.get("/activity-staff/", dependencies=[Depends(cookie)])
+@app.get("/api/activity-staff/", dependencies=[Depends(cookie)])
 def read_actvity_staff(
     _: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
@@ -1627,7 +1628,7 @@ def read_actvity_staff(
     return list(session.exec(select(ActivityStaff)).all())
 
 
-@app.get("/week-graduate-attributes/", dependencies=[Depends(cookie)])
+@app.get("/api/week-graduate-attributes/", dependencies=[Depends(cookie)])
 def read_week_graduate_attributes(
     _: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
@@ -1710,7 +1711,7 @@ def read_week_graduate_attributes(
     )
 
 
-@app.get("/workbook-contributors/", dependencies=[Depends(cookie)])
+@app.get("/api/workbook-contributors/", dependencies=[Depends(cookie)])
 def read_workbook_contributors(
     _: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
@@ -1788,7 +1789,7 @@ def read_workbook_contributors(
     )
 
 
-@app.get("/users/", dependencies=[Depends(cookie)])
+@app.get("/api/users/", dependencies=[Depends(cookie)])
 def read_users(
     _: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
@@ -1823,7 +1824,7 @@ def read_users(
     return list(session.exec(select(User)).all())
 
 
-@app.get("/permissions-groups/", dependencies=[Depends(cookie)])
+@app.get("/api/permissions-groups/", dependencies=[Depends(cookie)])
 def read_permissions_groups(
     _: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
@@ -1858,7 +1859,7 @@ def read_permissions_groups(
     return list(session.exec(select(PermissionsGroup)).all())
 
 
-@app.get("/learning-platforms/", dependencies=[Depends(cookie)])
+@app.get("/api/learning-platforms/", dependencies=[Depends(cookie)])
 def read_learning_platforms(
     _: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
@@ -1893,7 +1894,7 @@ def read_learning_platforms(
     return list(session.exec(select(LearningPlatform)).all())
 
 
-@app.get("/learning-activities/", dependencies=[Depends(cookie)])
+@app.get("/api/learning-activities/", dependencies=[Depends(cookie)])
 def read_learning_activities(
     _: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
@@ -1941,7 +1942,7 @@ def read_learning_activities(
     )
 
 
-@app.get("/task-statuses/", dependencies=[Depends(cookie)])
+@app.get("/api/task-statuses/", dependencies=[Depends(cookie)])
 def read_task_statuses(
     _: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
@@ -1976,7 +1977,7 @@ def read_task_statuses(
     return list(session.exec(select(TaskStatus)).all())
 
 
-@app.get("/learning-types/", dependencies=[Depends(cookie)])
+@app.get("/api/learning-types/", dependencies=[Depends(cookie)])
 def read_learning_types(
     _: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
@@ -2011,7 +2012,7 @@ def read_learning_types(
     return list(session.exec(select(LearningType)).all())
 
 
-@app.get("/workbooks/", dependencies=[Depends(cookie)])
+@app.get("/api/workbooks/", dependencies=[Depends(cookie)])
 def read_workbooks(
     _: SessionData = Depends(verifier),
     workbook_id: uuid.UUID | None = None,
@@ -2079,7 +2080,7 @@ def read_workbooks(
     ]
 
 
-@app.get("/workbooks/search/", dependencies=[Depends(cookie)])
+@app.get("/api/workbooks/search/", dependencies=[Depends(cookie)])
 def search_workbooks(
     name: str | None = None,
     starts_after: datetime.date | None = None,
@@ -2149,7 +2150,7 @@ def search_workbooks(
     return results
 
 
-@app.get("/weeks/", dependencies=[Depends(cookie)])
+@app.get("/api/weeks/", dependencies=[Depends(cookie)])
 def read_weeks(
     _: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
@@ -2201,7 +2202,7 @@ def read_weeks(
     )
 
 
-@app.get("/graduate_attributes/", dependencies=[Depends(cookie)])
+@app.get("/api/graduate_attributes/", dependencies=[Depends(cookie)])
 def read_graduate_attributes(
     _: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
@@ -2237,7 +2238,7 @@ def read_graduate_attributes(
     return graduate_attributes
 
 
-@app.get("/locations/", dependencies=[Depends(cookie)])
+@app.get("/api/locations/", dependencies=[Depends(cookie)])
 def read_locations(
     _: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
@@ -2273,7 +2274,7 @@ def read_locations(
     return locations
 
 
-@app.get("/activities/", dependencies=[Depends(cookie)])
+@app.get("/api/activities/", dependencies=[Depends(cookie)])
 def read_activities(
     _: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
@@ -2328,7 +2329,7 @@ def read_activities(
 
 
 # New endpoint to fetch all workbook details and related data
-@app.get("/workbooks/{workbook_id}/details", dependencies=[Depends(cookie)])
+@app.get("/api/workbooks/{workbook_id}/details", dependencies=[Depends(cookie)])
 def get_workbook_details(
     workbook_id: uuid.UUID,
     _: SessionData = Depends(verifier),
@@ -2423,7 +2424,7 @@ def get_workbook_details(
     return response
 
 
-@app.get("/workbooks/{workbook_id}/week-graduate-attributes", dependencies=[Depends(cookie)])
+@app.get("/api/workbooks/{workbook_id}/week-graduate-attributes", dependencies=[Depends(cookie)])
 def read_workbook_graduate_attributes(
     workbook_id: uuid.UUID,
     _: SessionData = Depends(verifier),
@@ -2468,7 +2469,7 @@ def read_workbook_graduate_attributes(
     )
 
 
-@app.get("/schools/", dependencies=[Depends(cookie)])
+@app.get("/api/schools/", dependencies=[Depends(cookie)])
 def read_schools(
     _: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
@@ -2503,7 +2504,7 @@ def read_schools(
     return list(session.exec(select(Schools)).all())
 
 
-@app.get("/area/", dependencies=[Depends(cookie)])
+@app.get("/api/area/", dependencies=[Depends(cookie)])
 def read_area(
     _: SessionData = Depends(verifier),
     session: Session = Depends(get_session),
