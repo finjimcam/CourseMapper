@@ -125,7 +125,7 @@ def create_test_user(session: Session, name: str, is_admin: bool = False) -> Use
     return user
 
 
-def create_test_workbook(session: Session, user_id: uuid.UUID) -> Workbook:
+def create_test_workbook(session: Session, user_id: str) -> Workbook:
     """
     Create a test workbook with the given user as the course lead.
     """
