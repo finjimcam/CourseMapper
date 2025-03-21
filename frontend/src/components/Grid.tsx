@@ -76,7 +76,7 @@ const Grid: React.FC<{ workbooks: Workbook[] | null }> = ({ workbooks }) => {
       {(workbooks && workbooks.length!=0) ? (
         workbooks.map((item) => (
           <div
-            key={item.workbook.id}
+            key={item.workbook.id} id= {item.workbook.id}
             className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 border border-gray-200 overflow-hidden"
           >
             <div 

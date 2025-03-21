@@ -75,15 +75,18 @@ describe('Grid', () => {
 
     it('should apply proper spacing and border styles', () => {
       render(React.createElement(Grid, { workbooks: mockWorkbooks }));
-      const firstCard = screen.getByText('Course 1').closest('div');
+      const firstCard = document.getElementById('1');
       
       expect(firstCard).toHaveClass(
         'bg-white',
-        'p-6',
         'rounded-lg',
         'shadow-md',
+        'hover:shadow-xl',
+        'transition-shadow',
+        'duration-300',
         'border',
-        'border-gray-200'
+        'border-gray-200',
+        'overflow-hidden'
       );
     });
   });
@@ -123,12 +126,18 @@ describe('Grid', () => {
   describe('Card Styling', () => {
     it('should have hover effects on cards', () => {
       render(React.createElement(Grid, { workbooks: mockWorkbooks }));
-      const firstCard = screen.getByText('Course 1').closest('div');
+      const firstCard = document.getElementById('1');
       
       expect(firstCard).toHaveClass(
+        'bg-white',
+        'rounded-lg',
+        'shadow-md',
         'hover:shadow-xl',
         'transition-shadow',
-        'duration-300'
+        'duration-300',
+        'border',
+        'border-gray-200',
+        'overflow-hidden'
       );
     });
 
@@ -138,7 +147,7 @@ describe('Grid', () => {
 
       // Course name styling
       const courseName = screen.getByText(workbook.workbook.course_name);
-      expect(courseName).toHaveClass('text-lg', 'font-bold', 'mb-2');
+      expect(courseName).toHaveClass('text-lg', 'font-bold', 'p-4');
       
       // Course lead and platform stylingmockWorkbooks.forEach(workbook => {
       const courseLeadText = screen.getByText("Lead: "+workbook.course_lead.name);

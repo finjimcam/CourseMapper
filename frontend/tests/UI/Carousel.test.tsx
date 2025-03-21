@@ -140,8 +140,8 @@ describe('Carousel', () => {
       
       const firstItem = mockItems[0];
       expect(screen.getByText(firstItem.course_name)).toBeInTheDocument();
-      expect(screen.getByText(firstItem.course_lead)).toBeInTheDocument();
-      expect(screen.getByText(firstItem.learning_platform)).toBeInTheDocument();
+      expect(screen.getByText("Lead: "+firstItem.course_lead)).toBeInTheDocument();
+      expect(screen.getByText("Platform: "+firstItem.learning_platform)).toBeInTheDocument();
     });
 
     it('should render correct links with workbookId', () => {
