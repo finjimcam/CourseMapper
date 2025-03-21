@@ -17,7 +17,10 @@ along with this program at /LICENSE.md. If not, see <https://www.gnu.org/license
 
 __-----------------------------------------------------------------------------------__
 
-This module populates the database with initial data for testing purposes.
+This module populates the database with initial data for production.
+
+As opposed to populate.py or big_populate.py, this module does not populate sample workbooks.
+It populates only what is necessary, but no actual data.
 """
 
 import sys
