@@ -151,7 +151,7 @@ describe('DashboardTab', () => {
       render(React.createElement(DashboardTab, mockProps));
       
       await waitFor(() => {
-        const toggleButton = screen.getByText(/Show Table|Show Graph/);
+        const toggleButton = screen.getAllByText(/Show Table|Show Graph/)[0];
         fireEvent.click(toggleButton);
         expect(mockProps.toggleShowTable).toHaveBeenCalled();
       });
