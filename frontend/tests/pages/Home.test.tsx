@@ -1,4 +1,7 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 77bcc86334122aafd8099c157da3c7db1c148b0f
 /** @jest-environment jsdom */
 import * as React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
@@ -200,6 +203,7 @@ describe('Home', () => {
         expect(searchInput).toHaveAttribute('type', 'text');
       });
     });
+<<<<<<< HEAD
 =======
 import React from 'react';
 import { render } from '@testing-library/react';
@@ -397,5 +401,7 @@ describe('Home', () => {
       render(<Home />);
     }).not.toThrow();
 >>>>>>> 0e28421 (homepage test (not working))
+=======
+>>>>>>> 77bcc86334122aafd8099c157da3c7db1c148b0f
   });
 });
