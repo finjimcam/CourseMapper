@@ -8,6 +8,9 @@ sqlmodel
 pandas
 pandas-stubs
 fastapi_sessions
-pytest
 pydantic_settings
 python-dotenv
+
+# Testing requirements
+pytest
+lark

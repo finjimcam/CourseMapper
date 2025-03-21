@@ -23,7 +23,6 @@ It mainly exists to check that all functions in main.py are still working as int
 """
 
 import pytest
-import json
 from fastapi.testclient import TestClient
 from typing import Dict
 from sqlmodel import Session, SQLModel, create_engine, select
@@ -33,7 +32,7 @@ import uuid
 import datetime
 
 from main import app
-from models.database import create_db_and_tables, get_session
+from models.database import get_session
 from models.models_base import (
     User,
     PermissionsGroup,
@@ -117,8 +116,8 @@ def create_test_user(session: Session, name: str, is_admin: bool = False) -> Use
         session.add(group)
         session.commit()
         session.refresh(group)
-    
-    email = name + "@gmail.com"
+
+    email = name + "@test-email.com"
 
     user = User(id=str(uuid.uuid4()), name=name, email=email, permissions_group_id=group.id)
     session.add(user)
@@ -178,7 +177,6 @@ def get_auth_headers(client: TestClient, username: str) -> Dict[str, str]:
     response = client.post(f"/api/session/{username}")
     assert response.status_code == 200
     cookie = response.headers["set-cookie"]
-    print(cookie)
     return {"Cookie": cookie}
 
 
@@ -521,7 +519,9 @@ class TestCreate:
 
         # Test that a contributor can be created
         contributor_data = {"workbook_id": str(workbook.id), "contributor_id": str(contributor.id)}
-        response = client.post("/api/workbook-contributors/", json=contributor_data, headers=headers)
+        response = client.post(
+            "/api/workbook-contributors/", json=contributor_data, headers=headers
+        )
         assert response.status_code == 200
 
         # Test that a contributor cannot be created with an invalid workbook ID
@@ -534,7 +534,9 @@ class TestCreate:
 
         # Test that a contributor cannot be created with an invalid contributor ID
         contributor_data = {"workbook_id": str(workbook.id), "contributor_id": str(uuid.uuid4())}
-        response = client.post("/api/workbook-contributors/", json=contributor_data, headers=headers)
+        response = client.post(
+            "/api/workbook-contributors/", json=contributor_data, headers=headers
+        )
         assert response.status_code == 422
 
     def test_create_activity_staff(self, client: TestClient, session: Session) -> None:
@@ -600,7 +602,9 @@ class TestCreate:
             "week_number": week.number,
             "graduate_attribute_id": str(graduate_attribute.id),
         }
-        response = client.post("/api/week-graduate-attributes/", json=attribute_data, headers=headers)
+        response = client.post(
+            "/api/week-graduate-attributes/", json=attribute_data, headers=headers
+        )
         assert response.status_code == 200
 
         # Test that a graduate attribute cannot be created with an invalid week_workbook_id
@@ -609,7 +613,9 @@ class TestCreate:
             "week_number": week.number,
             "graduate_attribute_id": str(graduate_attribute.id),
         }
-        response = client.post("/api/week-graduate-attributes/", json=invalid_data, headers=headers)
+        response = client.post(
+            "/api/week-graduate-attributes/", json=invalid_data, headers=headers
+        )
         assert response.status_code == 422
 
         # Test that a graduate attribute cannot be created with an invalid week_number
@@ -618,7 +624,9 @@ class TestCreate:
             "week_number": week.number,
             "graduate_attribute_id": str(uuid.uuid4()),
         }
-        response = client.post("/api/week-graduate-attributes/", json=invalid_data, headers=headers)
+        response = client.post(
+            "/api/week-graduate-attributes/", json=invalid_data, headers=headers
+        )
         assert response.status_code == 422
 
 
@@ -855,7 +863,9 @@ class TestDelete:
         workbook_id = response.json()["id"]
 
         # Test that a workbook cannot be deleted by a user who is not an admin
-        response = client.delete(f"/api/workbooks/?workbook_id={str(uuid.uuid4())}", headers=headers)
+        response = client.delete(
+            f"/api/workbooks/?workbook_id={str(uuid.uuid4())}", headers=headers
+        )
         assert response.status_code == 422
 
         # Test that a workbook can be deleted
@@ -927,7 +937,9 @@ class TestPatch:
         assert response.status_code == 403
 
         #
-        response = client.patch(f"/api/workbooks/{uuid.uuid4()}", json=update_data, headers=headers)
+        response = client.patch(
+            f"/api/workbooks/{uuid.uuid4()}", json=update_data, headers=headers
+        )
         assert response.status_code == 422
 
     def test_patch_activity(self, client: TestClient, session: Session) -> None:
@@ -968,7 +980,9 @@ class TestPatch:
 
         # Test that an activity can be updated
         update_data = {"name": "Updated Activity Name"}
-        response = client.patch(f"/api/activities/{activity.id}", json=update_data, headers=headers)
+        response = client.patch(
+            f"/api/activities/{activity.id}", json=update_data, headers=headers
+        )
         assert response.status_code == 200
         assert response.json()["name"] == "Updated Activity Name"
 

@@ -1,4 +1,4 @@
-image: "python:3.10-slim"
+image: "python:3.10-slim" 
 
 workflow:
   rules:
@@ -56,8 +56,10 @@ Type checking with mypy in backend:
 
 Unit tests on backend:
   stage: Dynamic Analysis
+  before_script:
+    - cd backend
   script:
-    - python -m unittest discover -s backend -p "test_*.py"
+    - pytest .
   rules:
     - changes:
       - backend/**/*
