@@ -117,8 +117,10 @@ def create_test_user(session: Session, name: str, is_admin: bool = False) -> Use
         session.add(group)
         session.commit()
         session.refresh(group)
+    
+    email = name + "@gmail.com"
 
-    user = User(name=name, permissions_group_id=group.id)
+    user = User(id=str(uuid.uuid4()), name=name, email=email, permissions_group_id=group.id)
     session.add(user)
     session.commit()
     session.refresh(user)
@@ -173,9 +175,11 @@ def get_auth_headers(client: TestClient, username: str) -> Dict[str, str]:
     Get the authorization headers for the given username.
     """
 
-    response = client.post(f"/session/{username}")
+    response = client.post(f"api/session/{username}")
+    print(response)
     assert response.status_code == 200
     cookie = response.headers["set-cookie"]
+    print(cookie)
     return {"Cookie": cookie}
 
 
@@ -198,7 +202,7 @@ def test_permission_checks(client: TestClient, session: Session) -> None:
 
     for username, expected_code in test_cases:
         headers = get_auth_headers(client, username)
-        response = client.get(f"/workbooks/{workbook.id}/details", headers=headers)
+        response = client.get(f"/api/workbooks/{workbook.id}/details", headers=headers)
         assert response.status_code == expected_code
 
 
@@ -206,73 +210,73 @@ class TestRead:
     def test_read_users(self, client: TestClient, session: Session) -> None:
         # Test that the /users/ endpoint returns a list of all users.
         headers = get_auth_headers(client, "admin")
-        response = client.get("/users/", headers=headers)
+        response = client.get("/api/users/", headers=headers)
         assert response.status_code == 200
 
     def test_read_permissions_groups(self, client: TestClient, session: Session) -> None:
         # Test that the /permissions-groups/ endpoint returns a list of all permissions groups.
         headers = get_auth_headers(client, "admin")
-        response = client.get("/permissions-groups/", headers=headers)
+        response = client.get("/api/permissions-groups/", headers=headers)
         assert response.status_code == 200
 
     def test_read_learning_platforms(self, client: TestClient, session: Session) -> None:
         # Test that the /learning-platforms/ endpoint returns a list of all learning platforms.
         headers = get_auth_headers(client, "admin")
-        response = client.get("/learning-platforms/", headers=headers)
+        response = client.get("/api/learning-platforms/", headers=headers)
         assert response.status_code == 200
 
     def test_read_task_statuses(self, client: TestClient, session: Session) -> None:
         # Test that the /task-statuses/ endpoint returns a list of all task statuses.
         headers = get_auth_headers(client, "admin")
-        response = client.get("/task-statuses/", headers=headers)
+        response = client.get("/api/task-statuses/", headers=headers)
         assert response.status_code == 200
 
     def test_read_learning_types(self, client: TestClient, session: Session) -> None:
         # Test that the /learning-types/ endpoint returns a list of all learning types.
         headers = get_auth_headers(client, "admin")
-        response = client.get("/learning-types/", headers=headers)
+        response = client.get("/api/learning-types/", headers=headers)
         assert response.status_code == 200
 
     def test_read_workbooks(self, client: TestClient, session: Session) -> None:
         # Test that the /workbooks/ endpoint returns a list of all workbooks.
         headers = get_auth_headers(client, "admin")
-        response = client.get("/workbooks/", headers=headers)
+        response = client.get("/api/workbooks/", headers=headers)
         assert response.status_code == 200
 
     def test_read_weeks(self, client: TestClient, session: Session) -> None:
         # Test that the /weeks/ endpoint returns a list of all weeks.
         headers = get_auth_headers(client, "admin")
-        response = client.get("/weeks/", headers=headers)
+        response = client.get("/api/weeks/", headers=headers)
         assert response.status_code == 200
 
     def test_read_graduate_attributes(self, client: TestClient, session: Session) -> None:
         # Test that the /graduate_attributes/ endpoint returns a list of all graduate attributes.
         headers = get_auth_headers(client, "admin")
-        response = client.get("/graduate_attributes/", headers=headers)
+        response = client.get("/api/graduate_attributes/", headers=headers)
         assert response.status_code == 200
 
     def test_read_locations(self, client: TestClient, session: Session) -> None:
         # Test that the /locations/ endpoint returns a list of all locations.
         headers = get_auth_headers(client, "admin")
-        response = client.get("/locations/", headers=headers)
+        response = client.get("/api/locations/", headers=headers)
         assert response.status_code == 200
 
     def test_read_activities(self, client: TestClient, session: Session) -> None:
         # Test that the /activities/ endpoint returns a list of all activities.
         headers = get_auth_headers(client, "admin")
-        response = client.get("/activities/", headers=headers)
+        response = client.get("/api/activities/", headers=headers)
         assert response.status_code == 200
 
     def test_read_area(self, client: TestClient, session: Session) -> None:
         # Test that the /area/ endpoint returns a list of all area.
         headers = get_auth_headers(client, "admin")
-        response = client.get("/area/", headers=headers)
+        response = client.get("/api/area/", headers=headers)
         assert response.status_code == 200
 
     def test_read_schools(self, client: TestClient, session: Session) -> None:
         # Test that the /schools/ endpoint returns a list of all schools.
         headers = get_auth_headers(client, "admin")
-        response = client.get("/schools/", headers=headers)
+        response = client.get("/api/schools/", headers=headers)
         assert response.status_code == 200
 
 
@@ -281,12 +285,12 @@ class TestCreate:
         user = create_test_user(session, "testuser")
 
         # Test that a valid user can log in
-        response = client.post("/session/testuser")
+        response = client.post("/api/session/testuser")
         assert response.status_code == 200
         assert "session" in response.headers["set-cookie"]
 
         # Test that an invalid user cannot log in
-        response = client.post("/session/invaliduser")
+        response = client.post("/api/session/invaliduser")
         assert response.status_code == 422
 
     def test_create_workbook(self, client: TestClient, session: Session) -> None:
@@ -317,7 +321,7 @@ class TestCreate:
             "area_id": str(area.id),
             "school_id": str(school.id),
         }
-        response = client.post("/workbooks/", json=workbook_data, headers=headers)
+        response = client.post("/api/workbooks/", json=workbook_data, headers=headers)
         assert response.status_code == 200
 
         # Test that a workbook cannot be created with an invalid platform ID
@@ -329,7 +333,7 @@ class TestCreate:
             "area_id": str(area.id),
             "school_id": str(school.id),
         }
-        response = client.post("/workbooks/", json=workbook_data, headers=headers)
+        response = client.post("/api/workbooks/", json=workbook_data, headers=headers)
         assert response.status_code == 422
 
         # Test that a workbook cannot be created with the end date before the start date
@@ -341,7 +345,7 @@ class TestCreate:
             "area_id": str(area.id),
             "school_id": str(school.id),
         }
-        response = client.post("/workbooks/", json=workbook_data, headers=headers)
+        response = client.post("/api/workbooks/", json=workbook_data, headers=headers)
         assert response.status_code == 422
 
         # Test that a workbook cannot be created with the date as a non-existent date
@@ -353,7 +357,7 @@ class TestCreate:
             "area_id": str(area.id),
             "school_id": str(school.id),
         }
-        response = client.post("/workbooks/", json=workbook_data, headers=headers)
+        response = client.post("/api/workbooks/", json=workbook_data, headers=headers)
         assert response.status_code == 422
 
         workbook_data = {
@@ -364,7 +368,7 @@ class TestCreate:
             "area_id": str(area.id),
             "school_id": str(school.id),
         }
-        response = client.post("/workbooks/", json=workbook_data, headers=headers)
+        response = client.post("/api/workbooks/", json=workbook_data, headers=headers)
         assert response.status_code == 422
 
         # Test that a workbook cannot be created with the date as a non-existent area id
@@ -376,7 +380,7 @@ class TestCreate:
             "area_id": str(uuid.uuid4()),
             "school_id": str(school.id),
         }
-        response = client.post("/workbooks/", json=workbook_data, headers=headers)
+        response = client.post("/api/workbooks/", json=workbook_data, headers=headers)
         assert response.status_code == 422
 
         # Test that a workbook cannot be created with the date as a non-existent school id
@@ -388,7 +392,7 @@ class TestCreate:
             "area_id": str(area.id),
             "school_id": str(uuid.uuid4()),
         }
-        response = client.post("/workbooks/", json=workbook_data, headers=headers)
+        response = client.post("/api/workbooks/", json=workbook_data, headers=headers)
         assert response.status_code == 422
 
     def test_create_week(self, client: TestClient, session: Session) -> None:
@@ -400,12 +404,12 @@ class TestCreate:
 
         # Test that a week can be created by a valid workbook ID
         week_data = {"workbook_id": str(workbook.id)}
-        response = client.post("/weeks/", json=week_data, headers=headers)
+        response = client.post("/api/weeks/", json=week_data, headers=headers)
         assert response.status_code == 200
 
         # Test that a week cannot be created by a invalid workbook ID
         week_data = {"workbook_id": str(uuid.uuid4())}
-        response = client.post("/weeks/", json=week_data, headers=headers)
+        response = client.post("/api/weeks/", json=week_data, headers=headers)
         assert response.status_code == 422
 
     def test_create_activity(self, client: TestClient, session: Session) -> None:
@@ -437,7 +441,7 @@ class TestCreate:
             "learning_type_id": str(learning_type.id),
             "task_status_id": str(task_status.id),
         }
-        response = client.post("/activities/", json=activity_data, headers=headers)
+        response = client.post("/api/activities/", json=activity_data, headers=headers)
         assert response.status_code == 200
 
         # Test that an activity cannot be created with an invalid workbook ID
@@ -451,7 +455,7 @@ class TestCreate:
             "learning_type_id": str(learning_type.id),
             "task_status_id": str(task_status.id),
         }
-        response = client.post("/activities/", json=activity_data, headers=headers)
+        response = client.post("/api/activities/", json=activity_data, headers=headers)
         assert response.status_code == 422
 
         # Test that an activity cannot be created with an invalid location ID
@@ -465,7 +469,7 @@ class TestCreate:
             "learning_type_id": str(learning_type.id),
             "task_status_id": str(task_status.id),
         }
-        response = client.post("/activities/", json=activity_data, headers=headers)
+        response = client.post("/api/activities/", json=activity_data, headers=headers)
         assert response.status_code == 422
 
         # Test that an activity cannot be created with an invalid learning_activity_id
@@ -479,7 +483,7 @@ class TestCreate:
             "learning_type_id": str(learning_type.id),
             "task_status_id": str(task_status.id),
         }
-        response = client.post("/activities/", json=activity_data, headers=headers)
+        response = client.post("/api/activities/", json=activity_data, headers=headers)
         assert response.status_code == 422
 
         # Test that an activity cannot be created with an invalid learning_type_id
@@ -493,7 +497,7 @@ class TestCreate:
             "learning_type_id": str(uuid.uuid4()),
             "task_status_id": str(task_status.id),
         }
-        response = client.post("/activities/", json=activity_data, headers=headers)
+        response = client.post("/api/activities/", json=activity_data, headers=headers)
         assert response.status_code == 422
 
         # Test that an activity cannot be created with an invalid task_status_id
@@ -507,7 +511,7 @@ class TestCreate:
             "learning_type_id": str(learning_type.id),
             "task_status_id": str(uuid.uuid4()),
         }
-        response = client.post("/activities/", json=activity_data, headers=headers)
+        response = client.post("/api/activities/", json=activity_data, headers=headers)
         assert response.status_code == 422
 
     def test_create_workbook_contributor(self, client: TestClient, session: Session) -> None:
@@ -518,7 +522,7 @@ class TestCreate:
 
         # Test that a contributor can be created
         contributor_data = {"workbook_id": str(workbook.id), "contributor_id": str(contributor.id)}
-        response = client.post("/workbook-contributors/", json=contributor_data, headers=headers)
+        response = client.post("/api/workbook-contributors/", json=contributor_data, headers=headers)
         assert response.status_code == 200
 
         # Test that a contributor cannot be created with an invalid workbook ID
@@ -526,12 +530,12 @@ class TestCreate:
             "workbook_id": str(uuid.uuid4()),
             "contributor_id": str(contributor.id),
         }
-        response = client.post("/workbook-contributors/", json=contributor_data, headers=headers)
+        response = client.post("/api/workbook-contributors/", json=contributor_data, headers=headers)
         assert response.status_code == 422
 
         # Test that a contributor cannot be created with an invalid contributor ID
         contributor_data = {"workbook_id": str(workbook.id), "contributor_id": str(uuid.uuid4())}
-        response = client.post("/workbook-contributors/", json=contributor_data, headers=headers)
+        response = client.post("/api/workbook-contributors/", json=contributor_data, headers=headers)
         assert response.status_code == 422
 
     def test_create_activity_staff(self, client: TestClient, session: Session) -> None:
@@ -563,17 +567,17 @@ class TestCreate:
 
         # Test that a staff can be created
         staff_data = {"activity_id": str(activity.id), "staff_id": str(staff.id)}
-        response = client.post("/activity-staff/", json=staff_data, headers=headers)
+        response = client.post("/api/activity-staff/", json=staff_data, headers=headers)
         assert response.status_code == 200
 
         # Test that a staff cannot be created with an invalid activity ID
         staff_data = {"activity_id": str(uuid.uuid4()), "staff_id": str(staff.id)}
-        response = client.post("/activity-staff/", json=staff_data, headers=headers)
+        response = client.post("/api/activity-staff/", json=staff_data, headers=headers)
         assert response.status_code == 422
 
         # Test that a staff cannot be created with an invalid staff ID
         staff_data = {"activity_id": str(activity.id), "staff_id": str(uuid.uuid4())}
-        response = client.post("/activity-staff/", json=staff_data, headers=headers)
+        response = client.post("/api/activity-staff/", json=staff_data, headers=headers)
         assert response.status_code == 422
 
     def test_create_week_graduate_attribute(self, client: TestClient, session: Session) -> None:
@@ -597,7 +601,7 @@ class TestCreate:
             "week_number": week.number,
             "graduate_attribute_id": str(graduate_attribute.id),
         }
-        response = client.post("/week-graduate-attributes/", json=attribute_data, headers=headers)
+        response = client.post("/api/week-graduate-attributes/", json=attribute_data, headers=headers)
         assert response.status_code == 200
 
         # Test that a graduate attribute cannot be created with an invalid week_workbook_id
@@ -606,7 +610,7 @@ class TestCreate:
             "week_number": week.number,
             "graduate_attribute_id": str(graduate_attribute.id),
         }
-        response = client.post("/week-graduate-attributes/", json=invalid_data, headers=headers)
+        response = client.post("/api/week-graduate-attributes/", json=invalid_data, headers=headers)
         assert response.status_code == 422
 
         # Test that a graduate attribute cannot be created with an invalid week_number
@@ -615,7 +619,7 @@ class TestCreate:
             "week_number": week.number,
             "graduate_attribute_id": str(uuid.uuid4()),
         }
-        response = client.post("/week-graduate-attributes/", json=invalid_data, headers=headers)
+        response = client.post("/api/week-graduate-attributes/", json=invalid_data, headers=headers)
         assert response.status_code == 422
 
 
@@ -654,7 +658,7 @@ class TestDelete:
         # Test that an activity staff cannot be deleted with an invalid staff ID
         response = client.request(
             "DELETE",
-            "/activity-staff/",
+            "/api/activity-staff/",
             json={"staff_id": str(uuid.uuid4()), "activity_id": str(activity.id)},
             headers=headers,
         )
@@ -663,7 +667,7 @@ class TestDelete:
         # Test that an activity staff cannot be deleted with an invalid activity ID
         response = client.request(
             "DELETE",
-            "/activity-staff/",
+            "/api/activity-staff/",
             json={"staff_id": str(user.id), "activity_id": str(uuid.uuid4())},
             headers=headers,
         )
@@ -672,7 +676,7 @@ class TestDelete:
         # Test that an activity staff can be deleted
         response = client.request(
             "DELETE",
-            "/activity-staff/",
+            "/api/activity-staff/",
             json={"staff_id": str(user.id), "activity_id": str(activity.id)},
             headers=headers,
         )
@@ -694,7 +698,7 @@ class TestDelete:
         # Test that a workbook contributor cannot be deleted with an invalid workbook ID
         response = client.request(
             "DELETE",
-            "/workbook-contributors/",
+            "/api/workbook-contributors/",
             json={"workbook_id": str(uuid.uuid4()), "contributor_id": str(contributor.id)},
             headers=headers,
         )
@@ -703,7 +707,7 @@ class TestDelete:
         # Test that a workbook contributor cannot be deleted with an invalid contributor ID
         response = client.request(
             "DELETE",
-            "/workbook-contributors/",
+            "/api/workbook-contributors/",
             json={"workbook_id": str(workbook.id), "contributor_id": str(uuid.uuid4())},
             headers=headers,
         )
@@ -712,7 +716,7 @@ class TestDelete:
         # Test that a workbook contributor can be deleted
         response = client.request(
             "DELETE",
-            "/workbook-contributors/",
+            "/api/workbook-contributors/",
             json={"workbook_id": str(workbook.id), "contributor_id": str(contributor.id)},
             headers=headers,
         )
@@ -731,7 +735,7 @@ class TestDelete:
         # Test that a week cannot be deleted with an invalid workbook ID
         response = client.request(
             "DELETE",
-            "/weeks/",
+            "/api/weeks/",
             json={"workbook_id": str(uuid.uuid4()), "number": week.number},
             headers=headers,
         )
@@ -740,7 +744,7 @@ class TestDelete:
         # Test that a week cannot be deleted with an invalid week number
         response = client.request(
             "DELETE",
-            "/weeks/",
+            "/api/weeks/",
             json={"workbook_id": str(workbook.id), "number": 99},
             headers=headers,
         )
@@ -749,7 +753,7 @@ class TestDelete:
         # Test that a week can be deleted
         response = client.request(
             "DELETE",
-            "/weeks/",
+            "/api/weeks/",
             json={"workbook_id": str(workbook.id), "number": week.number},
             headers=headers,
         )
@@ -780,7 +784,7 @@ class TestDelete:
         # Test that a graduate attribute cannot be deleted with an invalid week_workbook_id
         response = client.request(
             "DELETE",
-            "/week-graduate-attributes/",
+            "/api/week-graduate-attributes/",
             json={
                 "week_workbook_id": str(uuid.uuid4()),
                 "week_number": week.number,
@@ -793,7 +797,7 @@ class TestDelete:
         # Test that a graduate attribute cannot be deleted with an invalid graduate attribute ID
         response = client.request(
             "DELETE",
-            "/week-graduate-attributes/",
+            "/api/week-graduate-attributes/",
             json={
                 "week_workbook_id": str(workbook.id),
                 "week_number": week.number,
@@ -806,7 +810,7 @@ class TestDelete:
         # Test that a graduate attribute can be deleted
         response = client.request(
             "DELETE",
-            "/week-graduate-attributes/",
+            "/api/week-graduate-attributes/",
             json={
                 "week_workbook_id": str(workbook.id),
                 "week_number": week.number,
@@ -847,16 +851,16 @@ class TestDelete:
         workbook_data["learning_platform_id"] = str(platform.id)
 
         # Test that a workbook can be created
-        response = client.post("/workbooks/", json=workbook_data, headers=headers)
+        response = client.post("/api/workbooks/", json=workbook_data, headers=headers)
         assert response.status_code == 200
         workbook_id = response.json()["id"]
 
         # Test that a workbook cannot be deleted by a user who is not an admin
-        response = client.delete(f"/workbooks/?workbook_id={str(uuid.uuid4())}", headers=headers)
+        response = client.delete(f"/api/workbooks/?workbook_id={str(uuid.uuid4())}", headers=headers)
         assert response.status_code == 422
 
         # Test that a workbook can be deleted
-        response = client.delete(f"/workbooks/?workbook_id={workbook_id}", headers=headers)
+        response = client.delete(f"/api/workbooks/?workbook_id={workbook_id}", headers=headers)
         assert response.status_code == 200
 
     def test_delete_activity(self, client: TestClient, session: Session) -> None:
@@ -887,18 +891,18 @@ class TestDelete:
         session.refresh(activity)
 
         # Test that an activity cannot be deleted with an invalid activity ID
-        response = client.delete(f"/activities/?activity_id={(uuid.uuid4())}", headers=headers)
+        response = client.delete(f"/api/activities/?activity_id={(uuid.uuid4())}", headers=headers)
         assert response.status_code == 422
 
         # Test that an activity can be deleted
-        response = client.delete(f"/activities/?activity_id={activity.id}", headers=headers)
+        response = client.delete(f"/api/activities/?activity_id={activity.id}", headers=headers)
         assert response.status_code == 200
 
     def test_delete_session(self, client: TestClient, session: Session) -> None:
         headers = get_auth_headers(client, "admin")
 
         # Test that a session can be deleted
-        response = client.delete("/session/", headers=headers)
+        response = client.delete("/api/session/", headers=headers)
         assert response.status_code == 200
 
 
@@ -911,7 +915,7 @@ class TestPatch:
 
         # Test that a workbook can be updated
         update_data = {"course_name": "Updated Course Name"}
-        response = client.patch(f"/workbooks/{workbook.id}", json=update_data, headers=headers)
+        response = client.patch(f"/api/workbooks/{workbook.id}", json=update_data, headers=headers)
         assert response.status_code == 200
         assert response.json()["course_name"] == "Updated Course Name"
 
@@ -919,12 +923,12 @@ class TestPatch:
         normal_user = create_test_user(session, "normal_user")
         normal_headers = get_auth_headers(client, "normal_user")
         response = client.patch(
-            f"/workbooks/{workbook.id}", json=update_data, headers=normal_headers
+            f"/api/workbooks/{workbook.id}", json=update_data, headers=normal_headers
         )
         assert response.status_code == 403
 
         #
-        response = client.patch(f"/workbooks/{uuid.uuid4()}", json=update_data, headers=headers)
+        response = client.patch(f"/api/workbooks/{uuid.uuid4()}", json=update_data, headers=headers)
         assert response.status_code == 422
 
     def test_patch_activity(self, client: TestClient, session: Session) -> None:
@@ -965,14 +969,14 @@ class TestPatch:
 
         # Test that an activity can be updated
         update_data = {"name": "Updated Activity Name"}
-        response = client.patch(f"/activities/{activity.id}", json=update_data, headers=headers)
+        response = client.patch(f"/api/activities/{activity.id}", json=update_data, headers=headers)
         assert response.status_code == 200
         assert response.json()["name"] == "Updated Activity Name"
 
         # Test that an activity cannot be updated with an invalid activity ID
         invalid_activity_id = str(uuid.uuid4())
         response = client.patch(
-            f"/activities/{invalid_activity_id}", json=update_data, headers=headers
+            f"/api/activities/{invalid_activity_id}", json=update_data, headers=headers
         )
         assert response.status_code == 422
 
@@ -980,13 +984,13 @@ class TestPatch:
         normal_user = create_test_user(session, "normal_user")
         normal_headers = get_auth_headers(client, "normal_user")
         response = client.patch(
-            f"/activities/{activity.id}", json=update_data, headers=normal_headers
+            f"/api/activities/{activity.id}", json=update_data, headers=normal_headers
         )
         assert response.status_code == 403
 
         # Test that an activity can be updated with a new location
         update_data = {"time_estimate_minutes": "90"}
-        response = client.patch(f"/activities/{activity.id}", json=update_data, headers=headers)
+        response = client.patch(f"/api/activities/{activity.id}", json=update_data, headers=headers)
         assert response.status_code == 200
         assert response.json()["time_estimate_minutes"] == 90
 
@@ -1033,7 +1037,7 @@ class TestDuplicate:
         session.refresh(activity)
 
         # Test that a workbook can be duplicated
-        response = client.post(f"/workbooks/{workbook.id}/duplicate", headers=headers)
+        response = client.post(f"/api/workbooks/{workbook.id}/duplicate", headers=headers)
         assert response.status_code == 200
         duplicated_workbook = response.json()
         assert duplicated_workbook["course_name"] == workbook.course_name + " - COPY"
@@ -1042,11 +1046,11 @@ class TestDuplicate:
 
         # Test that a workbook cannot be duplicated with an invalid workbook ID
         invalid_workbook_id = str(uuid.uuid4())
-        response = client.post(f"/workbooks/{invalid_workbook_id}/duplicate", headers=headers)
+        response = client.post(f"/api/workbooks/{invalid_workbook_id}/duplicate", headers=headers)
         assert response.status_code == 422
 
         # Test that a workbook can be duplicated by a user who is not an admin
         normal_user = create_test_user(session, "normal_user")
         normal_headers = get_auth_headers(client, "normal_user")
-        response = client.post(f"/workbooks/{workbook.id}/duplicate", headers=normal_headers)
+        response = client.post(f"/api/workbooks/{workbook.id}/duplicate", headers=normal_headers)
         assert response.status_code == 200
