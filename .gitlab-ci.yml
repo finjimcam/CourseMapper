@@ -92,6 +92,7 @@ Linting with eslint in frontend:
 
 Unit tests on frontend:
   stage: Dynamic Analysis
+  image: node:20.17.0-alpine
   before_script:
     - cd frontend
     - npm i
