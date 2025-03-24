@@ -10,6 +10,7 @@ pandas-stubs
 fastapi_sessions
 pydantic_settings
 python-dotenv
+openpyxl
 
 # Testing requirements
 pytest

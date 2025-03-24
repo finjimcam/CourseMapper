@@ -30,6 +30,9 @@ from fastapi import FastAPI, Depends, HTTPException, Response, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_sessions.backends.implementations import InMemoryBackend
 from fastapi_sessions.frontends.implementations import SessionCookie, CookieParameters
+from fastapi.responses import StreamingResponse
+import pandas as pd
+import io
 
 from session import BaseVerifier, SessionData
 from sqlmodel import Session, select
@@ -2169,6 +2172,104 @@ def search_workbooks(
         results.append(add_workbook_details(session, workbook))
 
     return results
+
+
+@app.get("/api/workbooks/{workbook_id}/export", dependencies=[Depends(cookie)])
+def export_workbook_to_excel(
+    workbook_id: uuid.UUID,
+    _: SessionData = Depends(verifier),
+    session: Session = Depends(get_session),
+    peek: bool = Query(False),
+) -> StreamingResponse:
+    # Get workbook
+    workbook = session.exec(select(Workbook).where(Workbook.id == workbook_id)).first()
+    if not workbook:
+        raise HTTPException(status_code=404, detail="Workbook not found")
+
+    # Basic Info
+    course_lead = session.get(User, workbook.course_lead_id)
+    area = session.get(Area, workbook.area_id)
+    school = session.get(Schools, workbook.school_id) if workbook.school_id else None
+
+    activities = session.exec(select(Activity).where(Activity.workbook_id == workbook_id)).all()
+
+    # Transform to DataFrame
+    df_basic = pd.DataFrame(
+        [
+            {
+                "Course name": workbook.course_name,
+                "Course lead": course_lead.name if course_lead else "",
+                "Area": area.name if area else "",
+                "School": school.name if school else "",
+                "Start Date": workbook.start_date,
+                "End Date": workbook.end_date,
+            }
+        ]
+    )
+
+    # Contributors
+    df_contributors = pd.DataFrame(
+        [{"Contributor name": user.name} for user in workbook.contributors]
+        if workbook.contributors
+        else [{"Contributor name": "There is no contributor for this course."}]
+    )
+
+    # Activities per week
+    week_groups: dict[int, list[Activity]] = {}
+    for activity in workbook.activities:
+        week_groups.setdefault(activity.week_number, []).append(activity)
+
+    # Write Excel
+    stream = io.BytesIO()
+    with pd.ExcelWriter(stream, engine="openpyxl") as writer:
+        df_basic.to_excel(writer, sheet_name="Basic information", index=False)
+        df_contributors.to_excel(writer, sheet_name="Contributors", index=False)
+
+        for week_num, activities in week_groups.items():
+            rows = []
+            for a in activities:
+                row = {
+                    "Staff Responsible": ", ".join(user.name for user in a.staff_responsible),
+                    "Title / Name": a.name,
+                    "Learning Activity": a.learning_activity.name if a.learning_activity else "",
+                    "Learning Type": a.learning_type.name if a.learning_type else "",
+                    "Activity Location": a.location.name if a.location else "",
+                    "Task Status": a.task_status.name if a.task_status else "",
+                    "Time (minutes)": a.time_estimate_minutes,
+                }
+                rows.append(row)
+            df_week = pd.DataFrame(rows)
+            df_week.to_excel(writer, sheet_name=f"Week{week_num}", index=False)
+
+            # Set column width for Week sheet
+            worksheet = writer.sheets[f"Week{week_num}"]
+            worksheet.column_dimensions["A"].width = 45
+            worksheet.column_dimensions["B"].width = 45
+            worksheet.column_dimensions["C"].width = 20
+            worksheet.column_dimensions["D"].width = 20
+            worksheet.column_dimensions["E"].width = 20
+            worksheet.column_dimensions["F"].width = 15
+            worksheet.column_dimensions["G"].width = 20
+
+        # Set column width for Basic Information sheet
+        worksheet = writer.sheets["Basic information"]
+        worksheet.column_dimensions["A"].width = 35
+        worksheet.column_dimensions["B"].width = 30
+        worksheet.column_dimensions["C"].width = 45
+        worksheet.column_dimensions["D"].width = 45
+        worksheet.column_dimensions["E"].width = 15
+        worksheet.column_dimensions["F"].width = 15
+
+        # Set column width for Basic Information sheet
+        worksheet = writer.sheets["Contributors"]
+        worksheet.column_dimensions["A"].width = 40
+
+    stream.seek(0)
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={workbook.course_name}.xlsx"},
+    )
 
 
 @app.get("/api/weeks/", dependencies=[Depends(cookie)])

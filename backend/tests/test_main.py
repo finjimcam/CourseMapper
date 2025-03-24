@@ -30,6 +30,8 @@ from sqlmodel.pool import StaticPool
 from typing import Generator, Any
 import uuid
 import datetime
+import openpyxl
+from io import BytesIO
 
 from main import app
 from models.database import get_session
@@ -201,6 +203,56 @@ def test_permission_checks(client: TestClient, session: Session) -> None:
         headers = get_auth_headers(client, username)
         response = client.get(f"/api/workbooks/{workbook.id}/details", headers=headers)
         assert response.status_code == expected_code
+
+
+class TestExportExcel:
+    def test_export_workbook_to_excel(self, client: TestClient, session: Session):
+        # Create test users and workbook
+        admin = create_test_user(session, "admin", is_admin=True)
+        headers = get_auth_headers(client, "admin")
+
+        workbook = create_test_workbook(session, admin.id)
+
+        # Create test data
+        location = Location(name="Test Location")
+        learning_activity = LearningActivity(name="Test Activity", learning_platform_id=workbook.learning_platform_id)
+        learning_type = LearningType(name="Test Type")
+        task_status = TaskStatus(name="Test Status")
+        session.add_all([location, learning_activity, learning_type, task_status])
+        session.commit()
+
+        # Creat week and activity
+        week = Week(workbook_id=workbook.id, number=1)
+        session.add(week)
+        session.commit()
+
+        activity = Activity(
+            workbook_id=workbook.id,
+            week_number=1,
+            name="Export Test Activity",
+            time_estimate_minutes=60,
+            location_id=location.id,
+            learning_activity_id=learning_activity.id,
+            learning_type_id=learning_type.id,
+            task_status_id=task_status.id,
+        )
+        session.add(activity)
+        session.commit()
+
+        response = client.get(f"/api/workbooks/{workbook.id}/export", headers=headers)
+
+        # Check response
+        assert response.status_code == 200
+        assert response.headers["content-type"] == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+        # Load Excel details
+        workbook_bytes = BytesIO(response.content)
+        wb = openpyxl.load_workbook(workbook_bytes)
+
+        # Check sheet
+        assert "Basic information" in wb.sheetnames
+        assert "Contributors" in wb.sheetnames
+        assert "Week1" in wb.sheetnames
 
 
 class TestRead:
