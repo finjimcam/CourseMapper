@@ -142,6 +142,16 @@ function WorkbookPage(): JSX.Element {
               >
                 Duplicate
               </button>
+              <button
+                onClick={() => {
+                  if (!workbook_id) return;
+                  const url = `${import.meta.env.VITE_API}/workbooks/${workbook_id}/export`;
+                  window.open(url, "_blank");
+                }}
+                className="px-5 py-2.5 text-white bg-gradient-to-r from-yellow-500 via-yellow-600 to-yellow-700 focus:ring-4 focus:outline-none focus:ring-yellow-300 font-medium rounded-lg text-sm text-center"
+              >
+                Export as Excel
+              </button>
             </div>
             {ifCourseLead ? (
               <Link
