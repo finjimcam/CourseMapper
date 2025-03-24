@@ -2217,7 +2217,7 @@ def export_workbook_to_excel(
     # Activities per week
     week_groups: dict[int, list[Activity]] = {}
     for activity in workbook.activities:
-        week_groups.setdefault(activity.week_number, []).append(activity)
+        week_groups.setdefault(activity.week_number or 0, []).append(activity)
 
     # Write Excel
     stream = io.BytesIO()

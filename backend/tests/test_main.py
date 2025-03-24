@@ -215,7 +215,9 @@ class TestExportExcel:
 
         # Create test data
         location = Location(name="Test Location")
-        learning_activity = LearningActivity(name="Test Activity", learning_platform_id=workbook.learning_platform_id)
+        learning_activity = LearningActivity(
+            name="Test Activity", learning_platform_id=workbook.learning_platform_id
+        )
         learning_type = LearningType(name="Test Type")
         task_status = TaskStatus(name="Test Status")
         session.add_all([location, learning_activity, learning_type, task_status])
@@ -243,7 +245,10 @@ class TestExportExcel:
 
         # Check response
         assert response.status_code == 200
-        assert response.headers["content-type"] == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        assert (
+            response.headers["content-type"]
+            == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
         # Load Excel details
         workbook_bytes = BytesIO(response.content)
