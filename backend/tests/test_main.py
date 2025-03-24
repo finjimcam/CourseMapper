@@ -206,7 +206,7 @@ def test_permission_checks(client: TestClient, session: Session) -> None:
 
 
 class TestExportExcel:
-    def test_export_workbook_to_excel(self, client: TestClient, session: Session):
+    def test_export_workbook_to_excel(self, client: TestClient, session: Session) -> None:
         # Create test users and workbook
         admin = create_test_user(session, "admin", is_admin=True)
         headers = get_auth_headers(client, "admin")
