@@ -2118,7 +2118,7 @@ def search_workbooks(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> List[Dict[str, Any]] | None:
-    """ Searches for workbooks based on various criteria.
+    """Searches for workbooks based on various criteria.
 
     The _: SessionData enables SessionData to be parsed, which will return a 403 if it
     does not exist. This is how authentication is handled when there are no internal
@@ -2212,7 +2212,7 @@ def export_workbook_to_excel(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> StreamingResponse:
-    """ Exports a workbook to an Excel file.
+    """Exports a workbook to an Excel file.
 
     The _: SessionData enables SessionData to be parsed, which will return a 403 if it
     does not exist. This is how authentication is handled when there are no internal
@@ -2285,7 +2285,9 @@ def export_workbook_to_excel(
                 row = {
                     "Staff Responsible": ", ".join(user.name for user in a.staff_responsible),
                     "Title / Name": a.name,
-                    "Learning Activity": a.learning_activity.name if a.learning_activity else "None",
+                    "Learning Activity": (
+                        a.learning_activity.name if a.learning_activity else "None"
+                    ),
                     "Learning Type": a.learning_type.name if a.learning_type else "None",
                     "Activity Location": a.location.name if a.location else "None",
                     "Task Status": a.task_status.name if a.task_status else "None",
