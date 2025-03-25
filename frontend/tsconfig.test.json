@@ -4,5 +4,8 @@
     "esModuleInterop": true,
     "jsx": "react-jsx"
   },
-  "include": ["src", "tests"]
+  "include": [
+    "src",
+    "tests"
+  ]
 }
