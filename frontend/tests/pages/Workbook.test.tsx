@@ -30,11 +30,11 @@ describe('Workbook', () => {
 
   it('should show error message on fetch failure', async () => {
     mockedAxios.get.mockRejectedValueOnce(new Error('Failed to load'));
-    
+
     render(<Workbook />);
-    
+
     await waitFor(() => {
-      const errorMessage = screen.getByText((content) => 
+      const errorMessage = screen.getByText((content) =>
         content.startsWith('Error:') && content.includes('Failed to load')
       );
       expect(errorMessage).toBeInTheDocument();
