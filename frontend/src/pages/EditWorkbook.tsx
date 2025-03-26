@@ -135,7 +135,7 @@ function EditWorkbook(): JSX.Element {
           isAdmin(),
         ]);
         setContributors(contributorsData);
-        setEditedContributors(contributorsData)
+        setEditedContributors(contributorsData);
         setIsUserCourseLead(isUserCourseLeadData);
         setIsUserAdmin(isUserAdminData);
 
@@ -306,15 +306,17 @@ function EditWorkbook(): JSX.Element {
       );
     } else if (field_name[0] === 'contributors') {
       const contributorData: string[] = value.split(',');
-      const newContributor: User = {id: contributorData[0], name: contributorData[1]}
-      
-      for (let i=0; i<editedContributors.length; i++) {
+      const newContributor: User = { id: contributorData[0], name: contributorData[1] };
+
+      for (let i = 0; i < editedContributors.length; i++) {
         if (editedContributors[i].id === newContributor.id) {
-          setEditedContributors(editedContributors.filter(item => item.id !== newContributor.id));
+          setEditedContributors(
+            editedContributors.filter((item) => item.id !== newContributor.id)
+          );
           return;
-        }        
+        }
       }
-      
+
       setEditedContributors([...editedContributors, newContributor]);
     } else {
       setWorkbookData((prev) =>
@@ -341,11 +343,11 @@ function EditWorkbook(): JSX.Element {
     //     learning_platform_id: workbookData.learning_platform.id,
     //   });
 
-      // Handle week dates if start date changed
-      if (field_name[1] === 'start_date') {
-        const updatedWeeks = recalcWeeks(value, weeks);
-        setWeeks(updatedWeeks);
-      }
+    // Handle week dates if start date changed
+    if (field_name[1] === 'start_date') {
+      const updatedWeeks = recalcWeeks(value, weeks);
+      setWeeks(updatedWeeks);
+    }
     // } catch (err) {
     //   console.error('Error saving changes:', getErrorMessage(err));
     // }
@@ -503,20 +505,18 @@ function EditWorkbook(): JSX.Element {
         learning_platform_id: workbookData.learning_platform.id,
       });
 
-      for (let i=0; i<editedContributors.length; i++) {
-        if (contributors.filter(item => item.id === editedContributors[i].id).length === 0) {
+      for (let i = 0; i < editedContributors.length; i++) {
+        if (contributors.filter((item) => item.id === editedContributors[i].id).length === 0) {
           await axios.post(`${process.env.VITE_API}/workbook-contributors/`, {
             workbook_id: workbookData.workbook.id,
             contributor_id: editedContributors[i].id,
           });
         }
       }
-      for (let i=0; i<contributors.length; i++) { 
-        if (editedContributors.filter(item => item.id === contributors[i].id).length === 0) {
+      for (let i = 0; i < contributors.length; i++) {
+        if (editedContributors.filter((item) => item.id === contributors[i].id).length === 0) {
           await axios.delete(`${process.env.VITE_API}/workbook-contributors/`, {
-            data: {workbook_id: workbookData.workbook.id,
-                  contributor_id: contributors[i].id,
-            }
+            data: { workbook_id: workbookData.workbook.id, contributor_id: contributors[i].id },
           });
         }
       }

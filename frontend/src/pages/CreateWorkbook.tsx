@@ -70,7 +70,6 @@ function CreateWorkbook(): JSX.Element {
     weekNumber: number;
     activityIndex: number;
   } | null>(null);
-  
 
   // Activity form & editing state
   const [activityForm, setActivityForm] = useState<Partial<Activity>>(defaultActivityForm);
@@ -247,17 +246,16 @@ function CreateWorkbook(): JSX.Element {
         .catch((err) => setError(getErrorMessage(err)));
     } else if (field === 'contributors') {
       const contributorData: string[] = value.split(',');
-      const newContributor: User = {id: contributorData[0], name: contributorData[1]}
-      
-      for (let i=0; i<contributors.length; i++) {
+      const newContributor: User = { id: contributorData[0], name: contributorData[1] };
+
+      for (let i = 0; i < contributors.length; i++) {
         if (contributors[i].id === newContributor.id) {
-          setContributors(contributors.filter(item => item.id !== newContributor.id));
+          setContributors(contributors.filter((item) => item.id !== newContributor.id));
           return;
-        }        
+        }
       }
-      
+
       setContributors([...contributors, newContributor]);
-      
     } else {
       setWorkbook((prev) =>
         prev ? { ...prev, workbook: { ...prev.workbook, [field]: value } } : prev
@@ -444,10 +442,10 @@ function CreateWorkbook(): JSX.Element {
         }
       }
 
-      for (let i=0; i<contributors.length; i++) {
+      for (let i = 0; i < contributors.length; i++) {
         await axios.post(`${process.env.VITE_API}/workbook-contributors/`, {
           workbook_id: workbookId,
-          contributor_id: contributors[i].id
+          contributor_id: contributors[i].id,
         });
       }
 

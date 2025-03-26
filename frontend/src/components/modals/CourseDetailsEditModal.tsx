@@ -17,18 +17,16 @@ along with this program at /LICENSE.md. If not, see <https://www.gnu.org/license
 */
 
 // src/components/CourseDetailsEditModal.tsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Button, Label, TextInput, Select, Tabs, TabItem } from 'flowbite-react';
 import DatePicker from 'react-datepicker';
 import ConfirmModal from './ConfirmModal';
 import 'react-datepicker/dist/react-datepicker.css';
-import axios from 'axios';
 import {
   GenericData,
   Workbook,
   User,
   LearningPlatform,
-  getErrorMessage,
 } from '../../utils/workbookUtils';
 
 interface CourseDetailsEditModalProps {
@@ -52,63 +50,13 @@ const CourseDetailsEditModal: React.FC<CourseDetailsEditModalProps> = ({
   onCancel,
   onChange,
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showLeadChangeModal, setShowLeadChangeModal] = useState(false);
   const [newLeadId, setNewLeadId] = useState<string>('');
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
 
-  // const loadContributors = useCallback(async () => {
-  //   try {
-  //     const response = await axios.get<User[]>(`${process.env.VITE_API}/workbook-contributors/`, {
-  //       params: { workbook_id: workbook.workbook.id },
-  //     });
-  //     setContributors(response.data);
-  //   } catch (error) {
-  //     console.error('Error loading contributors:', getErrorMessage(error));
-  //   }
-  // }, [workbook.workbook.id]);
-
   useEffect(() => {
-    if (show) {
-      //loadContributors();
-    }
   }, [contributors]);
-
-  const handleAddContributor = async (userId: string) => {
-    try {
-      setIsLoading(true);
-      // await axios.post(`${process.env.VITE_API}/workbook-contributors/`, {
-      //   workbook_id: workbook.workbook.id,
-      //   contributor_id: userId,
-      // });
-
-      onChange('contributors', userId);
-      //await loadContributors();
-    } catch (error) {
-      console.error('Error adding contributor:', getErrorMessage(error));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleRemoveContributor = async (userId: string) => {
-    try {
-      setIsLoading(true);
-      // await axios.delete(`${process.env.VITE_API}/workbook-contributors/`, {
-      //   data: {
-      //     workbook_id: workbook.workbook.id,
-      //     contributor_id: userId,
-      //   },
-      // });
-      onChange('contributors', userId);
-      //await loadContributors();
-    } catch (error) {
-      console.error('Error removing contributor:', getErrorMessage(error));
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleDateChange = (date: Date | null) => {
     if (!date) return;
@@ -201,7 +149,9 @@ const CourseDetailsEditModal: React.FC<CourseDetailsEditModalProps> = ({
                         <Button
                           color="failure"
                           size="xs"
-                          onClick={() => onChange('contributors', `${contributor.id},${contributor.name}`)}
+                          onClick={() =>
+                            onChange('contributors', `${contributor.id},${contributor.name}`)
+                          }
                           disabled={isLoading}
                         >
                           Remove
