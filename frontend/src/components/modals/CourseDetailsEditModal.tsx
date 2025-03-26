@@ -17,18 +17,16 @@ along with this program at /LICENSE.md. If not, see <https://www.gnu.org/license
 */
 
 // src/components/CourseDetailsEditModal.tsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Modal, Button, Label, TextInput, Select, Tabs, TabItem } from 'flowbite-react';
 import DatePicker from 'react-datepicker';
 import ConfirmModal from './ConfirmModal';
 import 'react-datepicker/dist/react-datepicker.css';
-import axios from 'axios';
 import {
   GenericData,
   Workbook,
   User,
   LearningPlatform,
-  getErrorMessage,
 } from '../../utils/workbookUtils';
 
 interface CourseDetailsEditModalProps {
@@ -37,6 +35,7 @@ interface CourseDetailsEditModalProps {
   users: GenericData[];
   learningPlatforms: LearningPlatform[];
   weeksCount: number;
+  contributors: User[];
   onCancel: () => void;
   onSave: () => void;
   onChange: (field: string, value: string) => void;
@@ -47,64 +46,17 @@ const CourseDetailsEditModal: React.FC<CourseDetailsEditModalProps> = ({
   workbook,
   users,
   weeksCount,
+  contributors,
   onCancel,
   onChange,
 }) => {
-  const [contributors, setContributors] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showLeadChangeModal, setShowLeadChangeModal] = useState(false);
   const [newLeadId, setNewLeadId] = useState<string>('');
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
 
-  const loadContributors = useCallback(async () => {
-    try {
-      const response = await axios.get<User[]>(`${process.env.VITE_API}/workbook-contributors/`, {
-        params: { workbook_id: workbook.workbook.id },
-      });
-      setContributors(response.data);
-    } catch (error) {
-      console.error('Error loading contributors:', getErrorMessage(error));
-    }
-  }, [workbook.workbook.id]);
-
   useEffect(() => {
-    if (show) {
-      loadContributors();
-    }
-  }, [show, loadContributors]);
-
-  const handleAddContributor = async (userId: string) => {
-    try {
-      setIsLoading(true);
-      await axios.post(`${process.env.VITE_API}/workbook-contributors/`, {
-        workbook_id: workbook.workbook.id,
-        contributor_id: userId,
-      });
-      await loadContributors();
-    } catch (error) {
-      console.error('Error adding contributor:', getErrorMessage(error));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleRemoveContributor = async (userId: string) => {
-    try {
-      setIsLoading(true);
-      await axios.delete(`${process.env.VITE_API}/workbook-contributors/`, {
-        data: {
-          workbook_id: workbook.workbook.id,
-          contributor_id: userId,
-        },
-      });
-      await loadContributors();
-    } catch (error) {
-      console.error('Error removing contributor:', getErrorMessage(error));
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [contributors]);
 
   const handleDateChange = (date: Date | null) => {
     if (!date) return;
@@ -197,8 +149,9 @@ const CourseDetailsEditModal: React.FC<CourseDetailsEditModalProps> = ({
                         <Button
                           color="failure"
                           size="xs"
-                          onClick={() => handleRemoveContributor(contributor.id)}
-                          disabled={isLoading}
+                          onClick={() =>
+                            onChange('contributors', `${contributor.id},${contributor.name}`)
+                          }
                         >
                           Remove
                         </Button>
@@ -232,7 +185,7 @@ const CourseDetailsEditModal: React.FC<CourseDetailsEditModalProps> = ({
                                 key={user.id}
                                 className="px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer text-sm text-gray-700 dark:text-gray-200"
                                 onClick={() => {
-                                  handleAddContributor(user.id);
+                                  onChange('contributors', `${user.id},${user.name}`);
                                   setSearchQuery('');
                                   setFilteredUsers([]);
                                 }}

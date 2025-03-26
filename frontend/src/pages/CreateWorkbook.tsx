@@ -55,6 +55,7 @@ function CreateWorkbook(): JSX.Element {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [publishing, setPublishing] = useState<boolean>(false);
+  const [contributors, setContributors] = useState<User[]>([]);
 
   // Modal states
   const [showValidationModal, setShowValidationModal] = useState<boolean>(false);
@@ -243,6 +244,18 @@ function CreateWorkbook(): JSX.Element {
         .get(`${process.env.VITE_API}/learning-activities/?learning_platform_id=${value}`)
         .then((res) => setLearningActivities(res.data))
         .catch((err) => setError(getErrorMessage(err)));
+    } else if (field === 'contributors') {
+      const contributorData: string[] = value.split(',');
+      const newContributor: User = { id: contributorData[0], name: contributorData[1] };
+
+      for (let i = 0; i < contributors.length; i++) {
+        if (contributors[i].id === newContributor.id) {
+          setContributors(contributors.filter((item) => item.id !== newContributor.id));
+          return;
+        }
+      }
+
+      setContributors([...contributors, newContributor]);
     } else {
       setWorkbook((prev) =>
         prev ? { ...prev, workbook: { ...prev.workbook, [field]: value } } : prev
@@ -398,11 +411,6 @@ function CreateWorkbook(): JSX.Element {
         school_id: storedData.schoolId || null,
       };
 
-      // Debug logging
-      console.log('=== Debug Info ===');
-      console.log('Workbook Data:', workbookData);
-      console.log('Area ID:', storedData.areaId);
-      console.log('School ID:', storedData.schoolId);
       const workbookResponse = await axios.post(
         `${process.env.VITE_API}/workbooks/`,
         workbookData
@@ -432,6 +440,13 @@ function CreateWorkbook(): JSX.Element {
             });
           }
         }
+      }
+
+      for (let i = 0; i < contributors.length; i++) {
+        await axios.post(`${process.env.VITE_API}/workbook-contributors/`, {
+          workbook_id: workbookId,
+          contributor_id: contributors[i].id,
+        });
       }
 
       sessionStorage.removeItem('newWorkbookData');
@@ -522,6 +537,7 @@ function CreateWorkbook(): JSX.Element {
         users={users}
         learningPlatforms={learningPlatforms}
         weeksCount={weeks.length}
+        contributors={contributors}
         onSave={() => setShowWorkbookModal(false)}
         onCancel={() => setShowWorkbookModal(false)}
         onChange={handleWorkbookFieldChange}
@@ -543,7 +559,7 @@ function CreateWorkbook(): JSX.Element {
       <div className="bg-white p-6 rounded-lg shadow">
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center gap-2">
-            <CourseHeader workbook={workbook} contributors={[]} />
+            <CourseHeader workbook={workbook} contributors={contributors} />
             <Button size="xs" color="light" onClick={() => setShowWorkbookModal(true)}>
               <HiPencil className="h-4 w-4" />
             </Button>
