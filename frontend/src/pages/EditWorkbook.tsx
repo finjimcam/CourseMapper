@@ -71,6 +71,7 @@ function EditWorkbook(): JSX.Element {
   const [showDeleteWorkbookModal, setShowDeleteWorkbookModal] = useState<boolean>(false);
   const [isUserCourseLead, setIsUserCourseLead] = useState<boolean>(false);
   const [isUserAdmin, setIsUserAdmin] = useState<boolean>(false);
+  const [editedContributors, setEditedContributors] = useState<User[]>([]);
 
   // Modal states
   const [showValidationModal, setShowValidationModal] = useState<boolean>(false);
@@ -134,6 +135,7 @@ function EditWorkbook(): JSX.Element {
           isAdmin(),
         ]);
         setContributors(contributorsData);
+        setEditedContributors(contributorsData)
         setIsUserCourseLead(isUserCourseLeadData);
         setIsUserAdmin(isUserAdminData);
 
@@ -302,6 +304,18 @@ function EditWorkbook(): JSX.Element {
             }
           : prev
       );
+    } else if (field_name[0] === 'contributors') {
+      const contributorData: string[] = value.split(',');
+      const newContributor: User = {id: contributorData[0], name: contributorData[1]}
+      
+      for (let i=0; i<editedContributors.length; i++) {
+        if (editedContributors[i].id === newContributor.id) {
+          setEditedContributors(editedContributors.filter(item => item.id !== newContributor.id));
+          return;
+        }        
+      }
+      
+      setEditedContributors([...editedContributors, newContributor]);
     } else {
       setWorkbookData((prev) =>
         prev
@@ -318,23 +332,23 @@ function EditWorkbook(): JSX.Element {
 
     // Save changes to backend
     if (!workbookData || !workbook_id) return;
-    try {
-      await axios.patch(`${process.env.VITE_API}/workbooks/${workbook_id}`, {
-        course_name: workbookData.workbook.course_name,
-        start_date: workbookData.workbook.start_date,
-        end_date: workbookData.workbook.end_date,
-        course_lead_id: workbookData.course_lead.id,
-        learning_platform_id: workbookData.learning_platform.id,
-      });
+    // try {
+    //   await axios.patch(`${process.env.VITE_API}/workbooks/${workbook_id}`, {
+    //     course_name: workbookData.workbook.course_name,
+    //     start_date: workbookData.workbook.start_date,
+    //     end_date: workbookData.workbook.end_date,
+    //     course_lead_id: workbookData.course_lead.id,
+    //     learning_platform_id: workbookData.learning_platform.id,
+    //   });
 
       // Handle week dates if start date changed
       if (field_name[1] === 'start_date') {
         const updatedWeeks = recalcWeeks(value, weeks);
         setWeeks(updatedWeeks);
       }
-    } catch (err) {
-      console.error('Error saving changes:', getErrorMessage(err));
-    }
+    // } catch (err) {
+    //   console.error('Error saving changes:', getErrorMessage(err));
+    // }
   };
 
   const resetActivityForm = () => setActivityForm({ ...defaultActivityForm });
@@ -488,6 +502,25 @@ function EditWorkbook(): JSX.Element {
         course_lead_id: workbookData.course_lead.id,
         learning_platform_id: workbookData.learning_platform.id,
       });
+
+      for (let i=0; i<editedContributors.length; i++) {
+        if (contributors.filter(item => item.id === editedContributors[i].id).length === 0) {
+          await axios.post(`${process.env.VITE_API}/workbook-contributors/`, {
+            workbook_id: workbookData.workbook.id,
+            contributor_id: editedContributors[i].id,
+          });
+        }
+      }
+      for (let i=0; i<contributors.length; i++) { 
+        if (editedContributors.filter(item => item.id === contributors[i].id).length === 0) {
+          await axios.delete(`${process.env.VITE_API}/workbook-contributors/`, {
+            data: {workbook_id: workbookData.workbook.id,
+                  contributor_id: contributors[i].id,
+            }
+          });
+        }
+      }
+
       setSaving(false);
       navigate(`/workbook/${workbook_id}`);
     } catch (err) {
@@ -567,6 +600,7 @@ function EditWorkbook(): JSX.Element {
         users={users}
         learningPlatforms={learningPlatforms}
         weeksCount={weeks.length}
+        contributors={editedContributors}
         onCancel={() => setShowWorkbookModal(false)}
         onSave={() => setShowWorkbookModal(false)}
         onChange={handleWorkbookFieldChange}
@@ -591,7 +625,7 @@ function EditWorkbook(): JSX.Element {
       <div className="bg-white p-6 rounded-lg shadow">
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center gap-2">
-            <CourseHeader workbook={workbookData} contributors={contributors} />
+            <CourseHeader workbook={workbookData} contributors={editedContributors} />
             {isUserCourseLead ? (
               <Button size="xs" color="light" onClick={() => setShowWorkbookModal(true)}>
                 <HiPencil className="h-4 w-4" />

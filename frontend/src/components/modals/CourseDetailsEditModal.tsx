@@ -37,6 +37,7 @@ interface CourseDetailsEditModalProps {
   users: GenericData[];
   learningPlatforms: LearningPlatform[];
   weeksCount: number;
+  contributors: User[];
   onCancel: () => void;
   onSave: () => void;
   onChange: (field: string, value: string) => void;
@@ -47,41 +48,43 @@ const CourseDetailsEditModal: React.FC<CourseDetailsEditModalProps> = ({
   workbook,
   users,
   weeksCount,
+  contributors,
   onCancel,
   onChange,
 }) => {
-  const [contributors, setContributors] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showLeadChangeModal, setShowLeadChangeModal] = useState(false);
   const [newLeadId, setNewLeadId] = useState<string>('');
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
 
-  const loadContributors = useCallback(async () => {
-    try {
-      const response = await axios.get<User[]>(`${process.env.VITE_API}/workbook-contributors/`, {
-        params: { workbook_id: workbook.workbook.id },
-      });
-      setContributors(response.data);
-    } catch (error) {
-      console.error('Error loading contributors:', getErrorMessage(error));
-    }
-  }, [workbook.workbook.id]);
+  // const loadContributors = useCallback(async () => {
+  //   try {
+  //     const response = await axios.get<User[]>(`${process.env.VITE_API}/workbook-contributors/`, {
+  //       params: { workbook_id: workbook.workbook.id },
+  //     });
+  //     setContributors(response.data);
+  //   } catch (error) {
+  //     console.error('Error loading contributors:', getErrorMessage(error));
+  //   }
+  // }, [workbook.workbook.id]);
 
   useEffect(() => {
     if (show) {
-      loadContributors();
+      //loadContributors();
     }
-  }, [show, loadContributors]);
+  }, [contributors]);
 
   const handleAddContributor = async (userId: string) => {
     try {
       setIsLoading(true);
-      await axios.post(`${process.env.VITE_API}/workbook-contributors/`, {
-        workbook_id: workbook.workbook.id,
-        contributor_id: userId,
-      });
-      await loadContributors();
+      // await axios.post(`${process.env.VITE_API}/workbook-contributors/`, {
+      //   workbook_id: workbook.workbook.id,
+      //   contributor_id: userId,
+      // });
+
+      onChange('contributors', userId);
+      //await loadContributors();
     } catch (error) {
       console.error('Error adding contributor:', getErrorMessage(error));
     } finally {
@@ -92,13 +95,14 @@ const CourseDetailsEditModal: React.FC<CourseDetailsEditModalProps> = ({
   const handleRemoveContributor = async (userId: string) => {
     try {
       setIsLoading(true);
-      await axios.delete(`${process.env.VITE_API}/workbook-contributors/`, {
-        data: {
-          workbook_id: workbook.workbook.id,
-          contributor_id: userId,
-        },
-      });
-      await loadContributors();
+      // await axios.delete(`${process.env.VITE_API}/workbook-contributors/`, {
+      //   data: {
+      //     workbook_id: workbook.workbook.id,
+      //     contributor_id: userId,
+      //   },
+      // });
+      onChange('contributors', userId);
+      //await loadContributors();
     } catch (error) {
       console.error('Error removing contributor:', getErrorMessage(error));
     } finally {
@@ -197,7 +201,7 @@ const CourseDetailsEditModal: React.FC<CourseDetailsEditModalProps> = ({
                         <Button
                           color="failure"
                           size="xs"
-                          onClick={() => handleRemoveContributor(contributor.id)}
+                          onClick={() => onChange('contributors', `${contributor.id},${contributor.name}`)}
                           disabled={isLoading}
                         >
                           Remove
@@ -232,7 +236,7 @@ const CourseDetailsEditModal: React.FC<CourseDetailsEditModalProps> = ({
                                 key={user.id}
                                 className="px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer text-sm text-gray-700 dark:text-gray-200"
                                 onClick={() => {
-                                  handleAddContributor(user.id);
+                                  onChange('contributors', `${user.id},${user.name}`);
                                   setSearchQuery('');
                                   setFilteredUsers([]);
                                 }}

@@ -55,6 +55,7 @@ function CreateWorkbook(): JSX.Element {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [publishing, setPublishing] = useState<boolean>(false);
+  const [contributors, setContributors] = useState<User[]>([]);
 
   // Modal states
   const [showValidationModal, setShowValidationModal] = useState<boolean>(false);
@@ -432,6 +433,13 @@ function CreateWorkbook(): JSX.Element {
             });
           }
         }
+      }
+
+      for (let i=0; i<contributors.length; i++) {
+        await axios.post(`${process.env.VITE_API}/workbook-contributors/`, {
+          workbook_id: workbookId,
+          contributor_id: contributors[i],
+        });
       }
 
       sessionStorage.removeItem('newWorkbookData');
