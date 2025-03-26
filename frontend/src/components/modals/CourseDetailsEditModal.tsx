@@ -152,7 +152,6 @@ const CourseDetailsEditModal: React.FC<CourseDetailsEditModalProps> = ({
                           onClick={() =>
                             onChange('contributors', `${contributor.id},${contributor.name}`)
                           }
-                          disabled={isLoading}
                         >
                           Remove
                         </Button>

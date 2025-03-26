@@ -20,15 +20,33 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Grid from '../components/Grid';
-import { getErrorMessage, Workbook } from '../utils/workbookUtils';
+import { Area, getErrorMessage, School, Workbook } from '../utils/workbookUtils';
 import SearchBar from '../components/Searchbar';
 
 function SearchResults() {
   const [results, setResults] = useState<Workbook[] | null>(null);
   const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
+  const [schools, setSchools] = useState<School[]>([]);
+  const [areas, setAreas] = useState<Area[]>([]);
 
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [schoolsResponse, areasResponse] = await Promise.all([
+          axios.get(`${process.env.VITE_API}/schools/`),
+          axios.get(`${process.env.VITE_API}/area/`),
+        ]);
+        setSchools(schoolsResponse.data);
+        setAreas(areasResponse.data);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+
     const fetchResults = async () => {
       setIsLoading(true);
       try {
@@ -59,8 +77,8 @@ function SearchResults() {
     if (params.led_by) descriptions.push(`led by "${params.led_by}"`);
     if (params.contributed_by) descriptions.push(`contributed to by "${params.contributed_by}"`);
     if (params.learning_platform) descriptions.push(`on platform "${params.learning_platform}"`);
-    if (params.area) descriptions.push(`in area "${params.area}"`);
-    if (params.school) descriptions.push(`at school "${params.school}"`);
+    if (params.area_id) descriptions.push(`in area "${areas.filter(item => item.id === params.area_id)[0].name}"`);
+    if (params.school_id) descriptions.push(`in school "${schools.filter(item => item.id === params.school_id)[0].name}"`);
 
     return descriptions.length
       ? `Showing workbooks where ${descriptions.join(', ')}`
