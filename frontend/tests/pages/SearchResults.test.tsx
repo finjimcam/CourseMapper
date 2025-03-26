@@ -82,7 +82,7 @@ describe('SearchResults', () => {
       mockedAxios.get.mockImplementationOnce(() => pendingPromise);
 
       render(<SearchResults />);
-      
+
       // Find the spinner by its class since it doesn't have a data-testid
       const spinner = document.querySelector('.animate-spin');
       expect(spinner).toBeInTheDocument();
@@ -98,10 +98,21 @@ describe('SearchResults', () => {
 
   describe('Search Results Display', () => {
     it('should display results when data is loaded', async () => {
-      mockedAxios.get.mockResolvedValueOnce({ data: mockWorkbooks });
-      
+      mockedAxios.get.mockImplementation((url) => {
+        if (url.includes('/schools')) {
+          return Promise.resolve({ data: [] });
+        }
+        if (url.includes('/area')) {
+          return Promise.resolve({ data: [] });
+        }
+        if (url.includes('/workbooks/search')) {
+          return Promise.resolve({ data: mockWorkbooks });
+        }
+        return Promise.reject(new Error('Unknown URL'));
+      });
+
       render(<SearchResults />);
-      
+
       await waitFor(() => {
         expect(screen.getByTestId('mock-grid')).toBeInTheDocument();
         expect(screen.getByText('React Course')).toBeInTheDocument();
@@ -109,10 +120,21 @@ describe('SearchResults', () => {
     });
 
     it('should display no results message when empty results returned', async () => {
-      mockedAxios.get.mockResolvedValueOnce({ data: [] });
-      
+      mockedAxios.get.mockImplementation((url) => {
+        if (url.includes('/schools')) {
+          return Promise.resolve({ data: [] });
+        }
+        if (url.includes('/area')) {
+          return Promise.resolve({ data: [] });
+        }
+        if (url.includes('/workbooks/search')) {
+          return Promise.resolve({ data: [] }); // or mockWorkbooks depending on test
+        }
+        return Promise.reject(new Error('Unknown URL'));
+      });
+
       render(<SearchResults />);
-      
+
       await waitFor(() => {
         expect(screen.getByText('No search results found.')).toBeInTheDocument();
       });
@@ -120,9 +142,9 @@ describe('SearchResults', () => {
 
     it('should handle API errors gracefully', async () => {
       mockedAxios.get.mockRejectedValueOnce(new Error('Failed to fetch'));
-      
+
       render(<SearchResults />);
-      
+
       await waitFor(() => {
         expect(screen.queryByTestId('mock-grid')).not.toBeInTheDocument();
         expect(screen.getByText('No search results found.')).toBeInTheDocument();
@@ -132,10 +154,21 @@ describe('SearchResults', () => {
 
   describe('Search Description Generation', () => {
     it('should show default description with no search params', async () => {
-      mockedAxios.get.mockResolvedValueOnce({ data: mockWorkbooks });
-      
+      mockedAxios.get.mockImplementation((url) => {
+        if (url.includes('/schools')) {
+          return Promise.resolve({ data: [] });
+        }
+        if (url.includes('/area')) {
+          return Promise.resolve({ data: [] });
+        }
+        if (url.includes('/workbooks/search')) {
+          return Promise.resolve({ data: mockWorkbooks });
+        }
+        return Promise.reject(new Error('Unknown URL'));
+      });
+
       render(<SearchResults />);
-      
+
       await waitFor(() => {
         expect(screen.getByText('Showing all workbooks')).toBeInTheDocument();
       });
@@ -143,10 +176,21 @@ describe('SearchResults', () => {
 
     it('should show correct description for name search', async () => {
       mockSearchParams.set('name', 'React');
-      mockedAxios.get.mockResolvedValueOnce({ data: mockWorkbooks });
-      
+      mockedAxios.get.mockImplementation((url) => {
+        if (url.includes('/schools')) {
+          return Promise.resolve({ data: [] });
+        }
+        if (url.includes('/area')) {
+          return Promise.resolve({ data: [] });
+        }
+        if (url.includes('/workbooks/search')) {
+          return Promise.resolve({ data: mockWorkbooks });
+        }
+        return Promise.reject(new Error('Unknown URL'));
+      });
+
       render(<SearchResults />);
-      
+
       await waitFor(() => {
         expect(screen.getByText('Showing workbooks where name contains "React"')).toBeInTheDocument();
       });
@@ -155,12 +199,23 @@ describe('SearchResults', () => {
     it('should show correct description for date filters', async () => {
       mockSearchParams.set('starts_after', '2025-01-01');
       mockSearchParams.set('ends_before', '2025-12-31');
-      mockedAxios.get.mockResolvedValueOnce({ data: mockWorkbooks });
-      
+      mockedAxios.get.mockImplementation((url) => {
+        if (url.includes('/schools')) {
+          return Promise.resolve({ data: [] });
+        }
+        if (url.includes('/area')) {
+          return Promise.resolve({ data: [] });
+        }
+        if (url.includes('/workbooks/search')) {
+          return Promise.resolve({ data: mockWorkbooks });
+        }
+        return Promise.reject(new Error('Unknown URL'));
+      });
+
       render(<SearchResults />);
-      
+
       await waitFor(() => {
-        const description = screen.getByText((content) => 
+        const description = screen.getByText((content) =>
           content.includes('starts after') && content.includes('ends before')
         );
         expect(description).toBeInTheDocument();
@@ -170,12 +225,23 @@ describe('SearchResults', () => {
     it('should show correct description for multiple filters', async () => {
       mockSearchParams.set('led_by', 'John');
       mockSearchParams.set('learning_platform', 'Moodle');
-      mockedAxios.get.mockResolvedValueOnce({ data: mockWorkbooks });
-      
+      mockedAxios.get.mockImplementation((url) => {
+        if (url.includes('/schools')) {
+          return Promise.resolve({ data: [] });
+        }
+        if (url.includes('/area')) {
+          return Promise.resolve({ data: [] });
+        }
+        if (url.includes('/workbooks/search')) {
+          return Promise.resolve({ data: mockWorkbooks });
+        }
+        return Promise.reject(new Error('Unknown URL'));
+      });
+
       render(<SearchResults />);
-      
+
       await waitFor(() => {
-        const description = screen.getByText((content) => 
+        const description = screen.getByText((content) =>
           content.includes('led by "John"') && content.includes('on platform "Moodle"')
         );
         expect(description).toBeInTheDocument();
@@ -187,10 +253,21 @@ describe('SearchResults', () => {
     it('should make API call with correct search parameters', async () => {
       mockSearchParams.set('name', 'React');
       mockSearchParams.set('led_by', 'John');
-      mockedAxios.get.mockResolvedValueOnce({ data: mockWorkbooks });
-      
+      mockedAxios.get.mockImplementation((url) => {
+        if (url.includes('/schools')) {
+          return Promise.resolve({ data: [] });
+        }
+        if (url.includes('/area')) {
+          return Promise.resolve({ data: [] });
+        }
+        if (url.includes('/workbooks/search')) {
+          return Promise.resolve({ data: mockWorkbooks });
+        }
+        return Promise.reject(new Error('Unknown URL'));
+      });
+
       render(<SearchResults />);
-      
+
       await waitFor(() => {
         expect(mockedAxios.get).toHaveBeenCalledWith(
           expect.stringContaining('/workbooks/search/'),
