@@ -63,6 +63,17 @@ function WorkbookPage(): JSX.Element {
     }
   };
 
+  const handleExportWorkbook = async () => {
+    if (!workbook_id) return;
+    try {
+      const url = `${process.env.VITE_API}/workbooks/${workbook_id}/export`;
+      window.open(url, "_blank");
+    } catch (error) {
+      console.error('Error exporting workbook:', error);
+      alert('Failed to export workbook.');
+    }
+  };
+
   useEffect(() => {
     const fetchWorkbookData = async () => {
       try {
@@ -141,6 +152,12 @@ function WorkbookPage(): JSX.Element {
                 className="px-5 py-2.5 text-white bg-gradient-to-r from-green-500 via-green-600 to-green-700 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm text-center"
               >
                 Duplicate
+              </button>
+              <button
+                onClick={handleExportWorkbook}
+                className="px-5 py-2.5 text-white bg-gradient-to-r from-yellow-500 via-yellow-600 to-yellow-700 focus:ring-4 focus:outline-none focus:ring-yellow-300 font-medium rounded-lg text-sm text-center"
+              >
+                Export as Excel
               </button>
             </div>
             {ifCourseLead ? (

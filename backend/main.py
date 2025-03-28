@@ -30,6 +30,9 @@ from fastapi import FastAPI, Depends, HTTPException, Response, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi_sessions.backends.implementations import InMemoryBackend
 from fastapi_sessions.frontends.implementations import SessionCookie, CookieParameters
+from fastapi.responses import StreamingResponse
+import pandas as pd
+import io
 
 from session import BaseVerifier, SessionData
 from sqlmodel import Session, select
@@ -2115,6 +2118,37 @@ def search_workbooks(
     session: Session = Depends(get_session),
     peek: bool = Query(False),
 ) -> List[Dict[str, Any]] | None:
+    """Searches for workbooks based on various criteria.
+
+    The _: SessionData enables SessionData to be parsed, which will return a 403 if it
+    does not exist. This is how authentication is handled when there are no internal
+    restrictions i.e. every user can access this, but only if they are authenticated.
+
+    Args:
+        name: The name of the workbook to search for.
+        starts_after: The start date of the workbook to search for.
+        ends_before: The end date of the workbook to search for.
+        led_by: The name of the course lead to search for.
+        contributed_by: The name of the contributor to search for.
+        learning_platform: The name of the learning platform to search for.
+        area_id: The id of the area to search for.
+        school_id: The id of the school to search for.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        The list of all matching workbook objects, model_dumped and with course_lead
+        and learning_platform fields added, or None if peek=True.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
     if peek:
         return None
 
@@ -2169,6 +2203,129 @@ def search_workbooks(
         results.append(add_workbook_details(session, workbook))
 
     return results
+
+
+@app.get("/api/workbooks/{workbook_id}/export", dependencies=[Depends(cookie)])
+def export_workbook_to_excel(
+    workbook_id: uuid.UUID,
+    _: SessionData = Depends(verifier),
+    session: Session = Depends(get_session),
+    peek: bool = Query(False),
+) -> StreamingResponse:
+    """Exports a workbook to an Excel file.
+
+    The _: SessionData enables SessionData to be parsed, which will return a 403 if it
+    does not exist. This is how authentication is handled when there are no internal
+    restrictions i.e. every user can access this, but only if they are authenticated.
+
+    Args:
+        workbook_id: The id of the workbook to export.
+        session: The database session, separate from authentication session, useful for
+            separating concerns between calls.
+        peek: A flag which prevents the function from performing any database changes.
+            Useful for checking whether a request would fail due to e.g. permissions
+            error, without actually executing the request.
+
+    Returns:
+        A StreamingResponse object containing the Excel file.
+
+    Raises:
+        HTTPException(403): if no valid session is provided as a cookie, or if
+            permission is denied due to the user's permissions group.
+        HTTPException(422): if the request fails due to a database error.
+        HTTPException(500): if attempt fails for any other reason.
+    """
+    # Get workbook
+    workbook = session.exec(select(Workbook).where(Workbook.id == workbook_id)).first()
+    if not workbook:
+        raise HTTPException(status_code=404, detail="Workbook not found")
+
+    # Basic Info
+    course_lead = session.get(User, workbook.course_lead_id)
+    area = session.get(Area, workbook.area_id)
+    school = session.get(Schools, workbook.school_id) if workbook.school_id else None
+
+    activities = session.exec(select(Activity).where(Activity.workbook_id == workbook_id)).all()
+
+    # Transform to DataFrame
+    df_basic = pd.DataFrame(
+        [
+            {
+                "Course name": workbook.course_name,
+                "Course lead": course_lead.name if course_lead else "None",
+                "Area": area.name if area else "None",
+                "School": school.name if school else "None",
+                "Start Date": workbook.start_date,
+                "End Date": workbook.end_date,
+            }
+        ]
+    )
+
+    # Contributors
+    df_contributors = pd.DataFrame(
+        [{"Contributor name": user.name} for user in workbook.contributors]
+        if workbook.contributors
+        else [{"Contributor name": "There is no contributor for this course."}]
+    )
+
+    # Activities per week
+    week_groups: dict[int, list[Activity]] = {}
+    for activity in workbook.activities:
+        week_groups.setdefault(activity.week_number or 0, []).append(activity)
+
+    # Write Excel
+    stream = io.BytesIO()
+    with pd.ExcelWriter(stream, engine="openpyxl") as writer:
+        df_basic.to_excel(writer, sheet_name="Basic information", index=False)
+        df_contributors.to_excel(writer, sheet_name="Contributors", index=False)
+
+        for week_num, activities in week_groups.items():
+            rows = []
+            for a in activities:
+                row = {
+                    "Staff Responsible": ", ".join(user.name for user in a.staff_responsible),
+                    "Title / Name": a.name,
+                    "Learning Activity": (
+                        a.learning_activity.name if a.learning_activity else "None"
+                    ),
+                    "Learning Type": a.learning_type.name if a.learning_type else "None",
+                    "Activity Location": a.location.name if a.location else "None",
+                    "Task Status": a.task_status.name if a.task_status else "None",
+                    "Time (minutes)": a.time_estimate_minutes,
+                }
+                rows.append(row)
+            df_week = pd.DataFrame(rows)
+            df_week.to_excel(writer, sheet_name=f"Week{week_num}", index=False)
+
+            # Set column width for Week sheet
+            worksheet = writer.sheets[f"Week{week_num}"]
+            worksheet.column_dimensions["A"].width = 45
+            worksheet.column_dimensions["B"].width = 45
+            worksheet.column_dimensions["C"].width = 20
+            worksheet.column_dimensions["D"].width = 20
+            worksheet.column_dimensions["E"].width = 20
+            worksheet.column_dimensions["F"].width = 15
+            worksheet.column_dimensions["G"].width = 20
+
+        # Set column width for Basic Information sheet
+        worksheet = writer.sheets["Basic information"]
+        worksheet.column_dimensions["A"].width = 35
+        worksheet.column_dimensions["B"].width = 30
+        worksheet.column_dimensions["C"].width = 45
+        worksheet.column_dimensions["D"].width = 45
+        worksheet.column_dimensions["E"].width = 15
+        worksheet.column_dimensions["F"].width = 15
+
+        # Set column width for Basic Information sheet
+        worksheet = writer.sheets["Contributors"]
+        worksheet.column_dimensions["A"].width = 40
+
+    stream.seek(0)
+    return StreamingResponse(
+        stream,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={workbook.course_name}.xlsx"},
+    )
 
 
 @app.get("/api/weeks/", dependencies=[Depends(cookie)])
