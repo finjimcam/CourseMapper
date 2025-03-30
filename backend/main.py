@@ -460,8 +460,7 @@ def delete_week(
     for activity in erroneously_deleted_activities:
         activity.week_number = -1
         session.add(activity)
-        session.commit()
-        session.refresh(activity)
+    session.commit()
     # delete week
     session.add(db_workbook)
     session.delete(db_week)
@@ -474,8 +473,7 @@ def delete_week(
     for activity in erroneously_deleted_activities:
         activity.week_number = db_week.number
         session.add(activity)
-        session.commit()
-        session.refresh(activity)
+    session.commit()
     # loop through weeks of linked_workbook and update their numbers to maintain continuity
     for other_week in db_workbook.weeks:
         if other_week.number is None:
